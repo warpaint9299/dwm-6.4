@@ -29,6 +29,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
@@ -74,8 +75,8 @@
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum { SchemeNorm, SchemeSel, SchemeStatus, SchemeTagsSel, SchemeTagsNorm, SchemeInfoSel, SchemeInfoNorm }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
-       NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
+       NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
 enum { Manager, Xembed, XembedInfo, XLast }; /* Xembed atoms */
 enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms */
@@ -99,6 +100,7 @@ typedef struct {
 
 typedef struct Monitor Monitor;
 typedef struct Client Client;
+typedef struct Barblockinfo Barblockinfo;
 struct Client {
 	char name[256];
 	float mina, maxa;
@@ -132,8 +134,6 @@ struct Monitor {
 	int nmaster;
 	int num;
 	int by;               /* bar geometry */
-	int btw;              /* width of tasks portion of bar */
-	int bt;               /* number of tasks */
 	int mx, my, mw, mh;   /* screen size */
 	int wx, wy, ww, wh;   /* window area  */
 	int gappx;            /* gaps between windows */
@@ -149,6 +149,14 @@ struct Monitor {
 	Window barwin;
 	const Layout *lt[2];
 };
+
+enum Blockname { BBStatus, BBTags, BBLayout, BBTitle,} ; /* bar modlue names*/
+struct Barblockinfo {
+	enum Blockname blockname;
+	int x;
+	int w;
+};
+
 
 typedef struct {
 	const char *class;
@@ -195,6 +203,7 @@ static void focusin(XEvent *e);
 static void focusmon(const Arg *arg);
 static void focusstack(const Arg *arg);
 static Atom getatomprop(Client *c, Atom prop);
+static Barblockinfo getbarblockinfo(enum Blockname bn);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
 static unsigned int getsystraywidth();
@@ -202,6 +211,7 @@ static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
 static void incnmaster(const Arg *arg);
+static void initbarblockinfo(const unsigned int n);
 static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
 static void manage(Window w, XWindowAttributes *wa);
@@ -223,6 +233,7 @@ static void resizemouse(const Arg *arg);
 static void resizerequest(XEvent *e);
 static void restack(Monitor *m);
 static void run(void);
+static void runautostart(void);
 static void scan(void);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
 static void sendmon(Client *c, Monitor *m);
@@ -244,7 +255,6 @@ static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void toggletag(const Arg *arg);
-static void togglewin(const Arg *arg);
 static void toggleview(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
@@ -270,11 +280,16 @@ static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
-static void autostart_exec(void);
 
 /* variables */
+static FILE *fp = NULL;
+static Barblockinfo *barblockinfo = NULL;
 static Systray *systray = NULL;
+static const char autostartblocksh[] = "autostart_blocking.sh";
+static const char autostartsh[] = "autostart.sh";
 static const char broken[] = "broken";
+static const char dwmdir[] = "dwm";
+static const char localshare[] = ".local/share";
 static char stext[256];
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
@@ -315,34 +330,6 @@ static Window root, wmcheckwin;
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
-
-/* dwm will keep pid's of processes from autostart array and kill them at quit */
-static pid_t *autostart_pids;
-static size_t autostart_len;
-
-/* execute command from autostart array */
-static void
-autostart_exec() {
-	const char *const *p;
-	size_t i = 0;
-
-	/* count entries */
-	for (p = autostart; *p; autostart_len++, p++)
-		while (*++p);
-
-	autostart_pids = malloc(autostart_len * sizeof(pid_t));
-	for (p = autostart; *p; i++, p++) {
-		if ((autostart_pids[i] = fork()) == 0) {
-			setsid();
-			execvp(*p, (char *const *)p);
-			fprintf(stderr, "dwm: execvp %s\n", *p);
-			perror(" failed");
-			_exit(EXIT_FAILURE);
-		}
-		/* skip arguments */
-		while (*++p);
-	}
-}
 
 /* function implementations */
 void
@@ -487,10 +474,24 @@ attachstack(Client *c)
 	c->mon->stack = c;
 }
 
+Barblockinfo 
+getbarblockinfo(enum Blockname bn)
+{
+	unsigned int i = 0;
+	for(i = 0; i < strlen(barlayout); i++)
+		{
+			if(barblockinfo[i].blockname == bn)
+			{
+				return barblockinfo[i];
+			}
+		}
+	return barblockinfo[0];
+}
+
 void
 buttonpress(XEvent *e)
 {
-	unsigned int i, x, click;
+	unsigned int i, j, x, click;
 	Arg arg = {0};
 	Client *c;
 	Monitor *m;
@@ -503,38 +504,28 @@ buttonpress(XEvent *e)
 		selmon = m;
 		focus(NULL);
 	}
-	if (ev->window == selmon->barwin) {
-		i = x = 0;
-		do
-			x += TEXTW(tags[i]);
-		while (ev->x >= x && ++i < LENGTH(tags));
-		if (i < LENGTH(tags)) {
-			click = ClkTagBar;
-			arg.ui = 1 << i;
-		} else if (ev->x < x + TEXTW(selmon->ltsymbol))
-			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext) + lrpad - 2 - getsystraywidth())
-			click = ClkStatusText;
-		else {
-			x += TEXTW(selmon->ltsymbol);
-			c = m->clients;
-			int tabw = titlewidth;
-			if (c) {
-				do {
-					if (!ISVISIBLE(c))
-						continue;
-					else {
-						if(tabw * m->bt > m->btw)
-							x +=(1.0 / (double)m->bt) * m->btw;
-						else
-							x += tabw;
-					}
-				} while (ev->x > x && (c = c->next));
 
-				click = ClkWinTitle;
-				arg.v = c;
-			}
-		}
+	if (ev->window == selmon->barwin) {
+		x = getbarblockinfo(BBTags).x;
+		j = 0;
+		fp = fopen("/home/alex/debug.txt", "a");
+		fprintf(fp, "BBTags x = %i", x);
+		fclose(fp);
+		do
+			x += TEXTW(tags[j]);
+		while (ev->x >= x && ++j < LENGTH(tags));
+		if (ev->x >= getbarblockinfo(BBTags).x && j < LENGTH(tags)) {
+			click = ClkTagBar;
+			arg.ui = 1 << j;
+		fp = fopen("/home/alex/debug.txt", "a");
+		fprintf(fp, "BBTags j = %i", j);
+		fclose(fp);
+		} else if (ev->x >= getbarblockinfo(BBLayout).x && ev->x < (getbarblockinfo(BBLayout).x + getbarblockinfo(BBLayout).w))
+			click = ClkLtSymbol;
+		else if (ev->x >= getbarblockinfo(BBTitle).x && ev->x < (getbarblockinfo(BBTitle).x + getbarblockinfo(BBLayout).w))
+			click = ClkWinTitle;
+		else if (ev->x >= getbarblockinfo(BBStatus).x && ev->x < (getbarblockinfo(BBStatus).x + getbarblockinfo(BBStatus).w))
+			click = ClkStatusText;
 	} else if ((c = wintoclient(ev->window))) {
 		focus(c);
 		restack(selmon);
@@ -544,7 +535,7 @@ buttonpress(XEvent *e)
 	for (i = 0; i < LENGTH(buttons); i++)
 		if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
 		&& CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
-			buttons[i].func((click == ClkTagBar || click == ClkWinTitle) && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
+			buttons[i].func(click == ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
 }
 
 void
@@ -580,7 +571,7 @@ cleanup(void)
 		XDestroyWindow(dpy, systray->win);
 		free(systray);
 	}
-
+	free(barblockinfo);
 	for (i = 0; i < CurLast; i++)
 		drw_cur_free(drw, cursor[i]);
 	for (i = 0; i < LENGTH(colors); i++)
@@ -712,9 +703,6 @@ configurenotify(XEvent *e)
 			drw_resize(drw, sw, bh);
 			updatebars();
 			for (m = mons; m; m = m->next) {
-//				for (c = m->clients; c; c = c->next)
-//					if (c->isfullscreen)
-//						resizeclient(c, m->mx, m->my, m->mw, m->mh);
 				resizebarwin(m);
 			}
 			focus(NULL);
@@ -849,10 +837,10 @@ dirtomon(int dir)
 void
 drawbar(Monitor *m)
 {
-	int x, w, tw = 0, stw = 0, n = 0, scm;
+	int x, w, tw = 0, stw = 0, moveright = 0;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
-	unsigned int i, occ = 0, urg = 0;
+	unsigned int i, j, occ = 0, urg = 0;
 	Client *c;
 
 	if (!m->showbar)
@@ -861,67 +849,86 @@ drawbar(Monitor *m)
 	if(showsystray && m == systraytomon(m) && !systrayonleft)
 		stw = getsystraywidth();
 
-	/* draw status first so it can be overdrawn by tags later */
-	if (m == selmon) { /* status is only drawn on selected monitor */
-		drw_setscheme(drw, scheme[SchemeStatus]);
-		tw = TEXTW(stext) - lrpad / 2 + 2; /* 2px extra right padding */
-		drw_text(drw, m->ww - tw - stw - 2 * sp, 0, tw, bh, lrpad / 2 - 2, stext, 0);
-//		drw_text(drw, m->ww - tw - stw, 0, tw, bh, lrpad / 2 - 2, stext, 0);
-	}
+	if (barlayout[0] == '\0')
+		barlayout = "tln|s";
 
-	resizebarwin(m);
-	for (c = m->clients; c; c = c->next) {
-		if (ISVISIBLE(c))
-			n++;
-		occ |= c->tags;
-		if (c->isurgent)
-			urg |= c->tags;
-	}
 	x = 0;
-	for (i = 0; i < LENGTH(tags); i++) {
-		w = TEXTW(tags[i]);
-		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeTagsSel : SchemeTagsNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
-		if (occ & 1 << i)
-			drw_rect(drw, x + boxs, boxs, boxw, boxw,
-				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-				urg & 1 << i);
-		x += w;
-	}
-	w = TEXTW(m->ltsymbol);
-	drw_setscheme(drw, scheme[SchemeTagsNorm]);
-	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
-	if ((w = m->ww - tw - stw - x) > bh) {
-		if (n > 0) {
-			int tabw = titlewidth;
-			for (c = m->clients; c; c = c->next) {
-				if (!ISVISIBLE(c))
-					continue;
-				if (m->sel == c)
-					scm = SchemeInfoSel;
-				else
-					scm = SchemeInfoNorm;
-				drw_setscheme(drw, scheme[scm]);
-				if(tabw * n > w) {
-					tabw = (1.0 / (double)n) * w + 1;
-					drw_text(drw, x, 0, tabw - 2 * sp, bh, lrpad / 2, c->name, 0);
-					x += tabw;
-				} else {
-					drw_text(drw, x, 0, tabw - 2 * sp, bh, lrpad / 2, c->name, 0);
-					x += tabw;
-					drw_setscheme(drw, scheme[SchemeInfoNorm]);
-					drw_rect(drw, x, 0, w - 2 * sp, bh, 1, 1);
+	for (i = 0; i < strlen(barlayout); i++) {
+		switch (barlayout[i]) {
+			case 's':
+				// status
+				barblockinfo[i].blockname = BBStatus;
+				barblockinfo[i].x = x;
+				if (m == selmon) { /* status is only drawn on selected monitor */
+					drw_setscheme(drw, scheme[SchemeStatus]);
+					tw = TEXTW(stext) - lrpad / 2 + 2; /* 2px extra right padding */
+					x = drw_text(drw, x, 0, tw, bh, lrpad / 2 - 2, stext, 0);
 				}
+				barblockinfo[i].w = tw;
+				break;
+			case 't':
+				barblockinfo[i].blockname = BBTags;
+				barblockinfo[i].x = x;
+				fp = fopen("/home/alex/debug.txt", "a");
+				fprintf(fp, "bartags start x = %i\n", x);
+				fclose(fp);
+				for (c = m->clients; c; c = c->next) {
+					occ |= c->tags;
+					if (c->isurgent)
+						urg |= c->tags;
+				}
+				/* tags */
+				if (moveright) {
+					tw = 0;
+					for (j = 0; j < LENGTH(tags); j++) {
+						tw += TEXTW(tags[j]);
+					}
+					x -= tw;
+					barblockinfo[i].w = tw;
+				}
+				for (j = 0; j < LENGTH(tags); j++) {
+					w = TEXTW(tags[j]);
+					drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << j ? SchemeSel : SchemeNorm]);
+					drw_text(drw, x, 0, w, bh, lrpad / 2, tags[j], urg & 1 << j);
+					if (occ & 1 << j)
+						drw_rect(drw, x + boxs, boxs, boxw, boxw,
+							m == selmon && selmon->sel && selmon->sel->tags & 1 << j,
+							urg & 1 << i);
+					x += w;
+				}
+				if (moveright)
+					x -= tw;
+				break;
+			case 'l':
+				barblockinfo[i].blockname = BBLayout;
+				barblockinfo[i].x = x;
+				// layout
+				w = TEXTW(m->ltsymbol);
+				drw_setscheme(drw, scheme[SchemeTagsNorm]);
+				x = drw_text(drw, x, 0, w, bh, lrpad / 2 - 2, m->ltsymbol, 0);
+				stw += tw;
+				barblockinfo[i].w = w;
+				break;
+			case 'n':
+				barblockinfo[i].blockname = BBTitle;
+				barblockinfo[i].x = x;
+				w = m->ww;
+				// title
+				if (m->sel) {
+					drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
+					drw_text(drw, x, 0, w, bh, lrpad / 2 - 2, m->sel->name, 0);
+					if (m->sel->isfloating)
+						drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
+				} else {
+					drw_setscheme(drw, scheme[SchemeInfoNorm]);
+					drw_rect(drw, x, 0, w, bh, 1, 1);
+				}
+				barblockinfo[i].w = w;
+				break;
 			}
-		} else {
-			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_rect(drw, x, 0, w, bh, 1, 1);
-		}
 	}
-	m->bt = n;
-	m->btw = w;
-	drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
+ 	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
 }
 
 void
@@ -1164,6 +1171,11 @@ grabkeys(void)
 	}
 }
 
+void 
+initbarblockinfo(const unsigned int n){
+	if (!(barblockinfo = (Barblockinfo *)calloc(n, sizeof(Barblockinfo))))
+			die("fatal: could not malloc() %u bytes\n", sizeof(Barblockinfo));
+}
 void
 incnmaster(const Arg *arg)
 {
@@ -1462,16 +1474,6 @@ propertynotify(XEvent *e)
 void
 quit(const Arg *arg)
 {
-	size_t i;
-
-	/* kill child processes */
-	for (i = 0; i < autostart_len; i++) {
-		if (0 < autostart_pids[i]) {
-			kill(autostart_pids[i], SIGTERM);
-			waitpid(autostart_pids[i], NULL, 0);
-		}
-	}
-
 	running = 0;
 }
 
@@ -1634,6 +1636,83 @@ run(void)
 	while (running && !XNextEvent(dpy, &ev))
 		if (handler[ev.type])
 			handler[ev.type](&ev); /* call handler */
+}
+
+void
+runautostart(void)
+{
+	char *pathpfx;
+	char *path;
+	char *xdgdatahome;
+	char *home;
+	struct stat sb;
+
+	if ((home = getenv("HOME")) == NULL)
+		/* this is almost impossible */
+		return;
+
+	/* if $XDG_DATA_HOME is set and not empty, use $XDG_DATA_HOME/dwm,
+	 * otherwise use ~/.local/share/dwm as autostart script directory
+	 */
+	xdgdatahome = getenv("XDG_DATA_HOME");
+	if (xdgdatahome != NULL && *xdgdatahome != '\0') {
+		/* space for path segments, separators and nul */
+		pathpfx = ecalloc(1, strlen(xdgdatahome) + strlen(dwmdir) + 2);
+
+		if (sprintf(pathpfx, "%s/%s", xdgdatahome, dwmdir) <= 0) {
+			free(pathpfx);
+			return;
+		}
+	} else {
+		/* space for path segments, separators and nul */
+		pathpfx = ecalloc(1, strlen(home) + strlen(localshare)
+		                     + strlen(dwmdir) + 3);
+
+		if (sprintf(pathpfx, "%s/%s/%s", home, localshare, dwmdir) < 0) {
+			free(pathpfx);
+			return;
+		}
+	}
+
+	/* check if the autostart script directory exists */
+	if (! (stat(pathpfx, &sb) == 0 && S_ISDIR(sb.st_mode))) {
+		/* the XDG conformant path does not exist or is no directory
+		 * so we try ~/.dwm instead
+		 */
+		char *pathpfx_new = realloc(pathpfx, strlen(home) + strlen(dwmdir) + 3);
+		if(pathpfx_new == NULL) {
+			free(pathpfx);
+			return;
+		}
+		pathpfx = pathpfx_new;
+
+		if (sprintf(pathpfx, "%s/.%s", home, dwmdir) <= 0) {
+			free(pathpfx);
+			return;
+		}
+	}
+
+	/* try the blocking script first */
+	path = ecalloc(1, strlen(pathpfx) + strlen(autostartblocksh) + 2);
+	if (sprintf(path, "%s/%s", pathpfx, autostartblocksh) <= 0) {
+		free(path);
+		free(pathpfx);
+	}
+
+	if (access(path, X_OK) == 0)
+		system(path);
+
+	/* now the non-blocking script */
+	if (sprintf(path, "%s/%s", pathpfx, autostartsh) <= 0) {
+		free(path);
+		free(pathpfx);
+	}
+
+	if (access(path, X_OK) == 0)
+		system(strcat(path, " &"));
+
+	free(pathpfx);
+	free(path);
 }
 
 void
@@ -1843,6 +1922,7 @@ setup(void)
 	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
+	initbarblockinfo(strlen(barlayout));
 	/* init system tray */
 	updatesystray();
 	/* init bars */
@@ -1906,25 +1986,9 @@ showhide(Client *c)
 void
 sigchld(int unused)
 {
-	pid_t pid;
-
 	if (signal(SIGCHLD, sigchld) == SIG_ERR)
 		die("can't install SIGCHLD handler:");
-	while (0 < (pid = waitpid(-1, NULL, WNOHANG))) {
-		pid_t *p, *lim;
-
-		if (!(p = autostart_pids))
-			continue;
-		lim = &p[autostart_len];
-
-		for (; p < lim; p++) {
-			if (*p == pid) {
-				*p = -1;
-				break;
-			}
-		}
-
-	}
+	while (0 < waitpid(-1, NULL, WNOHANG));
 }
 
 void
@@ -2040,20 +2104,6 @@ toggletag(const Arg *arg)
 }
 
 void
-togglewin(const Arg *arg)
-{
-	Client *c = (Client*)arg->v;
-
-	if (c == selmon->sel) {
-		focus(NULL);
-		arrange(c->mon);
-	} else {
-		focus(c);
-		restack(selmon);
-	}
-}
-
-void
 toggleview(const Arg *arg)
 {
 	unsigned int newtagset = selmon->tagset[selmon->seltags] ^ (arg->ui & TAGMASK);
@@ -2142,7 +2192,6 @@ updatebars(void)
 		if (showsystray && m == systraytomon(m))
 			w -= getsystraywidth();
 		m->barwin = XCreateWindow(dpy, root, m->wx + sp, m->by + vp, w - 2 * sp, bh, 0, DefaultDepth(dpy, screen),
-//		m->barwin = XCreateWindow(dpy, root, m->wx + sp, m->by + vp, m->ww - 2 * sp, bh, 0, DefaultDepth(dpy, screen),
 				CopyFromParent, DefaultVisual(dpy, screen),
 				CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
 		XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
@@ -2322,7 +2371,7 @@ void
 updatestatus(void)
 {
 	if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
-		strcpy(stext, "");
+		strcpy(stext, "dwm-"VERSION);
 	drawbar(selmon);
 	updatesystray();
 }
@@ -2403,9 +2452,6 @@ updatesystray(void)
 		wa.override_redirect = True;
 		wa.background_pixel  = scheme[SchemeNorm][ColBg].pixel;
 		XSelectInput(dpy, systray->win, SubstructureNotifyMask);
-		Atom wmname = XInternAtom(dpy, "WM_NAME", False);
-	    Atom utf8string = XInternAtom(dpy, "UTF8_STRING", False);
-		XChangeProperty(dpy, systray->win, wmname, utf8string, 32, PropModeReplace, (unsigned char *)stvmclass, strlen(stvmclass));
 		XChangeProperty(dpy, systray->win, netatom[NetSystemTrayOrientation], XA_CARDINAL, 32,
 				PropModeReplace, (unsigned char *)&netatom[NetSystemTrayOrientationHorz], 1);
 		XChangeWindowAttributes(dpy, systray->win, CWEventMask|CWOverrideRedirect|CWBackPixel, &wa);
@@ -2437,7 +2483,7 @@ updatesystray(void)
 	w = w ? w + systrayspacing : 1;
 	x -= w;
 	XMoveResizeWindow(dpy, systray->win, x, m->by, w, bh);
-	wc.x = x + sp; wc.y = m->by + vp; wc.width = w - 2 * sp; wc.height = bh;
+	wc.x = x - sp; wc.y = m->by + vp; wc.width = w; wc.height = bh;
 	wc.stack_mode = Above; wc.sibling = m->barwin;
 	XConfigureWindow(dpy, systray->win, CWX|CWY|CWWidth|CWHeight|CWSibling|CWStackMode, &wc);
 	XMapWindow(dpy, systray->win);
@@ -2616,13 +2662,13 @@ main(int argc, char *argv[])
 	if (!(dpy = XOpenDisplay(NULL)))
 		die("dwm: cannot open display");
 	checkotherwm();
-	autostart_exec();
 	setup();
 #ifdef __OpenBSD__
 	if (pledge("stdio rpath proc exec", NULL) == -1)
 		die("pledge");
 #endif /* __OpenBSD__ */
 	scan();
+	runautostart();
 	run();
 	cleanup();
 	XCloseDisplay(dpy);
