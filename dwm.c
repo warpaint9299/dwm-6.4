@@ -83,6 +83,9 @@ enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms *
 enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle,
        ClkClientWin, ClkRootWin, ClkLast }; /* clicks */
 
+enum Blockname 
+{ BBStatus, BBTags, BBLayout, BBTitle,} ; /* bar modlue names*/
+
 typedef union {
 	int i;
 	unsigned int ui;
@@ -100,7 +103,7 @@ typedef struct {
 
 typedef struct Monitor Monitor;
 typedef struct Client Client;
-typedef struct Barblockinfo Barblockinfo;
+typedef struct Barblock Barblock;
 struct Client {
 	char name[256];
 	float mina, maxa;
@@ -134,6 +137,8 @@ struct Monitor {
 	int nmaster;
 	int num;
 	int by;               /* bar geometry */
+	int btw;              /* width of tasks portion of bar */
+	int bt;               /* number of tasks */
 	int mx, my, mw, mh;   /* screen size */
 	int wx, wy, ww, wh;   /* window area  */
 	int gappx;            /* gaps between windows */
@@ -150,11 +155,11 @@ struct Monitor {
 	const Layout *lt[2];
 };
 
-enum Blockname { BBStatus, BBTags, BBLayout, BBTitle,} ; /* bar modlue names*/
-struct Barblockinfo {
+struct Barblock {
 	enum Blockname blockname;
 	int x;
 	int w;
+//	Barblock *next;
 };
 
 
@@ -203,7 +208,7 @@ static void focusin(XEvent *e);
 static void focusmon(const Arg *arg);
 static void focusstack(const Arg *arg);
 static Atom getatomprop(Client *c, Atom prop);
-static Barblockinfo getbarblockinfo(enum Blockname bn);
+static Barblock getbarblock(enum Blockname bn);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
 static unsigned int getsystraywidth();
@@ -211,7 +216,7 @@ static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
 static void incnmaster(const Arg *arg);
-static void initbarblockinfo(const unsigned int n);
+static void initBarblock(const unsigned int len, Monitor *selmon);
 static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
 static void manage(Window w, XWindowAttributes *wa);
@@ -283,7 +288,7 @@ static void zoom(const Arg *arg);
 
 /* variables */
 static FILE *fp = NULL;
-static Barblockinfo *barblockinfo = NULL;
+static Barblock *barblock = NULL;
 static Systray *systray = NULL;
 static const char autostartblocksh[] = "autostart_blocking.sh";
 static const char autostartsh[] = "autostart.sh";
@@ -474,18 +479,19 @@ attachstack(Client *c)
 	c->mon->stack = c;
 }
 
-Barblockinfo 
-getbarblockinfo(enum Blockname bn)
+Barblock
+getbarblock(enum Blockname bn)
 {
-	unsigned int i = 0;
+	int i, j = 0;
 	for(i = 0; i < strlen(barlayout); i++)
+	{
+		if(barblock[i].blockname == bn)
 		{
-			if(barblockinfo[i].blockname == bn)
-			{
-				return barblockinfo[i];
-			}
+			j = i;
+			break;
 		}
-	return barblockinfo[0];
+	}
+	return barblock[j];
 }
 
 void
@@ -506,7 +512,7 @@ buttonpress(XEvent *e)
 	}
 
 	if (ev->window == selmon->barwin) {
-		x = getbarblockinfo(BBTags).x;
+		x = getbarblock(BBTags).x;
 		j = 0;
 		fp = fopen("/home/alex/debug.txt", "a");
 		fprintf(fp, "BBTags x = %i", x);
@@ -514,17 +520,17 @@ buttonpress(XEvent *e)
 		do
 			x += TEXTW(tags[j]);
 		while (ev->x >= x && ++j < LENGTH(tags));
-		if (ev->x >= getbarblockinfo(BBTags).x && j < LENGTH(tags)) {
+		if (ev->x >= getbarblock(BBTags).x && j < LENGTH(tags)) {
 			click = ClkTagBar;
 			arg.ui = 1 << j;
 		fp = fopen("/home/alex/debug.txt", "a");
 		fprintf(fp, "BBTags j = %i", j);
 		fclose(fp);
-		} else if (ev->x >= getbarblockinfo(BBLayout).x && ev->x < (getbarblockinfo(BBLayout).x + getbarblockinfo(BBLayout).w))
+		} else if (ev->x >= getbarblock(BBLayout).x && ev->x < (getbarblock(BBLayout).x + getbarblock(BBLayout).w))
 			click = ClkLtSymbol;
-		else if (ev->x >= getbarblockinfo(BBTitle).x && ev->x < (getbarblockinfo(BBTitle).x + getbarblockinfo(BBLayout).w))
+		else if (ev->x >= getbarblock(BBTitle).x && ev->x < (getbarblock(BBTitle).x + getbarblock(BBLayout).w))
 			click = ClkWinTitle;
-		else if (ev->x >= getbarblockinfo(BBStatus).x && ev->x < (getbarblockinfo(BBStatus).x + getbarblockinfo(BBStatus).w))
+		else if (ev->x >= getbarblock(BBStatus).x && ev->x < (getbarblock(BBStatus).x + getbarblock(BBStatus).w))
 			click = ClkStatusText;
 	} else if ((c = wintoclient(ev->window))) {
 		focus(c);
@@ -571,7 +577,7 @@ cleanup(void)
 		XDestroyWindow(dpy, systray->win);
 		free(systray);
 	}
-	free(barblockinfo);
+	free(barblock);
 	for (i = 0; i < CurLast; i++)
 		drw_cur_free(drw, cursor[i]);
 	for (i = 0; i < LENGTH(colors); i++)
@@ -834,14 +840,16 @@ dirtomon(int dir)
 	return m;
 }
 
+
 void
 drawbar(Monitor *m)
 {
-	int x, w, tw = 0, stw = 0, moveright = 0;
+	int x, w, stw = 0;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
-	unsigned int i, j, occ = 0, urg = 0;
+	unsigned int i, k, occ = 0, urg = 0;
 	Client *c;
+	Barblock b;
 
 	if (!m->showbar)
 		return;
@@ -850,81 +858,60 @@ drawbar(Monitor *m)
 		stw = getsystraywidth();
 
 	if (barlayout[0] == '\0')
-		barlayout = "tln|s";
+		barlayout = "tlns";
 
-	x = 0;
 
+	fp = fopen("/home/alex/debug.txt", "a");
+	fprintf(fp, "drawbar >>>>\n");
+	fclose(fp);
 	for (i = 0; i < strlen(barlayout); i++) {
 		switch (barlayout[i]) {
 			case 's':
-				// status
-				barblockinfo[i].blockname = BBStatus;
-				barblockinfo[i].x = x;
+				b = getbarblock(BBStatus);
 				if (m == selmon) { /* status is only drawn on selected monitor */
 					drw_setscheme(drw, scheme[SchemeStatus]);
-					tw = TEXTW(stext) - lrpad / 2 + 2; /* 2px extra right padding */
-					x = drw_text(drw, x, 0, tw, bh, lrpad / 2 - 2, stext, 0);
+					x = drw_text(drw, b.x, 0, b.w, bh, lrpad / 2 - 2, stext, 0);
 				}
-				barblockinfo[i].w = tw;
+				fp = fopen("/home/alex/debug.txt", "a");
+				fprintf(fp, "sssssssssss >>>> x = %i, w = %i\n", b.x, b.w);
+				fclose(fp);
 				break;
 			case 't':
-				barblockinfo[i].blockname = BBTags;
-				barblockinfo[i].x = x;
-				fp = fopen("/home/alex/debug.txt", "a");
-				fprintf(fp, "bartags start x = %i\n", x);
-				fclose(fp);
-				for (c = m->clients; c; c = c->next) {
-					occ |= c->tags;
-					if (c->isurgent)
-						urg |= c->tags;
-				}
-				/* tags */
-				if (moveright) {
-					tw = 0;
-					for (j = 0; j < LENGTH(tags); j++) {
-						tw += TEXTW(tags[j]);
-					}
-					x -= tw;
-					barblockinfo[i].w = tw;
-				}
-				for (j = 0; j < LENGTH(tags); j++) {
-					w = TEXTW(tags[j]);
-					drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << j ? SchemeSel : SchemeNorm]);
-					drw_text(drw, x, 0, w, bh, lrpad / 2, tags[j], urg & 1 << j);
-					if (occ & 1 << j)
-						drw_rect(drw, x + boxs, boxs, boxw, boxw,
-							m == selmon && selmon->sel && selmon->sel->tags & 1 << j,
-							urg & 1 << i);
+				b = getbarblock(BBTags);
+				x = b.x;
+//				for (c = m->clients; c; c = c->next) {
+//					occ |= c->tags;
+//					if (c->isurgent)
+//						urg |= c->tags;
+//				}
+				for (k = 0; k < LENGTH(tags); k++) {
+					w = TEXTW(tags[k]);
+					drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << k ? SchemeTagsSel : SchemeTagsNorm]);
+					drw_text(drw, x, 0, w, bh, lrpad / 2, tags[k], urg & 1 << k);
+					// 画 tag 左上角的小方块
+//					if (occ & 1 << k)
+//						drw_rect(drw, x + boxs, boxs, boxw, boxw,
+//							m == selmon && selmon->sel && selmon->sel->tags & 1 << k,
+//							urg & 1 << i);
 					x += w;
 				}
-				if (moveright)
-					x -= tw;
 				break;
 			case 'l':
-				barblockinfo[i].blockname = BBLayout;
-				barblockinfo[i].x = x;
-				// layout
-				w = TEXTW(m->ltsymbol);
+				b = getbarblock(BBLayout);
 				drw_setscheme(drw, scheme[SchemeTagsNorm]);
-				x = drw_text(drw, x, 0, w, bh, lrpad / 2 - 2, m->ltsymbol, 0);
-				stw += tw;
-				barblockinfo[i].w = w;
+				x = drw_text(drw, b.x, 0, b.w, bh, lrpad / 2 - 2, m->ltsymbol, 0);
 				break;
 			case 'n':
-				barblockinfo[i].blockname = BBTitle;
-				barblockinfo[i].x = x;
-				w = m->ww;
-				// title
+				b = getbarblock(BBTitle);
 				if (m->sel) {
 					drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
-					drw_text(drw, x, 0, w, bh, lrpad / 2 - 2, m->sel->name, 0);
+					drw_text(drw, b.x, 0, b.w - 2 * sp, bh, lrpad / 2, m->sel->name, 0);
 					if (m->sel->isfloating)
-						drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
+						drw_rect(drw, b.x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
 				} else {
 					drw_setscheme(drw, scheme[SchemeInfoNorm]);
-					drw_rect(drw, x, 0, w, bh, 1, 1);
+					drw_rect(drw, b.x, 0, b.w - 2 * sp, bh, 1, 1);
 				}
-				barblockinfo[i].w = w;
 				break;
 			}
 	}
@@ -1172,10 +1159,66 @@ grabkeys(void)
 }
 
 void 
-initbarblockinfo(const unsigned int n){
-	if (!(barblockinfo = (Barblockinfo *)calloc(n, sizeof(Barblockinfo))))
-			die("fatal: could not malloc() %u bytes\n", sizeof(Barblockinfo));
+initBarblock(const unsigned int len, Monitor * selmon){
+	int i, j, sw, bsw;
+	int x = 0, w = 0;
+	fp = fopen("/home/alex/debug.txt", "a");
+	fprintf(fp, "initBarblock>>> %i\n", len);
+	fclose(fp);
+	if (!(barblock = (Barblock *)calloc(len, sizeof(Barblock))))
+			die("fatal: could not malloc() %u bytes\n", sizeof(Barblock));
+
+	fp = fopen("/home/alex/debug.txt", "a");
+	fprintf(fp, "malloc>>> \n");
+	fclose(fp);
+	x = 0;
+	w = 0;
+	bsw = swidth;
+  	sw = selmon->ww; 
+	for (i = 0; i < strlen(barlayout); i++) {
+		switch (barlayout[i]) {
+			case 't':
+				barblock[i].blockname = BBTags;
+				barblock[i].x = x;
+				for (j = 0; j < LENGTH(tags); j++)
+					w += TEXTW(tags[j]);
+				barblock[1].w = w;
+				x += barblock[i].w;
+				sw -= barblock[i].w;
+				break;
+			case 'l':
+				barblock[i].blockname = BBLayout;
+				barblock[i].x = x;
+				barblock[i].w = TEXTW(selmon->ltsymbol);
+				fp = fopen("/home/alex/debug.txt", "a");
+				fprintf(fp, "layout x = %i \n", barblock[i].x);
+				fprintf(fp, "layout w = %i \n", barblock[i].w);
+				fclose(fp);
+				x += barblock[i].w;
+				sw -= barblock[i].w;
+				break;
+			case 'n':
+				barblock[i].blockname = BBTitle;
+				barblock[i].x = x;
+				barblock[i].w = sw;
+				x += barblock[i].w;
+				sw -= barblock[i].w;
+				break;
+			case 's':
+				barblock[i].blockname = BBStatus;
+				barblock[i].x = x;
+				barblock[i].w = swidth;
+				fp = fopen("/home/alex/debug.txt", "a");
+				fprintf(fp, "status x = %i \n", barblock[i].x);
+				fprintf(fp, "status w = %i \n", barblock[i].w);
+				fclose(fp);
+				x += barblock[i].w;
+				sw -= barblock[i].w;
+				break;
+		}
+	}
 }
+
 void
 incnmaster(const Arg *arg)
 {
@@ -1922,7 +1965,7 @@ setup(void)
 	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
-	initbarblockinfo(strlen(barlayout));
+	initBarblock(strlen(barlayout), selmon);
 	/* init system tray */
 	updatesystray();
 	/* init bars */

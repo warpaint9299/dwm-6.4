@@ -14,7 +14,8 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 static const int vertpad            = 10;       /* vertical padding of bar */
 static const int sidepad            = 10;       /* horizontal padding of bar */
 static const int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
-static const char *barlayout        = "slnt";
+static const int swidth             = 50;       /* */
+static const char *barlayout        = "stn";
 static const char *fonts[]          = { "VictorMono Nerd Font:style=Bold:size=12" };
 static const char dmenufont[]       = "monospace:size=10";
 static const char fgcolor1[]    = "#0e0e0e";
@@ -75,6 +76,7 @@ static const Layout layouts[] = {
 static const char *dmenucmd[] = { "rofi", "-show", "drun", "-theme", "~/.config/rofi/launchers/type-1/style-4.rasi", NULL };
 static const char *termcmd[]  = { "st", NULL };
 
+#include "movestack.c"
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
@@ -86,6 +88,8 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
+	{ MODKEY|ShiftMask,             XK_j,      movestack,      {.i = +1 } },
+	{ MODKEY|ShiftMask,             XK_k,      movestack,      {.i = -1 } },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },

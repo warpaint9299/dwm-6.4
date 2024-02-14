@@ -7,5 +7,6 @@ export XMODIFIERS=@im=fcitx
 export EDITOR=nvim
 export _JAVA_AWT_WM_NONREPARENTING=1
 #while true;do
-	dwm > /dev/null 2>&1
+	dwm > ~/.dwm.log 
+#	dwm > /dev/null 2>&1
 #done
