@@ -1,10 +1,9 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const unsigned int borderpx  = 3;        /* border pixel of windows */
+static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int gappx     = 18;        /* gaps between windows */
 static const unsigned int snap      = 1;       /* snap pixel */
-static const int showsystray        = 1;        /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 static const int vertpad            = 10;       /* vertical padding of bar */
@@ -35,9 +34,9 @@ static const unsigned int alphas[][3]      = {
     /*               fg      bg        border*/
     [SchemeNorm] = { OPAQUE, baralpha, borderalpha },
 	[SchemeSel]  = { OPAQUE, baralpha, borderalpha },
- //   [SchemeStatus] = { OPAQUE, baralpha, borderalpha },
- //   [SchemeTagsSel]  = { OPAQUE, baralpha, borderalpha },
- //   [SchemeTagsNorm] = { OPAQUE, baralpha, borderalpha },
+    [SchemeStatus] = { OPAQUE, baralpha, borderalpha },
+    [SchemeTagsSel]  = { OPAQUE, baralpha, borderalpha },
+    [SchemeTagsNorm] = { OPAQUE, baralpha, borderalpha },
  //   [SchemeInfoSel]  = { OPAQUE, baralpha, borderalpha },
  //   [SchemeInfoNorm] = { OPAQUE, baralpha, borderalpha },
 };
