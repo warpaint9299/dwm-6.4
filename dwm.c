@@ -50,7 +50,8 @@
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define INTERSECT(x,y,w,h,m)    (MAX(0, MIN((x)+(w),(m)->wx+(m)->ww) - MAX((x),(m)->wx)) \
                                * MAX(0, MIN((y)+(h),(m)->wy+(m)->wh) - MAX((y),(m)->wy)))
-#define ISVISIBLE(C)            ((C->tags & C->mon->tagset[C->mon->seltags]))
+#define ISVISIBLEONTAG(C, T)    ((C->tags & T))
+#define ISVISIBLE(C)            ISVISIBLEONTAG(C, C->mon->tagset[C->mon->seltags])
 #define LENGTH(X)               (sizeof X / sizeof X[0])
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
@@ -95,6 +96,8 @@ struct Client {
 	int bw, oldbw;
 	unsigned int tags;
 	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, CenterThisWindow;
+	int floatborderpx;
+	int hasfloatbw;
 	Client *next;
 	Client *snext;
 	Monitor *mon;
@@ -143,6 +146,8 @@ typedef struct {
 	int isfloating;
 	int CenterThisWindow;
 	int monitor;
+	int floatx, floaty, floatw, floath;
+	int floatborderpx;
 } Rule;
 
 /* function declarations */
@@ -151,6 +156,11 @@ static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interac
 static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
 static void attach(Client *c);
+static void attachabove(Client *c);
+static void attachaside(Client *c);
+static void attachbelow(Client *c);
+static void attachbottom(Client *c);
+static void attachtop(Client *c);
 static void attachstack(Client *c);
 static void buttonpress(XEvent *e);
 static void checkotherwm(void);
@@ -188,6 +198,7 @@ static void maprequest(XEvent *e);
 static void monocle(Monitor *m);
 static void motionnotify(XEvent *e);
 static void movemouse(const Arg *arg);
+static Client *nexttagged(Client *c);
 static Client *nexttiled(Client *c);
 static void pop(Client *c);
 static void propertynotify(XEvent *e);
@@ -321,6 +332,16 @@ applyrules(Client *c)
 			c->isfloating = r->isfloating;
 			c->CenterThisWindow = r->CenterThisWindow;
 			c->tags |= r->tags;
+			if (r->floatborderpx >= 0) {
+				c->floatborderpx = r->floatborderpx;
+				c->hasfloatbw = 1;
+			}
+			if (r->isfloating) {
+				if (r->floatx >= 0) c->x = c->mon->mx + r->floatx;
+				if (r->floaty >= 0) c->y = c->mon->my + r->floaty;
+				if (r->floatw >= 0) c->w = r->floatw;
+				if (r->floath >= 0) c->h = r->floath;
+			}
 			for (m = mons; m && m->num != r->monitor; m = m->next);
 			if (m)
 				c->mon = m;
@@ -428,6 +449,73 @@ attach(Client *c)
 {
 	c->next = c->mon->clients;
 	c->mon->clients = c;
+}
+
+void
+attachabove(Client *c)
+{
+	if (c->mon->sel == NULL || c->mon->sel == c->mon->clients || c->mon->sel->isfloating) {
+		attach(c);
+		return;
+	}
+
+	Client *at;
+	for (at = c->mon->clients; at->next != c->mon->sel; at = at->next);
+	c->next = at->next;
+	at->next = c;
+}
+
+void
+attachaside(Client *c) {
+	Client *at = nexttagged(c);
+	if(!at) {
+		attach(c);
+		return;
+		}
+	c->next = at->next;
+	at->next = c;
+}
+
+void
+attachbelow(Client *c)
+{
+	if(c->mon->sel == NULL || c->mon->sel == c || c->mon->sel->isfloating) {
+		attach(c);
+		return;
+	}
+	c->next = c->mon->sel->next;
+	c->mon->sel->next = c;
+}
+ 
+void
+attachbottom(Client *c)
+{
+	Client *below = c->mon->clients;
+	for (; below && below->next; below = below->next);
+	c->next = NULL;
+	if (below)
+		below->next = c;
+	else
+		c->mon->clients = c;
+}
+
+void
+attachtop(Client *c)
+{
+	int n;
+	Monitor *m = selmon;
+	Client *below;
+
+	for (n = 1, below = c->mon->clients;
+		below && below->next && (below->isfloating || !ISVISIBLEONTAG(below, c->tags) || n != m->nmaster);
+		n = below->isfloating || !ISVISIBLEONTAG(below, c->tags) ? n + 0 : n + 1, below = below->next);
+	c->next = NULL;
+	if (below) {
+		c->next = below->next;
+		below->next = c;
+	}
+	else
+		c->mon->clients = c;
 }
 
 void
@@ -728,11 +816,11 @@ drawbar(Monitor *m)
 		return;
 
 //	/* draw status first so it can be overdrawn by tags later */
-//	if (m == selmon) { /* status is only drawn on selected monitor */
-//		drw_setscheme(drw, scheme[SchemeNorm]);
-//		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-//		drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0);
-//	}
+	if (m == selmon) { /* status is only drawn on selected monitor */
+		drw_setscheme(drw, scheme[SchemeStatus]);
+		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
+		drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0);
+	}
 
 	for (c = m->clients; c; c = c->next) {
 		occ |= c->tags;
@@ -1085,7 +1173,25 @@ manage(Window w, XWindowAttributes *wa)
 		c->isfloating = c->oldstate = trans != None || c->isfixed;
 	if (c->isfloating)
 		XRaiseWindow(dpy, c->win);
-	attach(c);
+	switch(attachdirection){
+		case 1:
+			attachabove(c);
+			break;
+		case 2:
+			attachaside(c);
+			break;
+		case 3:
+			attachbelow(c);
+			break;
+		case 4:
+			attachbottom(c);
+			break;
+		case 5:
+			attachtop(c);
+			break;
+		default:
+			attach(c);
+	}
 	attachstack(c);
 	XChangeProperty(dpy, root, netatom[NetClientList], XA_WINDOW, 32, PropModeAppend,
 		(unsigned char *) &(c->win), 1);
@@ -1212,6 +1318,16 @@ movemouse(const Arg *arg)
 }
 
 Client *
+nexttagged(Client *c) {
+	Client *walked = c->mon->clients;
+	for(;
+		walked && (walked->isfloating || !ISVISIBLEONTAG(walked, c->tags));
+		walked = walked->next
+	);
+	return walked;
+}
+
+Client *
 nexttiled(Client *c)
 {
 	for (; c && (c->isfloating || !ISVISIBLE(c)); c = c->next);
@@ -1306,7 +1422,10 @@ resizeclient(Client *c, int x, int y, int w, int h)
 	c->oldy = c->y; c->y = wc.y = y;
 	c->oldw = c->w; c->w = wc.width = w;
 	c->oldh = c->h; c->h = wc.height = h;
-	wc.border_width = c->bw;
+	if (c->isfloating && c->hasfloatbw && !c->isfullscreen)
+		wc.border_width = c->floatborderpx;
+	else
+		wc.border_width = c->bw;
 	XConfigureWindow(dpy, c->win, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
 	configure(c);
 	XSync(dpy, False);
@@ -1517,7 +1636,25 @@ sendmon(Client *c, Monitor *m)
 	detachstack(c);
 	c->mon = m;
 	c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
-	attach(c);
+	switch(attachdirection){
+		case 1:
+			attachabove(c);
+			break;
+		case 2:
+			attachaside(c);
+			break;
+		case 3:
+			attachbelow(c);
+			break;
+		case 4:
+			attachbottom(c);
+			break;
+		case 5:
+			attachtop(c);
+			break;
+		default:
+			attach(c);
+	}
 	attachstack(c);
 	focus(NULL);
 	arrange(NULL);
@@ -2008,7 +2145,25 @@ updategeom(void)
 				m->clients = c->next;
 				detachstack(c);
 				c->mon = mons;
-				attach(c);
+				switch(attachdirection){
+				case 1:
+					attachabove(c);
+					break;
+				case 2:
+					attachaside(c);
+					break;
+				case 3:
+					attachbelow(c);
+					break;
+				case 4:
+					attachbottom(c);
+					break;
+				case 5:
+					attachtop(c);
+					break;
+				default:
+					attach(c);
+				}
 				attachstack(c);
 			}
 			if (m == selmon)

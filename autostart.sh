@@ -2,4 +2,4 @@
 
 fcitx5 &
 feh --randomize --bg-fill ~/.wallpaper/*.png &
-picom --config ~/.config/picom/picom.conf >> /dev/null 2>&1 & 
+picom --experimental-backends --config ~/.config/picom/picom.conf >> /dev/null 2>&1 & 
