@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const unsigned int borderpx  = 2;        /* border pixel of windows */
+static const unsigned int borderpx  = 3;        /* border pixel of windows */
 static const unsigned int gappx     = 18;        /* gaps between windows */
 static const unsigned int snap      = 1;       /* snap pixel */
 static const int showbar            = 1;        /* 0 means no bar */
@@ -9,25 +9,47 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 static const int vertpad            = 10;       /* vertical padding of bar */
 static const int sidepad            = 10;       /* horizontal padding of bar */
 static const int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
+static const int title_width        = 300;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const char *fonts[]          = { "VictorMono Nerd Font:style=Bold:size=12" };
 static const char dmenufont[]       = "monospace:size=10";
 static const unsigned int baralpha        = 0xd0;
 static const unsigned int borderalpha     = OPAQUE;
 static const char fgcolor1[]    = "#0e0e0e";
-static const char fgcolor2[]    = "#efefef";
-static const char bgcolor1[]    = "#83a598";
-static const char bgcolor2[]   = "#0d0d0d";
-static const char bdcolor1[]    = "#b8bb26";
-static const char bdcolor2[]    = "#ededed";
+static const char bgcolor1[]    = "#9BB65D";
+static const char bdcolor1[]    = "#9BB65D";
+
+static const char fgcolor2[]    = "#0e0e0e";
+static const char bgcolor2[]    = "#92D100";
+static const char bdcolor2[]    = "#92D100";
+
+static const char fgcolor3[]    = "#0e0e0e";
+static const char bgcolor3[]    = "#BA2525";
+static const char bdcolor3[]    = "#BA2525";
+
+static const char fgcolor4[]    = "#efefef";
+static const char bgcolor4[]    = "#0e0e0e";
+static const char bdcolor4[]    = "#0e0e0e";
+
+static const char fgcolor5[]    = "#0e0e0e";
+static const char bgcolor5[]    = "#b8bb26";
+static const char bdcolor5[]    = "#b8bb26";
+
+static const char fgcolor6[]    = "#efefef";
+static const char bgcolor6[]    = "#0e0e0e";
+static const char bdcolor6[]    = "#0e0e0e";
+
+static const char fgcolor7[]    = "#0e0e0e";
+static const char bgcolor7[]    = "#b8bb26";
+static const char bdcolor7[]    = "#b8bb26";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
-	[SchemeNorm] = { fgcolor1, bgcolor1, bdcolor2 },
-	[SchemeSel]  = { fgcolor2, bgcolor2, bdcolor1 },
-	[SchemeStatus]  = { fgcolor2, bgcolor2, bdcolor1 },
-	[SchemeTagsSel]  = { fgcolor2, bgcolor2, bdcolor1 },
-	[SchemeTagsNorm]  = { fgcolor2, bdcolor1, bdcolor1 },
-	[SchemeInfoSel]  = { fgcolor2, bgcolor2, bdcolor1 },
-	[SchemeInfoNorm]  = { fgcolor1, bgcolor1, bdcolor2 },
+	[SchemeNorm] = { fgcolor1, bgcolor1, bdcolor1 },
+	[SchemeSel]  = { fgcolor2, bgcolor2, bdcolor2 },
+	[SchemeStatus]  = { fgcolor3, bgcolor3, bdcolor3 },
+	[SchemeTagsSel]  = { fgcolor4, bgcolor4, bdcolor4 },
+	[SchemeTagsNorm]  = { fgcolor5, bgcolor5, bdcolor5 },
+	[SchemeInfoSel]  = { fgcolor6, bgcolor6, bdcolor6 },
+	[SchemeInfoNorm]  = { fgcolor7, bgcolor7, bdcolor7 },
 };
 
 static const unsigned int alphas[][3]      = {
@@ -37,8 +59,8 @@ static const unsigned int alphas[][3]      = {
     [SchemeStatus] = { OPAQUE, baralpha, borderalpha },
     [SchemeTagsSel]  = { OPAQUE, baralpha, borderalpha },
     [SchemeTagsNorm] = { OPAQUE, baralpha, borderalpha },
- //   [SchemeInfoSel]  = { OPAQUE, baralpha, borderalpha },
- //   [SchemeInfoNorm] = { OPAQUE, baralpha, borderalpha },
+    [SchemeInfoSel]  = { OPAQUE, baralpha, borderalpha },
+    [SchemeInfoNorm] = { OPAQUE, baralpha, borderalpha },
 };
 
 /* tagging */
@@ -49,17 +71,18 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      	     instance    title    tags mask     isfloating   CenterThisWindow?     monitor */
-	{ "st",              NULL,       NULL,    0,            0,     	     0,		           -1 },
-	{ "Gimp",            NULL,       NULL,    0,            1,           0,                    -1 },
-	{ "Firefox",         NULL,       NULL,    1 << 8,       0,           0,                    -1 },
+	/* class      	     instance    title    tags mask     isfloating   CenterThisWindow?     monitor    float x,y,w,h         floatborderpx */
+	{ "st",              NULL,       NULL,    0,            0,     	     0,		               -1,           50,0,0,0,                   5},
+	{ "Gimp",            NULL,       NULL,    0,            1,           0,                    -1,           50,0,0,0,                   5},
+	{ "Firefox",         NULL,       NULL,    1 << 8,       0,           0,                    -1,           50,0,0,0,                   5},
 };
 
 /* layout(s) */
-static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
+static const float mfact     = 0.50; /* factor of master area size [0.05..0.95] */
 static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 0; /* 1 will force focus on the fullscreen window */
+static const int attachdirection = 0;    /* 0 default, 1 above, 2 aside, 3 below, 4 bottom, 5 top */
 
 static const Layout layouts[] = {
 	/* symbol     arrange function */
