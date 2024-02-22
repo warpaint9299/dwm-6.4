@@ -23,8 +23,8 @@ static const char bgcolor2[]    = "#92D100";
 static const char bdcolor2[]    = "#92D100";
 
 static const char fgcolor3[]    = "#0e0e0e";
-static const char bgcolor3[]    = "#BA2525";
-static const char bdcolor3[]    = "#BA2525";
+static const char bgcolor3[]    = "#b8bb26";
+static const char bdcolor3[]    = "#b8bb26";
 
 static const char fgcolor4[]    = "#efefef";
 static const char bgcolor4[]    = "#0e0e0e";
