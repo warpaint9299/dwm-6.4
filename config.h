@@ -11,6 +11,7 @@ static const int vertpad            = 0;       /* vertical padding of bar */
 static const int sidepad            = 0;       /* horizontal padding of bar */
 static const int user_bh            = 32;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const char *fonts[]          = { "VictorMono Nerd Font:style=Bold:size=16" };
+static const unsigned int twidth          = 512;
 static const unsigned int baralpha        = 0xd0;
 static const unsigned int borderalpha     = OPAQUE;
 static const char fgcolor1[]    = "#0e0e0e";
