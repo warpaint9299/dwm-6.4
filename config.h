@@ -7,9 +7,9 @@ static const unsigned int snap      = 32;       /* snap pixel */
 static const char panel[][20]       = { "xfce4-panel", "Xfce4-panel" }; /* name & cls of panel win */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const int vertpad            = 0;       /* vertical padding of bar */
-static const int sidepad            = 0;       /* horizontal padding of bar */
-static const int user_bh            = 32;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
+static const int vertpad            = 0;        /* vertical padding of bar */
+static const int sidepad            = 0;        /* horizontal padding of bar */
+static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const char *fonts[]          = { "VictorMono Nerd Font:style=Bold:size=16" };
 static const unsigned int twidth          = 512;
 static const unsigned int baralpha        = 0xd0;
@@ -107,6 +107,7 @@ static const Layout layouts[] = {
 
 /* commands */
 static const char *roficmd[]  = { "rofi", "-theme", "DarkBlue", "-show", "drun", NULL };
+static const char *lockcmd[]  = { "i3lock", "-c", "0e0e0e", NULL };
 static const char *termcmd[]  = { "alacritty", NULL };
 
 #include "movestack.c"
@@ -114,6 +115,7 @@ static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,             			XK_p,      spawn,          {.v = roficmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+	{ MODKEY|ShiftMask,             XK_l,      spawn,          {.v = lockcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
