@@ -11,9 +11,8 @@ done &
 
 (
 while true; do
-	killall-
-	[[ $? != 0 ]] && picom --experimental-backends --config ~/.config/picom/picom.conf >> /dev/null 2>&1
-	sleep 10;
+	picom --experimental-backends --config ~/.config/picom/picom.conf >> /dev/null 2>&1
+	sleep 3;
 done &
 )
 
