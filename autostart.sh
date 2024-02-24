@@ -5,7 +5,7 @@ systemctl --user import-environment
 (
 while true; do
 	feh --randomize --bg-fill ~/.wallpaper/*.png >> /dev/null 2>&1
-	sleep 60;
+	sleep 300;
 done &
 )
 
@@ -13,7 +13,7 @@ done &
 while true; do
 	killall-
 	[[ $? != 0 ]] && picom --experimental-backends --config ~/.config/picom/picom.conf >> /dev/null 2>&1
-	sleep 5;
+	sleep 10;
 done &
 )
 
