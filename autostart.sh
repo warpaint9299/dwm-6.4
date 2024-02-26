@@ -15,10 +15,9 @@ while true; do
 	sleep 3;
 done &
 )
-
 fcitx5 &
+flameshot &
 nm-applet &
 blueman-applet &
-flameshot &
 xfce4-panel --disable-wm-check &
 xautolock -time 3 -locker 'i3lock -c 0e0e0e' &

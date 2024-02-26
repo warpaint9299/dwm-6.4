@@ -106,6 +106,7 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
+static const char *thuncmd[]  = { "thunar", NULL };
 static const char *roficmd[]  = { "rofi", "-theme", "DarkBlue", "-show", "drun", NULL };
 static const char *lockcmd[]  = { "i3lock", "-c", "0e0e0e", NULL };
 static const char *termcmd[]  = { "alacritty", NULL };
@@ -113,6 +114,7 @@ static const char *termcmd[]  = { "alacritty", NULL };
 #include "movestack.c"
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
+	{ MODKEY,             			XK_e,      spawn,          {.v = thuncmd } },
 	{ MODKEY,             			XK_p,      spawn,          {.v = roficmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY|ShiftMask,             XK_l,      spawn,          {.v = lockcmd } },
