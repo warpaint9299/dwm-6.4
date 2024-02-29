@@ -33,6 +33,7 @@ movestack(const Arg *arg) {
 		selmon->sel->next = c->next==selmon->sel?c:c->next;
 		c->next = temp;
 
+
 		if(p && p != c)
 			p->next = c;
 		if(pc && pc != selmon->sel)

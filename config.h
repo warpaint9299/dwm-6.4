@@ -1,22 +1,23 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const unsigned int borderpx  = 3;        /* border pixel of windows */
-static const unsigned int gappx     = 18;        /* gaps between windows */
-static const unsigned int snap      = 1;       /* snap pixel */
+static const unsigned int borderpx  = 2;        /* border pixel of windows */
+static const unsigned int gappx     = 8;        /* gap pixel between windows */
+static const unsigned int snap      = 32;       /* snap pixel */
+static const char panel[][20]       = { "xfce4-panel", "Xfce4-panel" }; /* name & cls of panel win */
+static const Bool viewontag         = True;     /* Switch view on tag switch */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const int vertpad            = 10;       /* vertical padding of bar */
-static const int sidepad            = 10;       /* horizontal padding of bar */
-static const int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
-static const int title_width        = 300;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
-static const char *fonts[]          = { "VictorMono Nerd Font:style=Bold:size=12" };
-static const char dmenufont[]       = "monospace:size=10";
+static const int vertpad            = 0;        /* vertical padding of bar */
+static const int sidepad            = 0;        /* horizontal padding of bar */
+static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
+static const char *fonts[]          = { "VictorMono Nerd Font:style=Bold:size=16" };
+static const unsigned int twidth          = 512;
 static const unsigned int baralpha        = 0xd0;
 static const unsigned int borderalpha     = OPAQUE;
 static const char fgcolor1[]    = "#0e0e0e";
-static const char bgcolor1[]    = "#9BB65D";
-static const char bdcolor1[]    = "#9BB65D";
+static const char bgcolor1[]    = "#efefef";
+static const char bdcolor1[]    = "#efefef";
 
 static const char fgcolor2[]    = "#0e0e0e";
 static const char bgcolor2[]    = "#92D100";
@@ -66,15 +67,19 @@ static const unsigned int alphas[][3]      = {
 /* tagging */
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
+/* Lockfile */
+static char lockfile[] = "/tmp/dwm.lock";
+
 static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      	     instance    title    tags mask     isfloating   CenterThisWindow?     monitor    float x,y,w,h         floatborderpx */
-	{ "st",              NULL,       NULL,    0,            0,     	     0,		               -1,           50,0,0,0,                   5},
-	{ "Gimp",            NULL,       NULL,    0,            1,           0,                    -1,           50,0,0,0,                   5},
-	{ "Firefox",         NULL,       NULL,    1 << 8,       0,           0,                    -1,           50,0,0,0,                   5},
+	/* class      	          instance    title    tags mask     isfloating   CenterThisWindow?        monitor */
+	{ "st",                   NULL,       NULL,      0,               0,     	     0,		                -1 },
+	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1 },
+	{ "Google-chrome",        NULL,       NULL,      2,       		  0,             0,                     -1 },
+	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1 },
 };
 
 /* layout(s) */
@@ -84,10 +89,12 @@ static const int resizehints = 1;    /* 1 means respect size hints in tiled resi
 static const int lockfullscreen = 0; /* 1 will force focus on the fullscreen window */
 static const int attachdirection = 0;    /* 0 default, 1 above, 2 aside, 3 below, 4 bottom, 5 top */
 
+#include "layouts.c"
 static const Layout layouts[] = {
 	/* symbol     arrange function */
-	{ "[]=",      tile },    /* first entry is default */
+	{ "[T]",      tile },    /* first entry is default */
 	{ "[M]",      monocle },
+	{ "[G]",      grid },
 };
 
 /* key definitions */
@@ -102,14 +109,18 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *dmenucmd[] = { "rofi", "-show", "drun", "-theme", "~/.config/rofi/launchers/type-1/style-4.rasi", NULL };
+static const char *thuncmd[]  = { "thunar", NULL };
+static const char *roficmd[]  = { "rofi", "-theme", "DarkBlue", "-show", "drun", NULL };
+static const char *lockcmd[]  = { "i3lock", "-c", "0e0e0e", NULL };
 static const char *termcmd[]  = { "st", NULL };
 
 #include "movestack.c"
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
+	{ MODKEY,             			XK_e,      spawn,          {.v = thuncmd } },
+	{ MODKEY,             			XK_p,      spawn,          {.v = roficmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+	{ MODKEY|ShiftMask,             XK_l,      spawn,          {.v = lockcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
@@ -124,7 +135,7 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
-	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
+	{ MODKEY,                       XK_g,      setlayout,      {.v = &layouts[2]} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
