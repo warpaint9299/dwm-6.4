@@ -111,6 +111,9 @@ static const Layout layouts[] = {
 /* commands */
 static const char *thuncmd[]  = { "thunar", NULL };
 static const char *roficmd[]  = { "rofi", "-theme", "DarkBlue", "-show", "drun", NULL };
+static const char *clipcmd[]  = { "rofi", "-theme", "DarkBlue", "-show", "clipboard", "-modi", "clipboard:greenclip print", NULL };
+static const char *rangcmd[]  = { "st", "-e", "ranger", NULL };
+static const char *flamcmd[]  = { "flameshot", "gui", NULL };
 static const char *lockcmd[]  = { "i3lock", "-c", "0e0e0e", NULL };
 static const char *termcmd[]  = { "st", NULL };
 
@@ -119,8 +122,11 @@ static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,             			XK_e,      spawn,          {.v = thuncmd } },
 	{ MODKEY,             			XK_p,      spawn,          {.v = roficmd } },
+	{ MODKEY,             			XK_c,      spawn,          {.v = clipcmd } },
+	{ MODKEY,             			XK_r,      spawn,          {.v = rangcmd } },
+	{ MODKEY|ShiftMask,             XK_f,      spawn,          {.v = flamcmd } },
+	{ MODKEY|ShiftMask,             XK_i,      spawn,          {.v = lockcmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY|ShiftMask,             XK_l,      spawn,          {.v = lockcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
