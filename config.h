@@ -78,7 +78,7 @@ static const Rule rules[] = {
 	/* class      	          instance    title    tags mask     isfloating   CenterThisWindow?        monitor */
 	{ "st",                   NULL,       NULL,      0,               0,     	     0,		                -1 },
 	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1 },
-	{ "Google-chrome",        NULL,       NULL,      2,       		  0,             0,                     -1 },
+	{ "Google-chrome",        NULL,       NULL,      0,       		  0,             0,                     -1 },
 	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1 },
 };
 
