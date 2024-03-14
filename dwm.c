@@ -109,6 +109,14 @@ enum
     ClkRootWin,
     ClkLast
 }; /* clicks */
+enum
+{
+    WIN_N,
+    WIN_W,
+    WIN_C,
+    WIN_E,
+    WIN_S,
+}; /* coordinates for movethrow */
 
 typedef union
 {
@@ -245,6 +253,7 @@ static void maprequest(XEvent *e);
 static void monocle(Monitor *m);
 static void motionnotify(XEvent *e);
 static void movemouse(const Arg *arg);
+static void movethrow(const Arg *arg);
 static Client *nexttagged(Client *c);
 static Client *nexttiled(Client *c);
 static void pop(Client *c);
@@ -1507,6 +1516,45 @@ nexttagged(Client *c)
          walked = walked->next)
         ;
     return walked;
+}
+
+void
+movethrow(const Arg *arg)
+{
+    Client *c;
+    int nh, nw, nx, ny;
+    c = selmon->sel;
+    if (selmon->lt[selmon->sellt]->arrange && !c->isfloating)
+        togglefloating(NULL);
+    nw = c->w;
+    nh = c->h;
+    switch (arg->ui)
+    {
+        case WIN_N:
+            nx = c->x;
+            ny = selmon->wy + selmon->gappx;
+            break;
+        case WIN_E:
+            nx = selmon->wx + selmon->ww - c->w - c->bw * 2 - selmon->gappx;
+            ny = c->y;
+            break;
+        case WIN_S:
+            nx = c->x;
+            ny = selmon->wy + selmon->wh - c->h - c->bw * 2 - selmon->gappx;
+            break;
+        case WIN_W:
+            nx = selmon->wx + selmon->gappx;
+            ny = c->y;
+            break;
+        case WIN_C:
+            nx = selmon->wx + ((selmon->ww - c->w - c->bw * 2) / 2);
+            ny = selmon->wy + ((selmon->wh - c->h - c->bw * 2) / 2);
+            break;
+        default:
+            return;
+    }
+    resize(c, nx, ny, nw, nh, True);
+    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, nw / 2, nh / 2);
 }
 
 Client *

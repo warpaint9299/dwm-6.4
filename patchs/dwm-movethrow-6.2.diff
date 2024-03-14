@@ -1,0 +1,89 @@
+diff --git a/config.def.h b/config.def.h
+index fa07ba5..17f71f5 100644
+--- a/config.def.h
++++ b/config.def.h
+@@ -159,6 +159,11 @@ static const Key keys[] = {
+ 	{ MODKEY,                       XK_minus,  setgaps,        {.i = -1 } },
+ 	{ MODKEY,                       XK_equal,  setgaps,        {.i = +1 } },
+ 	{ MODKEY|ShiftMask,             XK_equal,  setgaps,        {.i = 0  } },
++    { MODKEY|ShiftMask,             XK_Up,     movethrow,      {.ui = WIN_N  }},
++    { MODKEY|ShiftMask,             XK_Down,   movethrow,      {.ui = WIN_S  }},
++    { MODKEY|ShiftMask,             XK_Left,   movethrow,      {.ui = WIN_W  }},
++    { MODKEY|ShiftMask,             XK_Right,  movethrow,      {.ui = WIN_E  }},
++    { MODKEY|ShiftMask,             XK_m,      movethrow,      {.ui = WIN_C  }},
+ 	TAGKEYS(                        XK_1,                      0)
+ 	TAGKEYS(                        XK_2,                      1)
+ 	TAGKEYS(                        XK_3,                      2)
+diff --git a/dwm.c b/dwm.c
+index f2f0098..5623117 100644
+--- a/dwm.c
++++ b/dwm.c
+@@ -109,6 +109,14 @@ enum
+     ClkRootWin,
+     ClkLast
+ }; /* clicks */
++enum
++{
++    WIN_N,
++    WIN_W,
++    WIN_C,
++    WIN_E,
++    WIN_S,
++}; /* coordinates for movethrow */
+ 
+ typedef union
+ {
+@@ -245,6 +253,7 @@ static void maprequest(XEvent *e);
+ static void monocle(Monitor *m);
+ static void motionnotify(XEvent *e);
+ static void movemouse(const Arg *arg);
++static void movethrow(const Arg *arg);
+ static Client *nexttagged(Client *c);
+ static Client *nexttiled(Client *c);
+ static void pop(Client *c);
+@@ -1509,6 +1518,45 @@ nexttagged(Client *c)
+     return walked;
+ }
+ 
++void
++movethrow(const Arg *arg)
++{
++    Client *c;
++    int nh, nw, nx, ny;
++    c = selmon->sel;
++    if (selmon->lt[selmon->sellt]->arrange && !c->isfloating)
++        togglefloating(NULL);
++    nw = c->w;
++    nh = c->h;
++    switch (arg->ui)
++    {
++        case WIN_N:
++            nx = c->x;
++            ny = selmon->wy + selmon->gappx;
++            break;
++        case WIN_E:
++            nx = selmon->wx + selmon->ww - c->w - c->bw * 2 - selmon->gappx;
++            ny = c->y;
++            break;
++        case WIN_S:
++            nx = c->x;
++            ny = selmon->wy + selmon->wh - c->h - c->bw * 2 - selmon->gappx;
++            break;
++        case WIN_W:
++            nx = selmon->wx + selmon->gappx;
++            ny = c->y;
++            break;
++        case WIN_C:
++            nx = selmon->wx + ((selmon->ww - c->w - c->bw * 2) / 2);
++            ny = selmon->wy + ((selmon->wh - c->h - c->bw * 2) / 2);
++            break;
++        default:
++            return;
++    }
++    resize(c, nx, ny, nw, nh, True);
++    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, nw / 2, nh / 2);
++}
++
+ Client *
+ nexttiled(Client *c)
+ {
