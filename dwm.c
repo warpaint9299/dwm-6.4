@@ -51,7 +51,8 @@
 #define INTERSECT(x, y, w, h, m) (MAX(0, MIN((x) + (w), (m)->wx + (m)->ww) - MAX((x), (m)->wx)) \
                                   * MAX(0, MIN((y) + (h), (m)->wy + (m)->wh) - MAX((y), (m)->wy)))
 #define ISVISIBLEONTAG(C, T) ((C->tags & T))
-#define ISVISIBLE(C)         ISVISIBLEONTAG(C, C->mon->tagset[C->mon->seltags])
+#define ISVISIBLE(C)         ((C->tags & C->mon->tagset[C->mon->seltags]))
+#define HIDDEN(C)            ((getstate(C->win) == IconicState))
 #define LENGTH(X)            (sizeof X / sizeof X[0])
 #define MOUSEMASK            (BUTTONMASK | PointerMotionMask)
 #define WIDTH(X)             ((X)->w + 2 * (X)->bw)
@@ -109,6 +110,14 @@ enum
     ClkRootWin,
     ClkLast
 }; /* clicks */
+enum
+{
+    WIN_N,
+    WIN_W,
+    WIN_C,
+    WIN_E,
+    WIN_S,
+}; /* coordinates for movethrow */
 
 typedef union
 {
@@ -172,8 +181,10 @@ struct Monitor
     unsigned int seltags;
     unsigned int sellt;
     unsigned int tagset[2];
+    int rmaster;
     int showbar;
     int topbar;
+    int hidsel;
     Client *clients;
     Client *sel;
     Client *stack;
@@ -220,18 +231,25 @@ static void detachstack(Client *c);
 static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
+static void enqueue(Client *c);
+static void enqueuestack(Client *c);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
 static void focus(Client *c);
 static void focusin(XEvent *e);
 static void focusmon(const Arg *arg);
-static void focusstack(const Arg *arg);
+static void focusstackvis(const Arg *arg);
+static void focusstackhid(const Arg *arg);
+static void focusstack(int inc, int vis);
 static Atom getatomprop(Client *c, Atom prop);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
+static void hide(const Arg *arg);
+static void hideall(const Arg *arg);
+static void hidewin(Client *c);
 static int ispanel(Client *c);
 static void incnmaster(const Arg *arg);
 static void keypress(XEvent *e);
@@ -242,6 +260,7 @@ static void maprequest(XEvent *e);
 static void monocle(Monitor *m);
 static void motionnotify(XEvent *e);
 static void movemouse(const Arg *arg);
+static void movethrow(const Arg *arg);
 static Client *nexttagged(Client *c);
 static Client *nexttiled(Client *c);
 static void pop(Client *c);
@@ -253,6 +272,7 @@ static void resizebarwin(Monitor *m);
 static void resizeclient(Client *c, int x, int y, int w, int h);
 static void resizemouse(const Arg *arg);
 static void restack(Monitor *m);
+static void rotatestack(const Arg *arg);
 static void run(void);
 static void runautostart(void);
 static void scan(void);
@@ -266,7 +286,10 @@ static void setlayout(const Arg *arg);
 static void setmfact(const Arg *arg);
 static void setup(void);
 static void seturgent(Client *c, int urg);
+static void show(const Arg *arg);
+static void showall(const Arg *arg);
 static void showhide(Client *c);
+static void showwin(Client *c);
 static void sigchld(int unused);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
@@ -274,6 +297,7 @@ static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
+static void togglermaster(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
@@ -824,6 +848,7 @@ createmon(void)
     m->tagset[0] = m->tagset[1] = 1;
     m->mfact = mfact;
     m->nmaster = nmaster;
+    m->rmaster = rmaster;
     m->showbar = showbar;
     m->topbar = topbar;
     m->gappx = gappx;
@@ -962,6 +987,32 @@ drawbars(void)
 }
 
 void
+enqueue(Client *c)
+{
+    Client *l;
+    for (l = c->mon->clients; l && l->next; l = l->next)
+        ;
+    if (l)
+    {
+        l->next = c;
+        c->next = NULL;
+    }
+}
+
+void
+enqueuestack(Client *c)
+{
+    Client *l;
+    for (l = c->mon->stack; l && l->snext; l = l->snext)
+        ;
+    if (l)
+    {
+        l->snext = c;
+        c->snext = NULL;
+    }
+}
+
+void
 enternotify(XEvent *e)
 {
     Client *c;
@@ -996,10 +1047,20 @@ void
 focus(Client *c)
 {
     if (!c || !ISVISIBLE(c))
-        for (c = selmon->stack; c && !ISVISIBLE(c); c = c->snext)
+        for (c = selmon->stack; c && (!ISVISIBLE(c) || HIDDEN(c)); c = c->snext)
             ;
     if (selmon->sel && selmon->sel != c)
+    {
         unfocus(selmon->sel, 0);
+
+        if (selmon->hidsel)
+        {
+            hidewin(selmon->sel);
+            if (c)
+                arrange(c->mon);
+            selmon->hidsel = 0;
+        }
+    }
     if (c)
     {
         if (c->mon != selmon)
@@ -1051,30 +1112,55 @@ focusmon(const Arg *arg)
         XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
 }
 
+void
+focusstackvis(const Arg *arg)
+{
+    focusstack(arg->i, 0);
+}
+
+void
+focusstackhid(const Arg *arg)
+{
+    focusstack(arg->i, 1);
+}
+
 int focussed_panel = 0; // helper for focusstack, avoids loops when panel is the only client
 void
-focusstack(const Arg *arg)
+focusstack(int inc, int hid)
 {
     Client *c = NULL, *i;
 
-    if (!selmon->sel || (selmon->sel->isfullscreen && lockfullscreen))
+    // if no client selected AND exclude hidden client; if client selected but fullscreened
+    if ((!selmon->sel && !hid) || (selmon->sel && selmon->sel->isfullscreen && lockfullscreen))
         return;
-    if (arg->i > 0)
+    if (!selmon->clients)
+        return;
+    if (inc > 0)
     {
-        for (c = selmon->sel->next; c && !ISVISIBLE(c); c = c->next)
-            ;
+        if (selmon->sel)
+            for (c = selmon->sel->next;
+                 c && (!ISVISIBLE(c) || (!hid && HIDDEN(c)));
+                 c = c->next)
+                ;
         if (!c)
-            for (c = selmon->clients; c && !ISVISIBLE(c); c = c->next)
+            for (c = selmon->clients;
+                 c && (!ISVISIBLE(c) || (!hid && HIDDEN(c)));
+                 c = c->next)
                 ;
     }
     else
     {
-        for (i = selmon->clients; i != selmon->sel; i = i->next)
-            if (ISVISIBLE(i))
-                c = i;
+        if (selmon->sel)
+        {
+            for (i = selmon->clients; i != selmon->sel; i = i->next)
+                if (ISVISIBLE(i) && !(!hid && HIDDEN(i)))
+                    c = i;
+        }
+        else
+            c = selmon->clients;
         if (!c)
             for (; i; i = i->next)
-                if (ISVISIBLE(i))
+                if (ISVISIBLE(i) && !(!hid && HIDDEN(i)))
                     c = i;
     }
     if (c)
@@ -1082,12 +1168,17 @@ focusstack(const Arg *arg)
         focus(c);
         restack(selmon);
         XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
+        if (HIDDEN(c))
+        {
+            showwin(c);
+            c->mon->hidsel = 1;
+        }
     }
     // skipping the panel when switching focus:
     if (ispanel(c) && focussed_panel == 0)
     {
         focussed_panel = 1;
-        focusstack(arg);
+        focusstack(inc, 0);
         focussed_panel = 0;
     }
 }
@@ -1209,6 +1300,52 @@ int
 ispanel(Client *c)
 {
     return !strcmp(c->name, panel[0]);
+}
+
+void
+hide(const Arg *arg)
+{
+    if (ispanel(selmon->sel))
+        return;
+    hidewin(selmon->sel);
+    focus(NULL);
+    arrange(selmon);
+}
+
+void
+hideall(const Arg *arg)
+{
+    Client *c;
+    for (c = selmon->clients; c; c = c->next)
+    {
+        if (ispanel(c)) continue;
+        hidewin(c);
+    }
+    focus(NULL);
+    arrange(selmon);
+}
+
+void
+hidewin(Client *c)
+{
+    if (!c || HIDDEN(c))
+        return;
+
+    Window w = c->win;
+    static XWindowAttributes ra, ca;
+
+    // more or less taken directly from blackbox's hide() function
+    XGrabServer(dpy);
+    XGetWindowAttributes(dpy, root, &ra);
+    XGetWindowAttributes(dpy, w, &ca);
+    // prevent UnmapNotify events
+    XSelectInput(dpy, root, ra.your_event_mask & ~SubstructureNotifyMask);
+    XSelectInput(dpy, w, ca.your_event_mask & ~StructureNotifyMask);
+    XUnmapWindow(dpy, w);
+    setclientstate(c, IconicState);
+    XSelectInput(dpy, root, ra.your_event_mask);
+    XSelectInput(dpy, w, ca.your_event_mask);
+    XUngrabServer(dpy);
 }
 
 void
@@ -1339,12 +1476,14 @@ manage(Window w, XWindowAttributes *wa)
     XChangeProperty(dpy, root, netatom[NetClientList], XA_WINDOW, 32, PropModeAppend,
                     (unsigned char *)&(c->win), 1);
     XMoveResizeWindow(dpy, c->win, c->x + 2 * sw, c->y, c->w, c->h); /* some windows require this */
-    setclientstate(c, NormalState);
+    if (!HIDDEN(c))
+        setclientstate(c, NormalState);
     if (c->mon == selmon)
         unfocus(selmon->sel, 0);
     c->mon->sel = c;
     arrange(c->mon);
-    XMapWindow(dpy, c->win);
+    if (!HIDDEN(c))
+        XMapWindow(dpy, c->win);
     if (c && c->mon == selmon)
         XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
     focus(NULL);
@@ -1477,10 +1616,49 @@ nexttagged(Client *c)
     return walked;
 }
 
+void
+movethrow(const Arg *arg)
+{
+    Client *c;
+    int nh, nw, nx, ny;
+    c = selmon->sel;
+    if (selmon->lt[selmon->sellt]->arrange && !c->isfloating)
+        togglefloating(NULL);
+    nw = c->w;
+    nh = c->h;
+    switch (arg->ui)
+    {
+        case WIN_N:
+            nx = c->x;
+            ny = selmon->wy + selmon->gappx;
+            break;
+        case WIN_E:
+            nx = selmon->wx + selmon->ww - c->w - c->bw * 2 - selmon->gappx;
+            ny = c->y;
+            break;
+        case WIN_S:
+            nx = c->x;
+            ny = selmon->wy + selmon->wh - c->h - c->bw * 2 - selmon->gappx;
+            break;
+        case WIN_W:
+            nx = selmon->wx + selmon->gappx;
+            ny = c->y;
+            break;
+        case WIN_C:
+            nx = selmon->wx + ((selmon->ww - c->w - c->bw * 2) / 2);
+            ny = selmon->wy + ((selmon->wh - c->h - c->bw * 2) / 2);
+            break;
+        default:
+            return;
+    }
+    resize(c, nx, ny, nw, nh, True);
+    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, nw / 2, nh / 2);
+}
+
 Client *
 nexttiled(Client *c)
 {
-    for (; c && (c->isfloating || !ISVISIBLE(c)); c = c->next)
+    for (; c && (c->isfloating || !ISVISIBLE(c) || HIDDEN(c)); c = c->next)
         ;
     return c;
 }
@@ -1552,6 +1730,17 @@ quit(const Arg *arg)
     {
         fclose(fd);
         remove(lockfile);
+        // fix: reloading dwm keeps all the hidden clients hidden
+        Monitor *m;
+        Client *c;
+        for (m = mons; m; m = m->next)
+        {
+            if (m)
+            {
+                for (c = m->stack; c; c = c->next)
+                    if (c && HIDDEN(c)) showwin(c);
+            }
+        }
         running = 0;
     }
     else
@@ -1624,9 +1813,14 @@ void
 resizemouse(const Arg *arg)
 {
     int ocx, ocy, nw, nh;
+    int ocx2, ocy2, nx, ny;
     Client *c;
     Monitor *m;
     XEvent ev;
+    int horizcorner, vertcorner;
+    int di;
+    unsigned int dui;
+    Window dummy;
     Time lasttime = 0;
 
     if (!(c = selmon->sel))
@@ -1634,11 +1828,19 @@ resizemouse(const Arg *arg)
     restack(selmon);
     ocx = c->x;
     ocy = c->y;
+    ocx2 = c->x + c->w;
+    ocy2 = c->y + c->h;
     if (XGrabPointer(dpy, root, False, MOUSEMASK, GrabModeAsync, GrabModeAsync,
                      None, cursor[CurResize]->cursor, CurrentTime)
         != GrabSuccess)
         return;
-    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w + c->bw - 1, c->h + c->bw - 1);
+    if (!XQueryPointer(dpy, c->win, &dummy, &dummy, &di, &di, &nx, &ny, &dui))
+        return;
+    horizcorner = nx < c->w / 2;
+    vertcorner = ny < c->h / 2;
+    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0,
+                 horizcorner ? (-c->bw) : (c->w + c->bw - 1),
+                 vertcorner ? (-c->bw) : (c->h + c->bw - 1));
     do
     {
         XMaskEvent(dpy, MOUSEMASK | ExposureMask | SubstructureRedirectMask, &ev);
@@ -1654,8 +1856,11 @@ resizemouse(const Arg *arg)
                     continue;
                 lasttime = ev.xmotion.time;
 
-                nw = MAX(ev.xmotion.x - ocx - 2 * c->bw + 1, 1);
-                nh = MAX(ev.xmotion.y - ocy - 2 * c->bw + 1, 1);
+                nx = horizcorner ? ev.xmotion.x : c->x;
+                ny = vertcorner ? ev.xmotion.y : c->y;
+                nw = MAX(horizcorner ? (ocx2 - nx) : (ev.xmotion.x - ocx - 2 * c->bw + 1), 1);
+                nh = MAX(vertcorner ? (ocy2 - ny) : (ev.xmotion.y - ocy - 2 * c->bw + 1), 1);
+
                 if (c->mon->wx + nw >= selmon->wx && c->mon->wx + nw <= selmon->wx + selmon->ww
                     && c->mon->wy + nh >= selmon->wy && c->mon->wy + nh <= selmon->wy + selmon->wh)
                 {
@@ -1664,11 +1869,13 @@ resizemouse(const Arg *arg)
                         togglefloating(NULL);
                 }
                 if (!selmon->lt[selmon->sellt]->arrange || c->isfloating)
-                    resize(c, c->x, c->y, nw, nh, 1);
+                    resize(c, nx, ny, nw, nh, 1);
                 break;
         }
     } while (ev.type != ButtonRelease);
-    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w + c->bw - 1, c->h + c->bw - 1);
+    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0,
+                 horizcorner ? (-c->bw) : (c->w + c->bw - 1),
+                 vertcorner ? (-c->bw) : (c->h + c->bw - 1));
     XUngrabPointer(dpy, CurrentTime);
     while (XCheckMaskEvent(dpy, EnterWindowMask, &ev))
         ;
@@ -1706,6 +1913,42 @@ restack(Monitor *m)
     XSync(dpy, False);
     while (XCheckMaskEvent(dpy, EnterWindowMask, &ev))
         ;
+}
+
+void
+rotatestack(const Arg *arg)
+{
+    Client *c = NULL, *f;
+
+    if (!selmon->sel)
+        return;
+    f = selmon->sel;
+    if (arg->i > 0)
+    {
+        for (c = nexttiled(selmon->clients); c && nexttiled(c->next); c = nexttiled(c->next))
+            ;
+        if (c)
+        {
+            detach(c);
+            attach(c);
+            detachstack(c);
+            attachstack(c);
+        }
+    }
+    else if ((c = nexttiled(selmon->clients)))
+    {
+        detach(c);
+        enqueue(c);
+        detachstack(c);
+        enqueuestack(c);
+    }
+    if (c)
+    {
+        arrange(selmon);
+        // unfocus(f, 1);
+        focus(f);
+        restack(selmon);
+    }
 }
 
 void
@@ -2066,6 +2309,43 @@ seturgent(Client *c, int urg)
 }
 
 void
+show(const Arg *arg)
+{
+    if (selmon->hidsel)
+        selmon->hidsel = 0;
+    showwin(selmon->sel);
+}
+
+void
+showall(const Arg *arg)
+{
+    Client *c = NULL;
+    selmon->hidsel = 0;
+    for (c = selmon->clients; c; c = c->next)
+        if (ISVISIBLE(c))
+            showwin(c);
+    if (!selmon->sel)
+    {
+        for (c = selmon->clients; c && !ISVISIBLE(c); c = c->next)
+            ;
+        if (c)
+            focus(c);
+    }
+    restack(selmon);
+}
+
+void
+showwin(Client *c)
+{
+    if (!c || !HIDDEN(c))
+        return;
+
+    XMapWindow(dpy, c->win);
+    setclientstate(c, NormalState);
+    arrange(c->mon);
+}
+
+void
 showhide(Client *c)
 {
     if (!c)
@@ -2141,21 +2421,23 @@ tile(Monitor *m)
         return;
 
     if (n > m->nmaster)
-        mw = m->nmaster ? (m->ww - (g = gappx)) * m->mfact : 0;
+        mw = m->nmaster
+               ? (m->ww - (g = gappx)) * (m->rmaster ? 1.0 - m->mfact : m->mfact)
+               : 0;
     else
         mw = m->ww - m->gappx;
     for (i = 0, my = ty = m->gappx, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
         if (i < m->nmaster)
         {
             h = (m->wh - my) / (MIN(n, m->nmaster) - i) - m->gappx;
-            resize(c, m->wx + m->gappx, m->wy + my, mw - (2 * c->bw) - m->gappx, h - (2 * c->bw), 0);
+            resize(c, m->rmaster ? (m->wx + m->ww - mw) : (m->wx + m->gappx), m->wy + my, mw - (2 * c->bw) - m->gappx, h - (2 * c->bw), 0);
             if (my + HEIGHT(c) + m->gappx < m->wh)
                 my += HEIGHT(c) + m->gappx;
         }
         else
         {
             h = (m->wh - ty) / (n - i) - m->gappx;
-            resize(c, m->wx + mw + m->gappx, m->wy + ty, m->ww - mw - (2 * c->bw) - 2 * m->gappx, h - (2 * c->bw), 0);
+            resize(c, m->rmaster ? (m->wx + m->gappx) : (m->wx + mw + m->gappx), m->wy + ty, m->ww - mw - (2 * c->bw) - 2 * m->gappx, h - (2 * c->bw), 0);
             if (ty + HEIGHT(c) + m->gappx < m->wh)
                 ty += HEIGHT(c) + m->gappx;
         }
@@ -2187,6 +2469,16 @@ togglefloating(const Arg *arg)
         resize(selmon->sel, selmon->sel->x, selmon->sel->y,
                selmon->sel->w, selmon->sel->h, 0);
     arrange(selmon);
+}
+
+void
+togglermaster(const Arg *arg)
+{
+    selmon->rmaster = !selmon->rmaster;
+    /* now mfact represents the left factor */
+    selmon->mfact = 1.0 - selmon->mfact;
+    if (selmon->lt[selmon->sellt]->arrange)
+        arrange(selmon);
 }
 
 void
