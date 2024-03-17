@@ -147,7 +147,7 @@ struct Client
     int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
     int bw, oldbw;
     unsigned int tags;
-    int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, CenterThisWindow;
+    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, CenterThisWindow;
     int floatborderpx;
     int hasfloatbw;
     Client *next;
@@ -303,6 +303,7 @@ static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
+static void togglebehide(const Arg *arg);
 static void togglermaster(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
@@ -1947,8 +1948,13 @@ restack(Monitor *m)
     drawbar(m);
     if (!m->sel)
         return;
+
     if (m->sel->isfloating || !m->lt[m->sellt]->arrange)
         XRaiseWindow(dpy, m->sel->win);
+
+    if (m->sel->isfloating && m->sel->isbehide)
+        XLowerWindow(dpy, m->sel->win);
+
     if (m->lt[m->sellt]->arrange)
     {
         wc.stack_mode = Below;
@@ -2518,6 +2524,23 @@ togglefloating(const Arg *arg)
     if (selmon->sel->isfloating)
         resize(selmon->sel, selmon->sel->x, selmon->sel->y,
                selmon->sel->w, selmon->sel->h, 0);
+    arrange(selmon);
+}
+
+void
+togglebehide(const Arg *arg)
+{
+    if (!selmon->sel)
+        return;
+    if (selmon->sel->isfullscreen)
+        return;
+    if (!ISVISIBLE(selmon->sel))
+        return;
+    if (ispanel(selmon->sel))
+        return;
+    if (selmon->sel->isfloating)
+        selmon->sel->isbehide ^= 1;
+    focus(NULL);
     arrange(selmon);
 }
 
