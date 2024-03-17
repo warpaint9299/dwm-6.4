@@ -148,6 +148,8 @@ struct Client
     int bw, oldbw;
     unsigned int tags;
     int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, CenterThisWindow;
+    int floatborderpx;
+    int hasfloatbw;
     Client *next;
     Client *snext;
     Monitor *mon;
@@ -202,6 +204,8 @@ typedef struct
     int isfloating;
     int CenterThisWindow;
     int monitor;
+    int floatx, floaty, floatw, floath;
+    int floatborderpx;
 } Rule;
 
 /* function declarations */
@@ -251,6 +255,7 @@ static void hide(const Arg *arg);
 static void hideall(const Arg *arg);
 static void hidewin(Client *c);
 static int ispanel(Client *c);
+static int isnotifyd(Client *c);
 static void incnmaster(const Arg *arg);
 static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
@@ -403,6 +408,18 @@ applyrules(Client *c)
             c->isfloating = r->isfloating;
             c->CenterThisWindow = r->CenterThisWindow;
             c->tags |= r->tags;
+            if (r->floatborderpx >= 0)
+            {
+                c->floatborderpx = r->floatborderpx;
+                c->hasfloatbw = 1;
+            }
+            if (r->isfloating)
+            {
+                if (r->floatx >= 0) c->x = c->mon->mx + r->floatx;
+                if (r->floaty >= 0) c->y = c->mon->my + r->floaty;
+                if (r->floatw >= 0) c->w = r->floatw;
+                if (r->floath >= 0) c->h = r->floath;
+            }
             for (m = mons; m && m->num != r->monitor; m = m->next)
                 ;
             if (m)
@@ -963,9 +980,9 @@ drawbar(Monitor *m)
         if (m->sel)
         {
             drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
-            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, m->sel->name, 0);
+            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, ispanel(m->sel) ? "" : m->sel->name, 0);
             drw_rect(drw, x + twidth, 0, w - twidth - 2 * sp, bh, 1, 1);
-            if (m->sel->isfloating)
+            if (m->sel->isfloating && !ispanel(m->sel))
                 drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
         }
         else
@@ -1108,7 +1125,7 @@ focusmon(const Arg *arg)
     unfocus(selmon->sel, 0);
     selmon = m;
     focus(NULL);
-    if (selmon->sel)
+    if (selmon->sel && !ispanel(selmon->sel) && !isnotifyd(selmon->sel))
         XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
 }
 
@@ -1167,7 +1184,7 @@ focusstack(int inc, int hid)
     {
         focus(c);
         restack(selmon);
-        XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
+        // XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
         if (HIDDEN(c))
         {
             showwin(c);
@@ -1300,6 +1317,12 @@ int
 ispanel(Client *c)
 {
     return !strcmp(c->name, panel[0]);
+}
+
+int
+isnotifyd(Client *c)
+{
+    return !strcmp(c->name, panel[2]);
 }
 
 void
@@ -1484,7 +1507,7 @@ manage(Window w, XWindowAttributes *wa)
     arrange(c->mon);
     if (!HIDDEN(c))
         XMapWindow(dpy, c->win);
-    if (c && c->mon == selmon)
+    if (c && c->mon == selmon && !ispanel(selmon->sel) && !isnotifyd(selmon->sel))
         XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
     focus(NULL);
 }
@@ -1792,7 +1815,10 @@ resizeclient(Client *c, int x, int y, int w, int h)
     c->w = wc.width = w;
     c->oldh = c->h;
     c->h = wc.height = h;
-    wc.border_width = c->bw;
+    if (c->isfloating && c->hasfloatbw && !c->isfullscreen)
+        wc.border_width = c->floatborderpx;
+    else
+        wc.border_width = c->bw;
     // nail it to no border & y=0:
     if (((nexttiled(c->mon->clients) == c && !nexttiled(c->next))
          || &monocle == c->mon->lt[c->mon->sellt]->arrange)
@@ -2549,7 +2575,7 @@ unmanage(Client *c, int destroyed)
     focus(NULL);
     updateclientlist();
     arrange(m);
-    if (m == selmon && m->sel)
+    if (m == selmon && m->sel && !ispanel(selmon->sel) && !isnotifyd(selmon->sel))
         XWarpPointer(dpy, None, m->sel->win, 0, 0, 0, 0,
                      m->sel->w / 2, m->sel->h / 2);
 }
