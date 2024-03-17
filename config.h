@@ -7,13 +7,14 @@ static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int gappx     = 8;        /* gap pixel between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int rmaster            = 1;        /* 1 means master-area is initially on the right */
-static const char panel[][64]       = { "xfce4-panel", "Xfce4-panel", "xfce4-notifyd", "Xfce4-notifyd" }; /* name & cls of panel win */
+static const char panel[][32]       = { "xfce4-panel", "Xfce4-panel", "xfce4-notifyd", "Xfce4-notifyd" }; /* name & cls of panel win */
 static const Bool viewontag         = True;     /* Switch view on tag switch */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 static const int vertpad            = 0;        /* vertical padding of bar */
 static const int sidepad            = 0;        /* horizontal padding of bar */
 static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
+static const int min_tag             = 4;       /* min number of tag */
 static const char *fonts[]          = { "VictorMono Nerd Font:style=Bold:size=16" };
 static const unsigned int twidth          = 512;
 static const unsigned int baralpha        = 0xd0;
@@ -68,7 +69,7 @@ static const unsigned int alphas[][3]      = {
 };
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char *tags[] = { "", "󰰶", "󰰡", "󰰛", "󰰰", "󰰰", "󰰭", "󰰘", "󰎣" };
 
 /* Lockfile */
 static char lockfile[] = "/tmp/dwm.lock";
@@ -96,9 +97,10 @@ static const int attachdirection = 4;    /* 0 default, 1 above, 2 aside, 3 below
 #include "layouts.c"
 static const Layout layouts[] = {
 	/* symbol     arrange function */
-	{ "[T]",      tile },    /* first entry is default */
-	{ "[M]",      monocle },
-	{ "[G]",      grid },
+	{ "󰬛",      tile },    /* first entry is default */
+	{ "󰬔",      monocle },
+	{ "󰬎",      grid },
+	{ NULL,       NULL },
 };
 
 /* key definitions */
@@ -187,6 +189,8 @@ static const Key keys[] = {
 /* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
 static const Button buttons[] = {
 	/* click                event mask      button          function        argument */
+	{ ClkLtSymbol,          0,              Button1,        cyclelayout,      {.i = +1 } },
+	{ ClkLtSymbol,          0,              Button3,        cyclelayout,      {.i = -1 } },
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },

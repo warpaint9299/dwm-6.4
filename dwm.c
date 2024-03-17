@@ -192,7 +192,7 @@ struct Monitor
     Client *stack;
     Monitor *next;
     Window barwin;
-    const Layout *lt[2];
+    const Layout *lt[3];
 };
 
 typedef struct
@@ -229,6 +229,7 @@ static void configure(Client *c);
 static void configurenotify(XEvent *e);
 static void configurerequest(XEvent *e);
 static Monitor *createmon(void);
+static void cyclelayout(const Arg *arg);
 static void destroynotify(XEvent *e);
 static void detach(Client *c);
 static void detachstack(Client *c);
@@ -643,9 +644,16 @@ buttonpress(XEvent *e)
     if (ev->window == selmon->barwin)
     {
         i = x = 0;
+        unsigned int occ = 0;
+        for (c = m->clients; c; c = c->next)
+            occ |= c->tags;
         do
+        {
+            /* Do not reserve space for vacant tags */
+            if (!(occ & 1 << (i + min_tag + 1) || m->tagset[m->seltags] & 1 << (i + min_tag + 1)))
+                continue;
             x += TEXTW(tags[i]);
-        while (ev->x >= x && ++i < LENGTH(tags));
+        } while (ev->x >= x && ++i < LENGTH(tags));
         if (i < LENGTH(tags))
         {
             click = ClkTagBar;
@@ -876,6 +884,23 @@ createmon(void)
 }
 
 void
+cyclelayout(const Arg *arg)
+{
+    Layout *l;
+    for (l = (Layout *)layouts; l != selmon->lt[selmon->sellt]; l++)
+        ;
+    if (arg->i > 0)
+        if (l->symbol && (l + 1)->symbol)
+            setlayout(&((Arg){.v = (l + 1)}));
+        else
+            setlayout(&((Arg){.v = layouts}));
+    else if (l != layouts && (l - 1)->symbol)
+        setlayout(&((Arg){.v = (l - 1)}));
+    else
+        setlayout(&((Arg){.v = &layouts[LENGTH(layouts) - 2]}));
+}
+
+void
 destroynotify(XEvent *e)
 {
     Client *c;
@@ -962,13 +987,12 @@ drawbar(Monitor *m)
     x = 0;
     for (i = 0; i < LENGTH(tags); i++)
     {
+        /* Do not draw vacant tags */
+        if (i > min_tag - 1 && !(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+            continue;
         w = TEXTW(tags[i]);
         drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeTagsSel : SchemeTagsNorm]);
         drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
-        if (occ & 1 << i)
-            drw_rect(drw, x + boxs, boxs, boxw, boxw,
-                     m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-                     urg & 1 << i);
         x += w;
     }
     w = TEXTW(m->ltsymbol);
@@ -1542,8 +1566,8 @@ monocle(Monitor *m)
     for (c = m->clients; c; c = c->next)
         if (ISVISIBLE(c))
             n++;
-    if (n > 0) /* override layout symbol */
-        snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%s]", "M");
+    //    if (n > 0) /* override layout symbol */
+    //       snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%s]", "M");
     for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
         resize(c, m->wx, m->wy, m->ww - 2 * c->bw, m->wh - 2 * c->bw, 0);
 }
