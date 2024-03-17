@@ -32,7 +32,7 @@ while true; do
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
 	fi
-	sleep 10;
+	sleep 150;
 done &
 )
 
