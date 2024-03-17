@@ -7,7 +7,7 @@ static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int gappx     = 8;        /* gap pixel between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int rmaster            = 1;        /* 1 means master-area is initially on the right */
-static const char panel[][20]       = { "xfce4-panel", "Xfce4-panel" }; /* name & cls of panel win */
+static const char panel[][64]       = { "xfce4-panel", "Xfce4-panel", "xfce4-notifyd", "Xfce4-notifyd" }; /* name & cls of panel win */
 static const Bool viewontag         = True;     /* Switch view on tag switch */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
@@ -78,11 +78,12 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      	          instance    title    tags mask     isfloating   CenterThisWindow?        monitor */
-	{ "st",                   NULL,       NULL,      0,               0,     	     0,		                -1 },
-	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1 },
-	{ "Google-chrome",        NULL,       NULL,      0,       		  0,             0,                     -1 },
-	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1 },
+	/* class      	          instance    title    tags mask     isfloating   CenterThisWindow?        monitor          float x,y,w,h        floatborderpx */
+	{ "st",                   NULL,       NULL,      0,               0,     	     0,		                -1,			50,50,500,500,             3 },
+	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
+	{ "Google-chrome",        NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
+	{ "GoldenDict",           NULL,       NULL,      0,               1,     	     0,		                -1,			1300,40,612,500,           3 },
+	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1,			1606,16,300,200,           3 },
 };
 
 /* layout(s) */
