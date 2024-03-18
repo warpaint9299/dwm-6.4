@@ -83,8 +83,8 @@ static const Rule rules[] = {
 	{ "st",                   NULL,       NULL,      0,               0,     	     0,		                -1,			50,50,500,500,             3 },
 	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
 	{ "Google-chrome",        NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
-	{ "GoldenDict",           NULL,       NULL,      0,               1,     	     0,		                -1,			1300,40,612,500,           3 },
-	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1,			1606,16,300,200,           3 },
+	{ "GoldenDict",           NULL,       NULL,      0,               1,     	     0,		                -1,			1300,40,610,500,           3 },
+	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1,			1500,40,300,200,           3 },
 };
 
 /* layout(s) */
