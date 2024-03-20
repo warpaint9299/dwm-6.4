@@ -17,9 +17,9 @@ done &
 )
 
 (
+dir_cache_chrome="${HOME}/.cache/google-chrome";
+dir_cache_firefox="${HOME}/.cache/mozilla";
 while true; do
-	dir_cache_chrome="${HOME}/.cache/google-chrome";
-	dir_cache_firefox="${HOME}/.cache/mozilla";
 	wm_id_chrome=$(xdotool search --onlyvisible --class 'google-chrome');
 	wm_id_firefox=$(xdotool search --onlyvisible --class 'firefox-esr');
 
