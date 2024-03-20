@@ -18,21 +18,27 @@ done &
 
 (
 while true; do
-	wm_id_chrome = $(xdotool search --onlyvisible --class 'google-chrome');
-	wm_id_firefox-esr = $(xdotool search --onlyvisible --class 'firefox-esr');
+	dir_cache_chrome="${HOME}/.cache/google-chrome";
+	dir_cache_firefox="${HOME}/.cache/mozilla";
+	wm_id_chrome=$(xdotool search --onlyvisible --class 'google-chrome');
+	wm_id_firefox=$(xdotool search --onlyvisible --class 'firefox-esr');
 
 	if [[ -n ${wm_id_chrome} ]]; then
 		if [[ '_NET_WM_STATE_FULLSCREEN' -eq $(xprop -id ${wm_id_chrome} _NET_WM_STATE | cut -d\= -f2 | tr -d ' ') ]]; then
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
+	else
+		[[ -d "${dir_cache_chrome}" ]] && rm -rf ${dir_cache_chrome}
 	fi
 
-	if [[ -n ${wm_id_firefox-esr} ]]; then
-		if [[ '_NET_WM_STATE_FULLSCREEN' -eq $(xprop -id ${wm_id_firefox-esr} _NET_WM_STATE | cut -d\= -f2 | tr -d ' ') ]];then
+	if [[ -n ${wm_id_firefox} ]]; then
+		if [[ '_NET_WM_STATE_FULLSCREEN' -eq $(xprop -id ${wm_id_firefox} _NET_WM_STATE | cut -d\= -f2 | tr -d ' ') ]];then
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
+	else
+		[[ -d "${dir_cache_firefox}" ]] && rm -rf ${dir_cache_firefox}
 	fi
-	sleep 150;
+	sleep 5;
 done &
 )
 
@@ -49,4 +55,3 @@ fcitx5 &
 greenclip daemon > /dev/null &
 xfce4-panel --disable-wm-check &
 tmux has-session && exec st -e tmux attach || exec st -e tmux new -s Workspace01 &
-
