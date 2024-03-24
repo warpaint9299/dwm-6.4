@@ -1817,8 +1817,8 @@ recttomon(int x, int y, int w, int h)
 void
 resetnmaster(const Arg *arg)
 {
-	selmon->nmaster = 1;
-	arrange(selmon);
+    selmon->nmaster = 1;
+    arrange(selmon);
 }
 
 void
