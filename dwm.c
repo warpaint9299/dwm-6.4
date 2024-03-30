@@ -601,7 +601,7 @@ attachstack(Client *c)
 void
 buttonpress(XEvent *e)
 {
-    unsigned int i, x, click;
+    unsigned int i, x, click, occ;
     Arg arg = {0};
     Client *c;
     Monitor *m;
@@ -615,13 +615,14 @@ buttonpress(XEvent *e)
         focus(NULL);
     }
     if (ev->window == selmon->barwin) {
-        i = x = 0;
-        unsigned int occ = 0;
-        for (c = m->clients; c; c = c->next)
+        i = x = occ = 0;
+        for (c = m->clients; c; c = c->next) {
+            if (ispanel(c)) continue;
             occ |= c->tags;
+        }
         do {
             /* Do not reserve space for vacant tags */
-            if (!(occ & 1 << (i + min_tag + 1) || m->tagset[m->seltags] & 1 << (i + min_tag + 1)))
+            if (i > min_tag - 1 && !(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
                 continue;
             x += TEXTW(tags[i]);
         } while (ev->x >= x && ++i < LENGTH(tags));
