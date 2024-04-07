@@ -403,7 +403,7 @@ applyrules(Client *c)
                 c->floatborderpx = r->floatborderpx;
                 c->hasfloatbw = 1;
             }
-            if (r->isfloating) {
+            if (r->isfloating && !ispanel(c)) {
                 if (r->floatx >= 0) c->x = c->mon->mx + r->floatx;
                 if (r->floaty >= 0) c->y = c->mon->my + r->floaty;
                 if (r->floatw >= 0) c->w = r->floatw;
