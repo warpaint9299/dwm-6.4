@@ -2374,7 +2374,13 @@ tile(Monitor *m)
 void
 togglebar(const Arg *arg)
 {
+    Client *c;
     selmon->showbar = !selmon->showbar;
+    for (c = selmon->clients; c; c = c->next) {
+        if (!ispanel(c))
+            continue;
+        selmon->showbar ? showwin(c) : hidewin(c);
+    }
     updatebarpos(selmon);
     resizebarwin(selmon);
     arrange(selmon);
