@@ -52,6 +52,6 @@ done &
 blueman-applet &
 flameshot &
 fcitx5 &
-greenclip daemon > /dev/null &
 xfce4-panel --disable-wm-check &
 tmux has-session && exec st -e tmux attach || exec st -e tmux new -s Workspace01 &
+exec xset -b &

@@ -83,8 +83,9 @@ static const Rule rules[] = {
 //	{ "st",                   NULL,       NULL,      0,               1,     	     0,		                -1,			8,40,1904,1032             3 },
 	{ "st",                   NULL,       NULL,      0,               0,     	     0,		                -1,			198,143,1523,825,          3 },
 	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
-	{ "Google-chrome",        NULL,       NULL,      2,       		  0,             0,                     -1,			50,50,500,500,             3 },
+	{ "Google-chrome",        NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
 	{ "GoldenDict",           NULL,       NULL,      0,               0,     	     0,		                -1,			1300,40,608,500,           3 },
+	{ "Wrapper-2.0",          NULL,       NULL,      0,               1,     	     0,		                -1,			1300,40,608,500,           3 },
 	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1,			0,0,0,0,                   0 },
 };
 
@@ -118,7 +119,6 @@ static const Layout layouts[] = {
 /* commands */
 static const char *thuncmd[]  = { "thunar", NULL };
 static const char *roficmd[]  = { "rofi", "-theme", "DarkBlue", "-modes", "drun,run", "-show", "drun", NULL };
-static const char *clipcmd[]  = { "rofi", "-theme", "DarkBlue", "-show", "clipboard", "-modi", "clipboard:greenclip print", NULL };
 static const char *rangcmd[]  = { "st", "-e", "ranger", NULL };
 static const char *flamcmd[]  = { "flameshot", "gui", NULL };
 static const char *lockcmd[]  = { "i3lock", "-c", "0e0e0e", NULL };
@@ -129,7 +129,6 @@ static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,             			XK_e,      spawn,          {.v = thuncmd } },
 	{ MODKEY,             			XK_p,      spawn,          {.v = roficmd } },
-	{ MODKEY,             			XK_c,      spawn,          {.v = clipcmd } },
 	{ MODKEY|ShiftMask,    			XK_r,      spawn,          {.v = rangcmd } },
 	{ MODKEY|ShiftMask,             XK_f,      spawn,          {.v = flamcmd } },
 	{ MODKEY|ShiftMask,             XK_i,      spawn,          {.v = lockcmd } },
