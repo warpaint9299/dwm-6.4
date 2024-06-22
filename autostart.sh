@@ -44,7 +44,6 @@ done &
 
 (
 while true; do
-
 	[[ $(pgrep -x 'xautolock') ]] || xautolock -detectsleep -time 5 -locker 'i3lock -c 0e0e0e -n' >> /dev/null 2>&1 &
 	sleep 300;
 done &
