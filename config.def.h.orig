@@ -159,7 +159,7 @@ static const Key keys[] = {
 	{ MODKEY,             			XK_m,          resetnmaster,       {0} },
 	{ MODKEY,                       XK_0,          view,               {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,          tag,                {.ui = ~0 } },
-	{ MODKEY|ShiftMask,             XK_colon,      focusstackhid,      {.i = -1 } },
+	{ MODKEY,             			XK_semicolon,  focusstackhid,      {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_semicolon,  focusstackhid,      {.i = +1 } },
 	{ MODKEY,                       XK_comma,      focusmon,           {.i = -1 } },
 	{ MODKEY,                       XK_period,     focusmon,           {.i = +1 } },

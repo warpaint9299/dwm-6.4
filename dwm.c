@@ -866,8 +866,6 @@ destroynotify(XEvent *e)
 void
 detach(Client *c)
 {
-    if (!c)
-        return;
     Client **tc;
 
     for (tc = &c->mon->clients; *tc && *tc != c; tc = &(*tc)->next)
@@ -878,8 +876,6 @@ detach(Client *c)
 void
 detachstack(Client *c)
 {
-    if (!c)
-        return;
     Client **tc, *t;
 
     for (tc = &c->mon->stack; *tc && *tc != c; tc = &(*tc)->snext)
@@ -1103,37 +1099,36 @@ focusstackhid(const Arg *arg)
 }
 
 int focussed_panel = 0; // helper for focusstack, avoids loops when panel is the only client
+
 void
-focusstack(int inc, int hid)
+focusstack(int inc, int vis)
 {
     Client *c = NULL, *i;
 
-    // if no client selected AND exclude hidden client; if client selected but fullscreened
-    if ((!selmon->sel && !hid) || (selmon->sel && selmon->sel->isfullscreen && lockfullscreen))
+    // if no client selected AND exclude visden client; if client selected but fullscreened
+    if ((!selmon->sel && !vis) || (selmon->sel && selmon->sel->isfullscreen && lockfullscreen))
         return;
+
     if (!selmon->clients)
         return;
+
     if (inc > 0) {
         if (selmon->sel)
-            for (c = selmon->sel->next;
-                 c && (!ISVISIBLE(c) || (!hid && HIDDEN(c)));
-                 c = c->next)
+            for (c = selmon->sel->next; c && (!ISVISIBLE(c) || (!vis && HIDDEN(c))); c = c->next)
                 ;
         if (!c)
-            for (c = selmon->clients;
-                 c && (!ISVISIBLE(c) || (!hid && HIDDEN(c)));
-                 c = c->next)
+            for (c = selmon->clients; c && (!ISVISIBLE(c) || (!vis && HIDDEN(c))); c = c->next)
                 ;
     } else {
         if (selmon->sel) {
             for (i = selmon->clients; i != selmon->sel; i = i->next)
-                if (ISVISIBLE(i) && !(!hid && HIDDEN(i)))
+                if (!ispanel(i) && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
                     c = i;
         } else
             c = selmon->clients;
         if (!c)
             for (; i; i = i->next)
-                if (ISVISIBLE(i) && !(!hid && HIDDEN(i)))
+                if (!ispanel(i) && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
                     c = i;
     }
     if (c) {
@@ -1145,6 +1140,7 @@ focusstack(int inc, int hid)
             c->mon->hidsel = 1;
         }
     }
+
     // skipping the panel when switching focus:
     if (ispanel(c) && focussed_panel == 0) {
         focussed_panel = 1;
@@ -2025,14 +2021,15 @@ scan(void)
 void
 sendmon(Client *c, Monitor *m)
 {
-    if (!m)
-        return;
     if (c->mon == m)
         return;
+
     if (!c)
         return;
+
     if (ispanel(c))
         return;
+
     unfocus(c, 1);
     detach(c);
     detachstack(c);
@@ -2548,7 +2545,7 @@ updatebarpos(Monitor *m)
 {
     m->wy = m->my;
     m->wh = m->mh;
-    if (!m->num && m->showbar) {
+    if (!m->num && m->showbar) { // only show bar on first monitor
         m->wh = m->wh - vertpad - bh;
         m->by = m->topbar ? m->wy : m->wy + m->wh + vertpad;
         m->wy = m->topbar ? m->wy + bh + vp : m->wy;
