@@ -1135,7 +1135,7 @@ focusstack(int inc, int hid)
     if (c) {
         focus(c);
         restack(selmon);
-        // XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
+        XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
         if (HIDDEN(c)) {
             showwin(c);
             c->mon->hidsel = 1;
@@ -1273,6 +1273,8 @@ isnotifyd(Client *c)
 void
 hide(const Arg *arg)
 {
+    if (!selmon->sel)
+        return;
     if (ispanel(selmon->sel))
         return;
     hidewin(selmon->sel);
@@ -2021,30 +2023,35 @@ sendmon(Client *c, Monitor *m)
 {
     if (c->mon == m)
         return;
+    if (!c)
+        return;
+    if (ispanel(c))
+        return;
     unfocus(c, 1);
     detach(c);
     detachstack(c);
     c->mon = m;
     c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
-    switch (attachdirection) {
-        case 1:
-            attachabove(c);
-            break;
-        case 2:
-            attachaside(c);
-            break;
-        case 3:
-            attachbelow(c);
-            break;
-        case 4:
-            attachbottom(c);
-            break;
-        case 5:
-            attachtop(c);
-            break;
-        default:
-            attach(c);
-    }
+    // switch (attachdirection) {
+    //     case 1:
+    //         attachabove(c);
+    //         break;
+    //     case 2:
+    //         attachaside(c);
+    //         break;
+    //     case 3:
+    //         attachbelow(c);
+    //         break;
+    //     case 4:
+    //         attachbottom(c);
+    //         break;
+    //     case 5:
+    //         attachtop(c);
+    //         break;
+    //     default:
+    //         attach(c);
+    // }
+	attach(c);
     attachstack(c);
     focus(NULL);
     arrange(NULL);
