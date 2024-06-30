@@ -1105,7 +1105,7 @@ focusstack(int inc, int vis)
 {
     Client *c = NULL, *i;
 
-    // if no client selected AND exclude visden client; if client selected but fullscreened
+    // if no client selected AND exclude hiden client; if client selected but fullscreened
     if ((!selmon->sel && !vis) || (selmon->sel && selmon->sel->isfullscreen && lockfullscreen))
         return;
 
@@ -1131,6 +1131,7 @@ focusstack(int inc, int vis)
                 if (!ispanel(i) && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
                     c = i;
     }
+
     if (c) {
         focus(c);
         restack(selmon);
