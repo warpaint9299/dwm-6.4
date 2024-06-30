@@ -866,6 +866,8 @@ destroynotify(XEvent *e)
 void
 detach(Client *c)
 {
+    if (!c)
+        return;
     Client **tc;
 
     for (tc = &c->mon->clients; *tc && *tc != c; tc = &(*tc)->next)
@@ -876,6 +878,8 @@ detach(Client *c)
 void
 detachstack(Client *c)
 {
+    if (!c)
+        return;
     Client **tc, *t;
 
     for (tc = &c->mon->stack; *tc && *tc != c; tc = &(*tc)->snext)
@@ -2021,6 +2025,8 @@ scan(void)
 void
 sendmon(Client *c, Monitor *m)
 {
+    if (!m)
+        return;
     if (c->mon == m)
         return;
     if (!c)
@@ -2032,26 +2038,25 @@ sendmon(Client *c, Monitor *m)
     detachstack(c);
     c->mon = m;
     c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
-    // switch (attachdirection) {
-    //     case 1:
-    //         attachabove(c);
-    //         break;
-    //     case 2:
-    //         attachaside(c);
-    //         break;
-    //     case 3:
-    //         attachbelow(c);
-    //         break;
-    //     case 4:
-    //         attachbottom(c);
-    //         break;
-    //     case 5:
-    //         attachtop(c);
-    //         break;
-    //     default:
-    //         attach(c);
-    // }
-	attach(c);
+    switch (attachdirection) {
+        case 1:
+            attachabove(c);
+            break;
+        case 2:
+            attachaside(c);
+            break;
+        case 3:
+            attachbelow(c);
+            break;
+        case 4:
+            attachbottom(c);
+            break;
+        case 5:
+            attachtop(c);
+            break;
+        default:
+            attach(c);
+    }
     attachstack(c);
     focus(NULL);
     arrange(NULL);
@@ -2543,7 +2548,7 @@ updatebarpos(Monitor *m)
 {
     m->wy = m->my;
     m->wh = m->mh;
-    if (m->num == 0 && m->showbar) {
+    if (!m->num && m->showbar) {
         m->wh = m->wh - vertpad - bh;
         m->by = m->topbar ? m->wy : m->wy + m->wh + vertpad;
         m->wy = m->topbar ? m->wy + bh + vp : m->wy;
