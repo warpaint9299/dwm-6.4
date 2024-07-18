@@ -32,7 +32,7 @@ while true; do
 	fi
 
 	if [[ -n ${wm_id_firefox} ]]; then
-		if [[ '_NET_WM_WINDOW_TYPE_NORMAL' -eq $(xprop -id ${wm_id_firefox} _NET_WM_WINDOW_TYPE | cut -d\= -f2 | tr -d ' ') ]];then
+		if [[ 0 -ne $( ps -aux | grep firefox-esr | grep -v grep | wc -l ) ]];then
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
 	else
