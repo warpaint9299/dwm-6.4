@@ -11,7 +11,7 @@ done &
 
 (
 while true; do
-	[[ $(pgrep -x 'picom') ]] || picom --experimental-backends --config ~/.config/picom/picom.conf >> /dev/null 2>&1
+	[[ $(pgrep -x 'picom') ]] || picom --config ~/.config/picom/picom.conf >> /dev/null 2>&1
 	sleep 3;
 done &
 )
