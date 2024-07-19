@@ -99,9 +99,12 @@ static const int lockfullscreen = 0; /* 1 will force focus on the fullscreen win
 static const int attachdirection = 4;    /* 0 default, 1 above, 2 aside, 3 below, 4 bottom, 5 top */
 
 #include "layouts.c"
+#include "fibonacci.c"
 static const Layout layouts[] = {
 	/* symbol     arrange function */
-	{ "󰬛",      tile },    /* first entry is default */
+	{ "󰬚",      spiral },
+	{ "󰬛",      tile }, /* first entry is default */
+ 	{ "󰬋",      dwindle },
 	{ "󰬔",      monocle },
 	{ "󰬎",      grid },
 	{ NULL,       NULL },
