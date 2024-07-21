@@ -51,6 +51,7 @@ done &
 blueman-applet &
 flameshot &
 fcitx5 &
-xfce4-panel --disable-wm-check &
 tmux has-session && exec st -e tmux attach || exec st -e tmux new -s Workspace01 &
+superproductivity &
+xfce4-panel --disable-wm-check &
 exec xset -b & # disable console bell volume

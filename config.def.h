@@ -86,8 +86,8 @@ static const Rule rules[] = {
 	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
 	{ "Google-chrome",        NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
 	{ "GoldenDict",           NULL,       NULL,      0,               0,     	     0,		                -1,			1300,40,608,500,           3 },
+	{ "superProductivity",    NULL,       NULL,      0,               1,     	     1,		                -1,			198,143,1523,825,          3 },
 	{ "MyEclipse",        	  NULL,       NULL,      2,       		  0,             0,                     -1,			50,50,500,500,             3 },
-	{ "Wrapper-2.0",          NULL,       NULL,      0,               1,     	     0,		                -1,			1300,40,608,500,           3 },
 	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1,			198,143,1523,825,          0 },
 };
 
@@ -101,13 +101,14 @@ static const int attachdirection = 4;    /* 0 default, 1 above, 2 aside, 3 below
 #include "layouts.c"
 #include "fibonacci.c"
 static const Layout layouts[] = {
+    /* first entry is default */
 	/* symbol     arrange function */
-	{ "󰬛",      tile }, /* first entry is default */
-	{ "󰬚",      spiral },
- 	{ "󰬋",      dwindle },
-	{ "󰬔",      monocle },
-	{ "󰬎",      grid },
-	{ NULL,       NULL },
+	{ "󰬚",           spiral },
+	{ "󰬛",           tile }, 
+ 	{ "󰬋",           dwindle },
+	{ "󰬔",           monocle },
+	{ "󰬎",           grid },
+	{ NULL,          NULL },
 };
 
 /* key definitions */
