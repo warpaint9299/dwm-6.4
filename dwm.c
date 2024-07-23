@@ -1547,6 +1547,7 @@ motionnotify(XEvent *e)
                 continue;
             x += TEXTW(tags[i]);
         }
+        x += TEXTW(m->ltsymbol);
         if (ev->x < x)
             XDefineCursor(dpy, selmon->barwin, cursor[CurHand]->cursor);
         else
