@@ -1036,7 +1036,7 @@ drawhoverbar(XMotionEvent *ev, Monitor *m)
         w = TEXTW(tags[i]);
         if (m->tagset[m->seltags] & 1 << i)
             drw_setscheme(drw, scheme[SchemeTagsSel]);
-        else if (ev->x > x && ev->x < x + w && ev->y < bh)
+        else if (ev->x > x && ev->x < x + w && (topbar ? ev->y < bh : ev->y > selmon->by))
             drw_setscheme(drw, scheme[SchemeTagsHover]);
         else
             drw_setscheme(drw, scheme[SchemeTagsNorm]);
