@@ -3,7 +3,7 @@
 #define SESSION_FILE "/tmp/dwm-session"
 
 /* appearance */
-static const unsigned int borderpx  = 2;        /* border pixel of windows */
+static const unsigned int borderpx  = 3;        /* border pixel of windows */
 static const unsigned int gappx     = 8;        /* gap pixel between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int rmaster            = 1;        /* 1 means master-area is initially on the right */
@@ -36,26 +36,32 @@ static const char fgcolor4[]    = "#efefef";
 static const char bgcolor4[]    = "#0e0e0e";
 static const char bdcolor4[]    = "#0e0e0e";
 
-static const char fgcolor5[]    = "#0e0e0e";
-static const char bgcolor5[]    = "#b8bb26";
-static const char bdcolor5[]    = "#b8bb26";
+static const char fgcolor5[]    = "#b8bb28";
+static const char bgcolor5[]    = "#0e0e0e";
+static const char bdcolor5[]    = "#0e0e0e";
 
-static const char fgcolor6[]    = "#efefef";
-static const char bgcolor6[]    = "#0e0e0e";
-static const char bdcolor6[]    = "#0e0e0e";
+static const char fgcolor6[]    = "#0e0e0e";
+static const char bgcolor6[]    = "#b8bb26";
+static const char bdcolor6[]    = "#b8bb26";
 
-static const char fgcolor7[]    = "#0e0e0e";
-static const char bgcolor7[]    = "#b8bb26";
-static const char bdcolor7[]    = "#b8bb26";
+static const char fgcolor7[]    = "#efefef";
+static const char bgcolor7[]    = "#0e0e0e";
+static const char bdcolor7[]    = "#0e0e0e";
+
+static const char fgcolor8[]    = "#0e0e0e";
+static const char bgcolor8[]    = "#b8bb26";
+static const char bdcolor8[]    = "#b8bb26";
+
 static const char *colors[][3]      = {
-	/*               fg         bg         border   */
-	[SchemeNorm] = { fgcolor1, bgcolor1, bdcolor1 },
-	[SchemeSel]  = { fgcolor2, bgcolor2, bdcolor2 },
-	[SchemeStatus]  = { fgcolor3, bgcolor3, bdcolor3 },
-	[SchemeTagsSel]  = { fgcolor4, bgcolor4, bdcolor4 },
-	[SchemeTagsNorm]  = { fgcolor5, bgcolor5, bdcolor5 },
-	[SchemeInfoSel]  = { fgcolor6, bgcolor6, bdcolor6 },
-	[SchemeInfoNorm]  = { fgcolor7, bgcolor7, bdcolor7 },
+	/*                         fg         bg         border   */
+	[SchemeNorm]        =    { fgcolor1, bgcolor1, bdcolor1 },
+	[SchemeSel]         =    { fgcolor2, bgcolor2, bdcolor2 },
+	[SchemeStatus]      =    { fgcolor3, bgcolor3, bdcolor3 },
+	[SchemeTagsSel]     =    { fgcolor4, bgcolor4, bdcolor4 },
+	[SchemeTagsHover]   =    { fgcolor5, bgcolor5, bdcolor5 },
+	[SchemeTagsNorm]    =    { fgcolor6, bgcolor6, bdcolor6 },
+	[SchemeInfoSel]     =    { fgcolor7, bgcolor7, bdcolor7 },
+	[SchemeInfoNorm]    =    { fgcolor8, bgcolor8, bdcolor8 },
 };
 
 static const unsigned int alphas[][3]      = {
@@ -64,6 +70,7 @@ static const unsigned int alphas[][3]      = {
 	[SchemeSel]  = { OPAQUE, baralpha, borderalpha },
     [SchemeStatus] = { OPAQUE, baralpha, borderalpha },
     [SchemeTagsSel]  = { OPAQUE, baralpha, borderalpha },
+    [SchemeTagsHover]  = { OPAQUE, baralpha, borderalpha },
     [SchemeTagsNorm] = { OPAQUE, baralpha, borderalpha },
     [SchemeInfoSel]  = { OPAQUE, baralpha, borderalpha },
     [SchemeInfoNorm] = { OPAQUE, baralpha, borderalpha },

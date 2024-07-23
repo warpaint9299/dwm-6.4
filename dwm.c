@@ -75,6 +75,7 @@ enum {
     SchemeSel,
     SchemeStatus,
     SchemeTagsSel,
+    SchemeTagsHover,
     SchemeTagsNorm,
     SchemeInfoSel,
     SchemeInfoNorm
@@ -231,6 +232,8 @@ static void detachstack(Client *c);
 static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
+static void drawhoverbar(XMotionEvent *ev, Monitor *m);
+static void drawhoverbars(XMotionEvent *ev, Monitor *m);
 static void enqueue(Client *c);
 static void enqueuestack(Client *c);
 static void enternotify(XEvent *e);
@@ -1000,6 +1003,79 @@ drawbars(void)
 }
 
 void
+drawhoverbar(XMotionEvent *ev, Monitor *m)
+{
+    int x, w, tw = 0;
+    int boxs = drw->fonts->h / 9;
+    int boxw = drw->fonts->h / 6 + 2;
+    unsigned int i, occ = 0, urg = 0;
+    Client *c;
+
+    if (!m->showbar)
+        return;
+
+    //	/* draw status first so it can be overdrawn by tags later */
+    if (m == selmon) {                 /* status is only drawn on selected monitor */
+        drw_setscheme(drw, scheme[SchemeStatus]);
+        tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
+        drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0);
+    }
+
+    for (c = m->clients; c; c = c->next) {
+        // prevent showing the panel as active application:
+        if (ispanel(c)) continue;
+        occ |= c->tags;
+        if (c->isurgent)
+            urg |= c->tags;
+    }
+    x = 0;
+    for (i = 0; i < LENGTH(tags); i++) {
+        /* Do not draw vacant tags */
+        if (i > min_tag - 1 && !(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+            continue;
+        w = TEXTW(tags[i]);
+        if (m->tagset[m->seltags] & 1 << i)
+            drw_setscheme(drw, scheme[SchemeTagsSel]);
+        else if (ev->x > x && ev->x < x + w && ev->y < bh)
+            drw_setscheme(drw, scheme[SchemeTagsHover]);
+        else
+            drw_setscheme(drw, scheme[SchemeTagsNorm]);
+        drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+        x += w;
+    }
+
+    w = TEXTW(m->ltsymbol);
+    drw_setscheme(drw, scheme[SchemeTagsNorm]);
+    x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+
+    if (ev->x < x)
+        XDefineCursor(dpy, selmon->barwin, cursor[CurHand]->cursor);
+    else
+        XDefineCursor(dpy, selmon->barwin, cursor[CurNormal]->cursor);
+
+    if ((w = m->ww - tw - x) > bh) {
+        if (m->sel) {
+            drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
+            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, ispanel(m->sel) ? "" : m->sel->name, 0);
+            drw_rect(drw, x + twidth, 0, w - twidth - 2 * sp, bh, 1, 1);
+            if (m->sel->isfloating && !ispanel(m->sel))
+                drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
+        } else {
+            drw_setscheme(drw, scheme[SchemeInfoNorm]);
+            drw_rect(drw, x, 0, w - 2 * sp, bh, 1, 1);
+        }
+    }
+    drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+}
+
+void
+drawhoverbars(XMotionEvent *ev, Monitor *m)
+{
+    for (m = mons; m; m = m->next)
+        drawhoverbar(ev, m);
+}
+
+void
 enqueue(Client *c)
 {
     Client *l;
@@ -1526,33 +1602,11 @@ motionnotify(XEvent *e)
     static Monitor *mon = NULL;
     Monitor *m;
     XMotionEvent *ev = &e->xmotion;
-    unsigned int i, x, occ = 0, urg = 0;
-    Client *c;
 
     if (ev->window != root)
         return;
 
-    for (m = mons; m; m = m->next) {
-        for (c = m->clients; c; c = c->next) {
-            // prevent showing the panel as active application:
-            if (ispanel(c)) continue;
-            occ |= c->tags;
-            if (c->isurgent)
-                urg |= c->tags;
-        }
-        x = 0;
-        for (i = 0; i < LENGTH(tags); i++) {
-            /* Do not draw vacant tags */
-            if (i > min_tag - 1 && !(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
-                continue;
-            x += TEXTW(tags[i]);
-        }
-        x += TEXTW(m->ltsymbol);
-        if (ev->x < x)
-            XDefineCursor(dpy, selmon->barwin, cursor[CurHand]->cursor);
-        else
-            XDefineCursor(dpy, selmon->barwin, cursor[CurNormal]->cursor);
-    }
+    drawhoverbars(ev, m);
 
     if ((m = recttomon(ev->x_root, ev->y_root, 1, 1)) != mon && mon) {
         unfocus(selmon->sel, 1);
