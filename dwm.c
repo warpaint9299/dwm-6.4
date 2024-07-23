@@ -66,8 +66,10 @@ enum {
     CurNormal,
     CurResize,
     CurMove,
+    CurHand,
     CurLast
 }; /* cursor */
+
 enum {
     SchemeNorm,
     SchemeSel,
@@ -969,10 +971,10 @@ drawbar(Monitor *m)
         drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
         x += w;
     }
+
     w = TEXTW(m->ltsymbol);
     drw_setscheme(drw, scheme[SchemeTagsNorm]);
     x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
-
     if ((w = m->ww - tw - x) > bh) {
         if (m->sel) {
             drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
@@ -1524,14 +1526,39 @@ motionnotify(XEvent *e)
     static Monitor *mon = NULL;
     Monitor *m;
     XMotionEvent *ev = &e->xmotion;
+    unsigned int i, x, occ = 0, urg = 0;
+    Client *c;
 
     if (ev->window != root)
         return;
+
+    for (m = mons; m; m = m->next) {
+        for (c = m->clients; c; c = c->next) {
+            // prevent showing the panel as active application:
+            if (ispanel(c)) continue;
+            occ |= c->tags;
+            if (c->isurgent)
+                urg |= c->tags;
+        }
+        x = 0;
+        for (i = 0; i < LENGTH(tags); i++) {
+            /* Do not draw vacant tags */
+            if (i > min_tag - 1 && !(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+                continue;
+            x += TEXTW(tags[i]);
+        }
+        if (ev->x < x)
+            XDefineCursor(dpy, selmon->barwin, cursor[CurHand]->cursor);
+        else
+            XDefineCursor(dpy, selmon->barwin, cursor[CurNormal]->cursor);
+    }
+
     if ((m = recttomon(ev->x_root, ev->y_root, 1, 1)) != mon && mon) {
         unfocus(selmon->sel, 1);
         selmon = m;
         focus(NULL);
     }
+
     mon = m;
 }
 
@@ -2279,6 +2306,7 @@ setup(void)
     cursor[CurNormal] = drw_cur_create(drw, XC_left_ptr);
     cursor[CurResize] = drw_cur_create(drw, XC_sizing);
     cursor[CurMove] = drw_cur_create(drw, XC_fleur);
+    cursor[CurHand] = drw_cur_create(drw, XC_hand2);
     /* init appearance */
     scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
     for (i = 0; i < LENGTH(colors); i++)
