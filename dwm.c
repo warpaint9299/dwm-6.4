@@ -232,8 +232,8 @@ static void detachstack(Client *c);
 static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
-static void drawhoverbar(XMotionEvent *ev, Monitor *m);
-static void drawhoverbars(XMotionEvent *ev, Monitor *m);
+static void drawhoverbar(Monitor *m, XMotionEvent *ev);
+static void drawhoverbars(XMotionEvent *ev);
 static void enqueue(Client *c);
 static void enqueuestack(Client *c);
 static void enternotify(XEvent *e);
@@ -1003,7 +1003,7 @@ drawbars(void)
 }
 
 void
-drawhoverbar(XMotionEvent *ev, Monitor *m)
+drawhoverbar(Monitor *m, XMotionEvent *ev)
 {
     int x, w, tw = 0;
     int boxs = drw->fonts->h / 9;
@@ -1069,10 +1069,12 @@ drawhoverbar(XMotionEvent *ev, Monitor *m)
 }
 
 void
-drawhoverbars(XMotionEvent *ev, Monitor *m)
+drawhoverbars(XMotionEvent *ev)
 {
+    Monitor *m;
+
     for (m = mons; m; m = m->next)
-        drawhoverbar(ev, m);
+        drawhoverbar(m, ev);
 }
 
 void
@@ -1606,7 +1608,7 @@ motionnotify(XEvent *e)
     if (ev->window != root)
         return;
 
-    drawhoverbars(ev, m);
+    drawhoverbars(ev);
 
     if ((m = recttomon(ev->x_root, ev->y_root, 1, 1)) != mon && mon) {
         unfocus(selmon->sel, 1);
