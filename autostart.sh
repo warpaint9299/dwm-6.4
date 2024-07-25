@@ -19,9 +19,11 @@ done &
 (
 dir_cache_chrome="${HOME}/.cache/google-chrome";
 dir_cache_firefox="${HOME}/.cache/mozilla";
+dir_cache_brave="${HOME}/.cache/BraveSoftware";
 while true; do
 	wm_id_chrome=$(xdotool search --onlyvisible --class 'google-chrome');
 	wm_id_firefox=$(xdotool search --onlyvisible --class 'firefox-esr');
+	wm_id_brave=$(xdotool search --onlyvisible --class 'brave-browser');
 
 	if [[ -n ${wm_id_chrome} ]]; then
 		if [[ '_NET_WM_STATE_FULLSCREEN' -eq $(xprop -id ${wm_id_chrome} _NET_WM_STATE | cut -d\= -f2 | tr -d ' ') ]]; then
@@ -38,6 +40,15 @@ while true; do
 	else
 		[[ -d "${dir_cache_firefox}" ]] && rm -rf ${dir_cache_firefox}
 	fi
+
+	if [[ -n ${wm_id_brave} ]]; then
+		if [[ '_NET_WM_STATE_FULLSCREEN' -eq $(xprop -id ${wm_id_brave} _NET_WM_STATE | cut -d\= -f2 | tr -d ' ') ]]; then
+			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
+		fi
+	else
+		[[ -d "${dir_cache_brave}" ]] && rm -rf ${dir_cache_brave}
+	fi
+
 	sleep 5;
 done &
 )
@@ -48,6 +59,7 @@ while true; do
 	sleep 300;
 done &
 )
+
 blueman-applet &
 flameshot &
 fcitx5 &
