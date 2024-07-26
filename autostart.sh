@@ -42,7 +42,7 @@ while true; do
 	fi
 
 	if [[ -n ${wm_id_brave} ]]; then
-		if [[ '_NET_WM_STATE_FULLSCREEN' -eq $(xprop -id ${wm_id_brave} _NET_WM_STATE | cut -d\= -f2 | tr -d ' ') ]]; then
+		if [[ 0 -ne $( ps -aux | grep brave | grep -v grep | wc -l ) ]];then
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
 	else
@@ -64,6 +64,5 @@ blueman-applet &
 flameshot &
 fcitx5 &
 tmux has-session && exec st -e tmux attach || exec st -e tmux new -s Workspace01 &
-superproductivity &
 xfce4-panel --disable-wm-check &
 exec xset -b & # disable console bell volume
