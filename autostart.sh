@@ -4,8 +4,8 @@ systemctl --user import-environment
 
 (
 while true; do
-	feh --randomize --bg-fill ~/.wallpaper/*.png >> /dev/null 2>&1
-	sleep 300;
+	feh --recursive --randomize --bg-fill ~/.wallpaper/*.png >> /dev/null 2>&1
+	sleep 60;
 done &
 )
 
