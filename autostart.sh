@@ -22,7 +22,7 @@ dir_cache_firefox="${HOME}/.cache/mozilla";
 dir_cache_brave="${HOME}/.cache/BraveSoftware";
 while true; do
 	wm_id_chrome=$(xdotool search --onlyvisible --class 'google-chrome');
-	wm_id_firefox=$(xdotool search --onlyvisible --class 'firefox-esr');
+	wm_id_firefox=$(xdotool search --onlyvisible --class 'firefox');
 	wm_id_brave=$(xdotool search --onlyvisible --class 'brave-browser');
 
 	if [[ -n ${wm_id_chrome} ]]; then
@@ -34,7 +34,7 @@ while true; do
 	fi
 
 	if [[ -n ${wm_id_firefox} ]]; then
-		if [[ 0 -ne $( ps -aux | grep firefox-esr | grep -v grep | wc -l ) ]];then
+		if [[ 0 -ne $( ps -aux | grep firefox | grep -v grep | wc -l ) ]];then
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
 	else
