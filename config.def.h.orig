@@ -135,7 +135,7 @@ static const char *roficmd[]  = { "rofi", "-theme", "DarkBlue", "-modes", "drun,
 static const char *rangcmd[]  = { "st", "-e", "ranger", NULL };
 static const char *flamcmd[]  = { "flameshot", "gui", NULL };
 static const char *lockcmd[]  = { "i3lock", "-c", "0e0e0e", NULL };
-static const char *termcmd[]  = { "alacritty", NULL };
+static const char *termcmd[]  = { "st", NULL };
 
 #include "movestack.c"
 static const Key keys[] = {

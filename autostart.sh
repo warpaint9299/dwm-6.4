@@ -63,6 +63,6 @@ done &
 blueman-applet &
 flameshot &
 fcitx5 &
-tmux has-session && exec alacritty -e tmux attach || exec alacritty -e tmux new -s Workspace01 &
+tmux has-session && exec kitty -e tmux attach || exec kitty -e tmux new -s Workspace01 &
 xfce4-panel --disable-wm-check &
 exec xset -b & # disable console bell volume
