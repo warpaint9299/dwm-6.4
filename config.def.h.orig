@@ -3,7 +3,7 @@
 #define SESSION_FILE "/tmp/dwm-session"
 
 /* appearance */
-static const unsigned int borderpx  = 3;        /* border pixel of windows */
+static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int gappx     = 8;        /* gap pixel between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int rmaster            = 1;        /* 1 means master-area is initially on the right */
@@ -36,7 +36,7 @@ static const char fgcolor4[]    = "#efefef";
 static const char bgcolor4[]    = "#0e0e0e";
 static const char bdcolor4[]    = "#0e0e0e";
 
-static const char fgcolor5[]    = "#b8bb28";
+static const char fgcolor5[]    = "#b8bb26";
 static const char bgcolor5[]    = "#0e0e0e";
 static const char bdcolor5[]    = "#0e0e0e";
 
