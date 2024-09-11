@@ -1243,7 +1243,8 @@ focusstack(int inc, int vis)
     if (c) {
         focus(c);
         restack(selmon);
-        XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
+        if (iswarppointer)
+            XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
         if (HIDDEN(c)) {
             showwin(c);
             c->mon->hidsel = 1;
@@ -1557,7 +1558,7 @@ manage(Window w, XWindowAttributes *wa)
     arrange(c->mon);
     if (!HIDDEN(c))
         XMapWindow(dpy, c->win);
-    if (c && c->mon == selmon && !ispanel(selmon->sel) && !isnotifyd(selmon->sel))
+    if (c && c->mon == selmon && !ispanel(selmon->sel) && !isnotifyd(selmon->sel) && iswarppointer)
         XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
     focus(NULL);
 }
@@ -2677,7 +2678,7 @@ unmanage(Client *c, int destroyed)
     focus(NULL);
     updateclientlist();
     arrange(m);
-    if (m == selmon && m->sel && !ispanel(selmon->sel) && !isnotifyd(selmon->sel))
+    if (m == selmon && m->sel && !ispanel(selmon->sel) && !isnotifyd(selmon->sel) && iswarppointer)
         XWarpPointer(dpy, None, m->sel->win, 0, 0, 0, 0,
                      m->sel->w / 2, m->sel->h / 2);
 }
