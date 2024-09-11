@@ -9,6 +9,7 @@ static const unsigned int snap      = 32;       /* snap pixel */
 static const int rmaster            = 1;        /* 1 means master-area is initially on the right */
 static const char panel[][32]       = { "xfce4-panel", "Xfce4-panel", "xfce4-notifyd", "Xfce4-notifyd" }; /* name & cls of panel win */
 static const int entagmon			= 0;
+static const int iswarppointer      = 0;
 static const int viewontag          = 1;        /* Switch view on tag switch */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
@@ -25,8 +26,8 @@ static const char bgcolor1[]    = "#efefef";
 static const char bdcolor1[]    = "#efefef";
 
 static const char fgcolor2[]    = "#0e0e0e";
-static const char bgcolor2[]    = "#92D100";
-static const char bdcolor2[]    = "#92D100";
+static const char bgcolor2[]    = "#b8bb26";
+static const char bdcolor2[]    = "#b8bb26";
 
 static const char fgcolor3[]    = "#0e0e0e";
 static const char bgcolor3[]    = "#b8bb26";
@@ -111,7 +112,7 @@ static const Layout layouts[] = {
     /* first entry is default */
 	/* symbol     arrange function */
 	{ "󰬚",           spiral },
-	{ "󰬛",           tile }, 
+	{ "󰬛",           tile },
  	{ "󰬋",           dwindle },
 	{ "󰬔",           monocle },
 	{ "󰬎",           grid },
@@ -135,7 +136,7 @@ static const char *roficmd[]  = { "rofi", "-theme", "DarkBlue", "-modes", "drun,
 static const char *rangcmd[]  = { "st", "-e", "ranger", NULL };
 static const char *flamcmd[]  = { "flameshot", "gui", NULL };
 static const char *lockcmd[]  = { "i3lock", "-c", "0e0e0e", NULL };
-static const char *termcmd[]  = { "st", NULL };
+static const char *termcmd[]  = { "kitty", NULL };
 
 #include "movestack.c"
 static const Key keys[] = {
