@@ -1398,10 +1398,12 @@ hide(const Arg *arg)
 void
 hideall(const Arg *arg)
 {
-    Client *c;
+    Client *c = NULL;
     for (c = selmon->clients; c; c = c->next) {
         if (ispanel(c)) continue;
-        hidewin(c);
+        // hide clients in the current tagset
+        if (c->tags == selmon->tagset[selmon->seltags])
+            hidewin(c);
     }
     focus(NULL);
     arrange(selmon);
