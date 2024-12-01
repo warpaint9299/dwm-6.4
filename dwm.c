@@ -1234,13 +1234,16 @@ focusstack(int inc, int vis)
                     c = i;
         } else
             c = selmon->clients;
-        if (!c)
+        if (!c) {
             for (; i; i = i->next)
                 if (!ispanel(i) && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
                     c = i;
+        }
     }
-
-    if (c) {
+    // if is not clients and then return, to void exit dwm.
+    if (!c)
+        return;
+    else {
         focus(c);
         restack(selmon);
         if (iswarppointer)
