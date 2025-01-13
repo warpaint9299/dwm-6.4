@@ -30,7 +30,7 @@ while true; do
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
 	else
-		[[ -d "${dir_cache_chrome}" ]] && rm -rf ${dir_cache_chrome}
+		[[ -d "${dir_cache_chrome}" ]] # && rm -rf ${dir_cache_chrome}
 	fi
 
 	if [[ -n ${wm_id_firefox} ]]; then
@@ -38,7 +38,7 @@ while true; do
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
 	else
-		[[ -d "${dir_cache_firefox}" ]] && rm -rf ${dir_cache_firefox}
+		[[ -d "${dir_cache_firefox}" ]] # && rm -rf ${dir_cache_firefox}
 	fi
 
 	if [[ -n ${wm_id_brave} ]]; then
@@ -46,7 +46,7 @@ while true; do
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
 	else
-		[[ -d "${dir_cache_brave}" ]] && rm -rf ${dir_cache_brave}
+		[[ -d "${dir_cache_brave}" ]] # && rm -rf ${dir_cache_brave}
 	fi
 
 	sleep 5;

@@ -58,7 +58,7 @@
 #define WIDTH(X)             ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X)            ((X)->h + 2 * (X)->bw)
 #define TAGMASK              ((1 << LENGTH(tags)) - 1)
-#define TEXTW(X)             (drw_fontset_getwidth(drw, (X)) + lrpad)
+#define TEXTW(X, F)          (drw_fontset_getwidth(drw, (X), (F)) + lrpad)
 #define OPAQUE               0xffU
 
 /* enums */
@@ -643,14 +643,14 @@ buttonpress(XEvent *e)
             /* Do not reserve space for vacant tags */
             if (i > min_tag - 1 && !(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
                 continue;
-            x += TEXTW(tags[i]);
+            x += TEXTW(tags[i], 0);
         } while (ev->x >= x && ++i < LENGTH(tags));
         if (i < LENGTH(tags)) {
             click = ClkTagBar;
             arg.ui = 1 << i;
-        } else if (ev->x < x + TEXTW(selmon->ltsymbol))
+        } else if (ev->x < x + TEXTW(selmon->ltsymbol, 0))
             click = ClkLtSymbol;
-        else if (ev->x > selmon->ww - (int)TEXTW(stext))
+        else if (ev->x > selmon->ww - (int)TEXTW(stext, 0))
             click = ClkStatusText;
         else
             click = ClkWinTitle;
@@ -954,10 +954,10 @@ drawbar(Monitor *m)
         return;
 
     //	/* draw status first so it can be overdrawn by tags later */
-    if (m == selmon) {                 /* status is only drawn on selected monitor */
+    if (m == selmon) {                    /* status is only drawn on selected monitor */
         drw_setscheme(drw, scheme[SchemeStatus]);
-        tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-        drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0);
+        tw = TEXTW(stext, 0) - lrpad + 2; /* 2px right padding */
+        drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0, 0);
     }
 
     for (c = m->clients; c; c = c->next) {
@@ -972,19 +972,19 @@ drawbar(Monitor *m)
         /* Do not draw vacant tags */
         if (i > min_tag - 1 && !(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
             continue;
-        w = TEXTW(tags[i]);
+        w = TEXTW(tags[i], 0);
         drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeTagsSel : SchemeTagsNorm]);
-        drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+        drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i, 0);
         x += w;
     }
 
-    w = TEXTW(m->ltsymbol);
+    w = TEXTW(m->ltsymbol, 0);
     drw_setscheme(drw, scheme[SchemeTagsNorm]);
-    x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+    x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0, 0);
     if ((w = m->ww - tw - x) > bh) {
         if (m->sel) {
             drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
-            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, ispanel(m->sel) ? "" : m->sel->name, 0);
+            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, ispanel(m->sel) ? "" : m->sel->name, 0, statusfontindex);
             drw_rect(drw, x + twidth, 0, w - twidth - 2 * sp, bh, 1, 1);
             if (m->sel->isfloating && !ispanel(m->sel))
                 drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
@@ -1018,10 +1018,10 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
         return;
 
     //	/* draw status first so it can be overdrawn by tags later */
-    if (m == selmon) {                 /* status is only drawn on selected monitor */
+    if (m == selmon) {                    /* status is only drawn on selected monitor */
         drw_setscheme(drw, scheme[SchemeStatus]);
-        tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-        drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0);
+        tw = TEXTW(stext, 0) - lrpad + 2; /* 2px right padding */
+        drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0, 0);
     }
 
     for (c = m->clients; c; c = c->next) {
@@ -1036,20 +1036,20 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
         /* Do not draw vacant tags */
         if (i > min_tag - 1 && !(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
             continue;
-        w = TEXTW(tags[i]);
+        w = TEXTW(tags[i], 0);
         if (m->tagset[m->seltags] & 1 << i)
             drw_setscheme(drw, scheme[SchemeTagsSel]);
         else if (ev->x > x && ev->x < x + w && (topbar ? ev->y < bh : ev->y > selmon->by))
             drw_setscheme(drw, scheme[SchemeTagsHover]);
         else
             drw_setscheme(drw, scheme[SchemeTagsNorm]);
-        drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+        drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i, 0);
         x += w;
     }
 
-    w = TEXTW(m->ltsymbol);
+    w = TEXTW(m->ltsymbol, 0);
     drw_setscheme(drw, scheme[SchemeTagsNorm]);
-    x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+    x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0, 0);
 
     if (ev->x < x)
         XDefineCursor(dpy, selmon->barwin, cursor[CurHand]->cursor);
@@ -1059,7 +1059,7 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
     if ((w = m->ww - tw - x) > bh) {
         if (m->sel) {
             drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
-            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, ispanel(m->sel) ? "" : m->sel->name, 0);
+            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, ispanel(m->sel) ? "" : m->sel->name, 0, statusfontindex);
             drw_rect(drw, x + twidth, 0, w - twidth - 2 * sp, bh, 1, 1);
             if (m->sel->isfloating && !ispanel(m->sel))
                 drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);

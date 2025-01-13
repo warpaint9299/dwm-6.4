@@ -18,7 +18,12 @@ static const int vertpad            = 0;        /* vertical padding of bar */
 static const int sidepad            = 0;        /* horizontal padding of bar */
 static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const int min_tag             = 4;       /* min number of tag */
-static const char *fonts[]          = { "VictorMono Nerd Font:style=Bold:size=16" };
+// static const char *fonts[]          = { "Comic Code:style=Medium:size=18" };
+static const char *fonts[]          = {
+		"VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
+		"LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
+		"Comic Code:style=Medium:size=16:antialias=true:autohint=true",
+		};
 static const unsigned int twidth          = 1024;
 static const unsigned int baralpha        = 0xd0;
 static const unsigned int borderalpha     = OPAQUE;
@@ -77,7 +82,9 @@ static const unsigned int alphas[][3]      = {
     [SchemeInfoSel]  = { OPAQUE, baralpha, borderalpha },
     [SchemeInfoNorm] = { OPAQUE, baralpha, borderalpha },
 };
-
+/* Select the font index for you statusbar
+ * the index is zero based*/
+static const int statusfontindex = 1;
 /* tagging */
 static const char *tags[] = { "", "󰰶", "󰰡", "󰰛", "󰰰", "󰰰", "󰰭", "󰰘", "󰎣" };
 
@@ -92,10 +99,13 @@ static const Rule rules[] = {
 	/* class      	          instance    title    tags mask     isfloating   CenterThisWindow?        monitor          float x,y,w,h        floatborderpx */
 //	{ "st",                   NULL,       NULL,      0,               1,     	     0,		                -1,			8,40,1904,1032             3 },
 	{ "st",                   NULL,       NULL,      0,               0,     	     0,		                -1,			198,143,1523,825,          3 },
-	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
-	{ "Google-chrome",        NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
+	{ "kitty",                NULL,       NULL,      0,               0,     	     0,		                -1,			198,143,1523,825,          3 },
+	{ "steam",                NULL,       NULL,      0,               1,     	     0,		                -1,			198,143,1523,825,          3 },
+	{ "firefox-esr",          NULL,       NULL,      0,       		  1,             0,                     -1,			50,50,500,500,             3 },
+	{ "Brave-browser",        NULL,       NULL,      0,               1,     	     0,		                -1,			1300,40,608,500,           3 },
 	{ "GoldenDict",           NULL,       NULL,      0,               1,     	     0,		                -1,			1300,40,608,500,           3 },
-	{ "MyEclipse",        	  NULL,       NULL,      2,       		  0,             0,                     -1,			50,50,500,500,             3 },
+	{ "MyEclipse",        	  NULL,       NULL,      2,       		  1,             0,                     -1,			50,50,500,500,             3 },
+	{ "Clash for Windows",    NULL,       NULL,      0,       		  1,             0,                     -1,			50,50,500,500,             3 },
 	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1,			198,143,1523,825,          0 },
 };
 
