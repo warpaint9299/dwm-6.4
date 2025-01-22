@@ -24,7 +24,7 @@ static const char *fonts[]          = {
 		"LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
 		"Comic Code:style=Medium:size=16:antialias=true:autohint=true",
 		};
-static const unsigned int twidth          = 1024;
+static const unsigned int twidth          = 720;
 static const unsigned int baralpha        = 0xd0;
 static const unsigned int borderalpha     = OPAQUE;
 static const char fgcolor1[]    = "#0e0e0e";
@@ -100,12 +100,13 @@ static const Rule rules[] = {
 //	{ "st",                   NULL,       NULL,      0,               1,     	     0,		                -1,			8,40,1904,1032             3 },
 	{ "st",                   NULL,       NULL,      0,               0,     	     0,		                -1,			198,143,1523,825,          3 },
 	{ "kitty",                NULL,       NULL,      0,               0,     	     0,		                -1,			198,143,1523,825,          3 },
-	{ "steam",                NULL,       NULL,      0,               1,     	     0,		                -1,			198,143,1523,825,          3 },
 	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
 	{ "Brave-browser",        NULL,       NULL,      0,               0,     	     0,		                -1,			1300,40,608,500,           3 },
+	{ "Thunar",               NULL,       NULL,      0,       		  1,             1,                     -1,			50,50,500,500,             3 },
 	{ "GoldenDict",           NULL,       NULL,      0,               1,     	     0,		                -1,			1300,40,608,500,           3 },
-	{ "MyEclipse",        	  NULL,       NULL,      2,       		  1,             0,                     -1,			50,50,500,500,             3 },
+	{ "MyEclipse",        	  NULL,       NULL,      2,       		  1,             1,                     -1,			50,50,500,500,             3 },
 	{ "Clash for Windows",    NULL,       NULL,      0,       		  1,             0,                     -1,			50,50,500,500,             3 },
+	{ "steam",                NULL,       NULL,      0,               1,     	     0,		                -1,			198,143,1523,825,          3 },
 	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1,			198,143,1523,825,          0 },
 };
 
