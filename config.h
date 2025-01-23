@@ -107,6 +107,7 @@ static const Rule rules[] = {
 	{ "MyEclipse",        	  NULL,       NULL,      2,       		  1,             1,                     -1,			50,50,500,500,             3 },
 	{ "Clash for Windows",    NULL,       NULL,      0,       		  1,             0,                     -1,			50,50,500,500,             3 },
 	{ "steam",                NULL,       NULL,      0,               1,     	     0,		                -1,			198,143,1523,825,          3 },
+	{ "Xfce4-clipman-history",NULL,       NULL,      0,       		  1,             1,                     -1,			50,50,500,500,             3 },
 	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1,			198,143,1523,825,          0 },
 };
 
