@@ -103,6 +103,7 @@ static const Rule rules[] = {
 	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
 	{ "Brave-browser",        NULL,       NULL,      0,               0,     	     0,		                -1,			1300,40,608,500,           3 },
 	{ "Thunar",               NULL,       NULL,      0,       		  1,             1,                     -1,			50,50,500,500,             3 },
+	{ "Mousepad",             NULL,       NULL,      0,       		  1,             1,                     -1,			50,50,500,500,             3 },
 	{ "GoldenDict",           NULL,       NULL,      0,               1,     	     0,		                -1,			1300,40,608,500,           3 },
 	{ "MyEclipse",        	  NULL,       NULL,      2,       		  1,             1,                     -1,			50,50,500,500,             3 },
 	{ "Clash for Windows",    NULL,       NULL,      0,       		  1,             0,                     -1,			50,50,500,500,             3 },
