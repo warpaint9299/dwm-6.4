@@ -200,7 +200,8 @@ typedef struct
     int isfloating;
     int CenterThisWindow;
     int monitor;
-    int floatx, floaty, floatw, floath;
+    int isfactor;
+    double factorx, factory, factorw, factorh;
     int floatborderpx;
     int iswarppointer;
 } Rule;
@@ -419,16 +420,20 @@ applyrules(Client *c)
             c->CenterThisWindow = r->CenterThisWindow;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
-            if (isfloatrules) {
+            if (r->isfactor && r->isfloating && !ispanel(c)) {
+                m = selmon;
+                if (r->factorx == 1.0 || r->factory == 1.0 || r->factorw == 1.0 || r->factorh == 1.0)
+                    resize(c, m->wx + m->gappx, m->wy + m->gappx, m->ww - 2 * c->bw - (2 * m->gappx), m->wh - 2 * c->bw - (2 * m->gappx), 0);
+                else
+                    resizeclient(c,
+                                 (m->mw - m->mw * r->factorx) / 2,
+                                 (m->mh - m->mh * r->factory) / 2,
+                                 m->mw * r->factorw,
+                                 m->mh * r->factorh);
+
                 if (r->floatborderpx >= 0) {
                     c->floatborderpx = r->floatborderpx;
                     c->hasfloatbw = 1;
-                }
-                if (r->isfloating && !ispanel(c)) {
-                    if (r->floatx >= 0) c->x = c->mon->mx + r->floatx;
-                    if (r->floaty >= 0) c->y = c->mon->my + r->floaty;
-                    if (r->floatw >= 0) c->w = r->floatw;
-                    if (r->floath >= 0) c->h = r->floath;
                 }
             }
 
@@ -1916,7 +1921,7 @@ resizeclient(Client *c, int x, int y, int w, int h)
     c->w = wc.width = w;
     c->oldh = c->h;
     c->h = wc.height = h;
-    if (isfloatrules && c->isfloating && c->hasfloatbw && !c->isfullscreen)
+    if (c->isfloating && c->hasfloatbw && !c->isfullscreen)
         wc.border_width = c->floatborderpx;
     else
         wc.border_width = c->bw;
