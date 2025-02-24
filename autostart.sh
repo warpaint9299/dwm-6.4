@@ -18,24 +18,24 @@ done &
 
 (
 while true; do
-	wm_id_chrome=$(xdotool search --onlyvisible --class 'google-chrome');
-	wm_id_firefox=$(xdotool search --onlyvisible --class 'firefox');
-	wm_id_brave=$(xdotool search --onlyvisible --class 'brave-browser');
+	wm_id_chrome=$(xdotool search --name 'Chrome' | head -n 1);
+	wm_id_firefox=$(xdotool search --name 'Firefox' | head -n 1);
+	wm_id_brave=$(xdotool search --name 'Brave' | head -n 1);
 
 	if [[ -n ${wm_id_chrome} ]]; then
-		if [[ '_NET_WM_STATE_FULLSCREEN' -eq $(xprop -id ${wm_id_chrome} _NET_WM_STATE | cut -d\= -f2 | tr -d ' ') ]]; then
+		if [[ 0 -ne $(xprop -id ${wm_id_chrome} | grep '_NET_WM_STATE_FULLSCREEN' | wc -l) ]]; then
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
 	fi
 
 	if [[ -n ${wm_id_firefox} ]]; then
-		if [[ 0 -ne $( ps -aux | grep firefox | grep -v grep | wc -l ) ]];then
+		if [[ 0 -ne $(xprop -id ${wm_id_firefox} | grep '_NET_WM_STATE_FULLSCREEN' | wc -l) ]]; then
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
 	fi
 
 	if [[ -n ${wm_id_brave} ]]; then
-		if [[ 0 -ne $( ps -aux | grep brave | grep -v grep | wc -l ) ]];then
+		if [[ 0 -ne $(xprop -id ${wm_id_brave} | grep '_NET_WM_STATE_FULLSCREEN' | wc -l) ]]; then
 			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 		fi
 	fi
