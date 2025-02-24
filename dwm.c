@@ -142,7 +142,7 @@ struct Client {
     int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
     int bw, oldbw;
     unsigned int tags;
-    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, CenterThisWindow;
+    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, CenterThisWindow, iswarppointer;
     int floatborderpx;
     int hasfloatbw;
     Client *next;
@@ -202,6 +202,7 @@ typedef struct
     int monitor;
     int floatx, floaty, floatw, floath;
     int floatborderpx;
+    int iswarppointer;
 } Rule;
 
 /* function declarations */
@@ -322,6 +323,7 @@ static void updatewmhints(Client *c);
 static void view(const Arg *arg);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
+static void warppointer(Monitor *m);
 static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
@@ -400,6 +402,7 @@ applyrules(Client *c)
     XClassHint ch = {NULL, NULL};
 
     /* rule matching */
+    c->iswarppointer = 1;
     c->isfloating = 0;
     c->CenterThisWindow = 0;
     c->tags = 0;
@@ -415,6 +418,7 @@ applyrules(Client *c)
             c->isfloating = r->isfloating;
             c->CenterThisWindow = r->CenterThisWindow;
             c->tags |= r->tags;
+            c->iswarppointer = r->iswarppointer;
             if (isfloatrules) {
                 if (r->floatborderpx >= 0) {
                     c->floatborderpx = r->floatborderpx;
@@ -1249,8 +1253,7 @@ focusstack(int inc, int vis)
     else {
         focus(c);
         restack(selmon);
-        if (iswarppointer)
-            XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
+        warppointer(selmon);
         if (HIDDEN(c)) {
             showwin(c);
             c->mon->hidsel = 1;
@@ -1566,8 +1569,7 @@ manage(Window w, XWindowAttributes *wa)
     arrange(c->mon);
     if (!HIDDEN(c))
         XMapWindow(dpy, c->win);
-    if (c && c->mon == selmon && !ispanel(selmon->sel) && !isnotifyd(selmon->sel) && iswarppointer)
-        XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
+    warppointer(c->mon);
     focus(NULL);
 }
 
@@ -2065,6 +2067,7 @@ rotatestack(const Arg *arg)
         arrange(selmon);
         // unfocus(f, 1);
         focus(f);
+        warppointer(selmon);
         restack(selmon);
     }
 }
@@ -2609,6 +2612,7 @@ togglermaster(const Arg *arg)
     selmon->mfact = 1.0 - selmon->mfact;
     if (selmon->lt[selmon->sellt]->arrange)
         arrange(selmon);
+    warppointer(selmon);
 }
 
 void
@@ -2693,9 +2697,8 @@ unmanage(Client *c, int destroyed)
     focus(NULL);
     updateclientlist();
     arrange(m);
-    if (m == selmon && m->sel && !ispanel(selmon->sel) && !isnotifyd(selmon->sel) && iswarppointer)
-        XWarpPointer(dpy, None, m->sel->win, 0, 0, 0, 0,
-                     m->sel->w / 2, m->sel->h / 2);
+    if (m == selmon && selmon->sel)
+        warppointer(m);
 }
 
 void
@@ -3029,6 +3032,13 @@ wintomon(Window w)
     if ((c = wintoclient(w)))
         return c->mon;
     return selmon;
+}
+
+void
+warppointer(Monitor *selmon)
+{
+    if (!ispanel(selmon->sel) && !isnotifyd(selmon->sel) && selmon->sel->iswarppointer)
+        XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
 }
 
 /* There's no way to check accesses to destroyed windows, thus those cases are

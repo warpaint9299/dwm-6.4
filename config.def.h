@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-
 #define SESSION_FILE "/tmp/dwm-session"
 
 /* appearance */
@@ -9,7 +8,6 @@ static const unsigned int snap      = 32;       /* snap pixel */
 static const int rmaster            = 1;        /* 1 means master-area is initially on the right */
 static const char panel[][32]       = { "xfce4-panel", "Xfce4-panel", "xfce4-notifyd", "Xfce4-notifyd" }; /* name & cls of panel win */
 static const int entagmon			= 0;
-static const int iswarppointer      = 0;
 static const int isfloatrules		= 0;
 static const int viewontag          = 1;        /* Switch view on tag switch */
 static const int showbar            = 1;        /* 0 means no bar */
@@ -96,20 +94,21 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      	          instance    title    tags mask     isfloating   CenterThisWindow?        monitor          float x,y,w,h        floatborderpx */
-//	{ "st",                   NULL,       NULL,      0,               1,     	     0,		                -1,			8,40,1904,1032             3 },
-	{ "st",                   NULL,       NULL,      0,               0,     	     0,		                -1,			198,143,1523,825,          3 },
-	{ "kitty",                NULL,       NULL,      0,               0,     	     0,		                -1,			198,143,1523,825,          3 },
-	{ "firefox-esr",          NULL,       NULL,      0,       		  0,             0,                     -1,			50,50,500,500,             3 },
-	{ "Brave-browser",        NULL,       NULL,      0,               0,     	     0,		                -1,			1300,40,608,500,           3 },
-	{ "Thunar",               NULL,       NULL,      0,       		  1,             1,                     -1,			50,50,500,500,             3 },
-	{ "Mousepad",             NULL,       NULL,      0,       		  1,             1,                     -1,			50,50,500,500,             3 },
-	{ "GoldenDict",           NULL,       NULL,      0,               1,     	     0,		                -1,			1300,40,608,500,           3 },
-	{ "MyEclipse",        	  NULL,       NULL,      2,       		  1,             1,                     -1,			50,50,500,500,             3 },
-	{ "Clash for Windows",    NULL,       NULL,      0,       		  1,             0,                     -1,			50,50,500,500,             3 },
-	{ "steam",                NULL,       NULL,      0,               1,     	     0,		                -1,			198,143,1523,825,          3 },
-	{ "Xfce4-clipman-history",NULL,       NULL,      0,       		  1,             0,                     -1,			50,50,500,500,             3 },
-	{  panel[1],              NULL,       NULL,      (1 << 9) - 1,    1,             0,                     -1,			198,143,1523,825,          0 },
+	/* class      	          instance		title	tags mask	isfloating	CenterThisWindow	monitor		float x,y,w,h		floatborderpx	iswarppointer */
+//	{ "st",                   NULL,			NULL,      0,			1,			0,				-1,			8,40,1904,1032   	3 				1 },
+	{ "st",                   NULL,       	NULL,      0,			0,			0,				-1,			198,143,1523,825,	3,				1 },
+	{ "kitty",                NULL,       	NULL,      0,			0,			0,				-1,			198,143,1523,825,	3,				1 },
+	{ "firefox-esr",          NULL,       	NULL,      0,			0,			0,				-1,			50,50,500,500,   	3,				1 },
+	{ "Brave-browser",        NULL,       	NULL,      0,			0,			0,				-1,			1300,40,608,500, 	3,				1 },
+	{ "Thunar",               NULL,       	NULL,      0,			1,			1,				-1,			50,50,500,500,   	3,				1 },
+	{ "Mousepad",             NULL,       	NULL,      0,       	1,			1,				-1,			50,50,500,500,   	3,				1 },
+	{ "gnome-calculator",     NULL,       	NULL,      0,       	1,			0,				-1,			50,50,500,500,   	3,				1 },
+	{ "GoldenDict",           NULL,       	NULL,      0,       	1,			0,				-1,			1300,40,608,500, 	3,				1 },
+	{ "MyEclipse",        	  NULL,       	NULL,      2,       	1,			1,				-1,			50,50,500,500,   	3,				1 },
+	{ "Clash for Windows",    NULL,       	NULL,      0,       	1,			0,				-1,			50,50,500,500,   	3,				1 },
+	{ "steam",                NULL,       	NULL,      0,       	1,			0,				-1,			198,143,1523,825,	3,				0 },
+	{ "Xfce4-clipman-history",NULL,       	NULL,      0,      		1,			0,				-1,			50,50,500,500,   	3,				1 },
+	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,			0,				-1,			198,143,1523,825,	0,				1 },
 };
 
 /* layout(s) */
