@@ -93,28 +93,29 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      	          instance		title	tags mask	isfloating	CenterThisWindow	monitor		isfactor	factor x,y,w,h(double)		floatborderpx	iswarppointer */
+	/* class      	          instance		title	tags mask	isfloating	CenterThisWindow	monitor		isfactor	factor x,y,w,h(0.0~1.0)		floatborderpx	iswarppointer */
 //	{ "st",                   NULL,			NULL,      0,			1,			0,				-1,			1,			1.0,1.0,1.0,1.0,		   	3 				1 },
 	{ "st",                   NULL,       	NULL,      0,			0,			0,				-1,			1,			1.0,1.0,1.0,1.0,			3,				1 },
-	{ "kitty",                NULL,       	NULL,      0,			1,			0,				-1,			1,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "firefox-esr",          NULL,       	NULL,      0,			1,			0,				-1,			1,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "Brave-browser",        NULL,       	NULL,      0,			1,			0,				-1,			1,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "Thunar",               NULL,       	NULL,      0,			1,			1,				-1,			1,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "Mousepad",             NULL,       	NULL,      0,       	1,			1,				-1,			1,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "gnome-calculator",     NULL,       	NULL,      0,       	1,			0,				-1,			0,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "rnote",                NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "GoldenDict",           NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "kdeconnect.app",       NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "MyEclipse",        	  NULL,       	NULL,      2,       	1,			1,				-1,			1,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "Clash for Windows",    NULL,       	NULL,      0,       	1,			0,				-1,			0,			0.8,0.8,0.8,0.8,			3,				1 },
-	{ "steam",                NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.8,0.8,0.8,0.8,			3,				0 },
-	{ "Xfce4-clipman-history",NULL,       	NULL,      0,      		1,			0,				-1,			1,			0.8,0.8,0.8,0.8,			3,				1 },
-	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,			0,				-1,			1,			0.8,0.8,0.8,0.8,			0,				1 },
+	{ "kitty",                NULL,       	NULL,      0,			1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "firefox-esr",          NULL,       	NULL,      0,			1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "Brave-browser",        NULL,       	NULL,      0,			1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "Google-chrome",        NULL,       	NULL,      0,			1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "Thunar",               NULL,       	NULL,      0,			1,			1,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "Mousepad",             NULL,       	NULL,      0,       	1,			1,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "gnome-calculator",     NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.23,1.0,1.0,0.32,			3,				1 },
+	{ "rnote",                NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "GoldenDict",           NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.5,0.5,1.0,1.0,			3,				1 },
+	{ "kdeconnect.app",       NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "MyEclipse",        	  NULL,       	NULL,      2,       	1,			1,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "Clash for Windows",    NULL,       	NULL,      0,       	1,			0,				-1,			0,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "steam",                NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				0 },
+	{ "Xfce4-clipman-history",NULL,       	NULL,      0,      		1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,			0,				-1,			1,			1.0,1.0,1.0,1.0,			0,				1 },
 };
 
 /* layout(s) */
-static const float mfact     = 0.70; /* factor of master area size [0.05..0.95] */
-static const int nmaster     = 1;    /* number of clients in master area */
+static const float mfact     = 0.60; /* factor of master area size [0.05..0.95] */
+static const int nmaster     = 2;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 0; /* 1 will force focus on the fullscreen window */
 static const int attachdirection = 4;    /* 0 default, 1 above, 2 aside, 3 below, 4 bottom, 5 top */

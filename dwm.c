@@ -420,16 +420,32 @@ applyrules(Client *c)
             c->CenterThisWindow = r->CenterThisWindow;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
-            if (r->isfactor && r->isfloating && !ispanel(c)) {
-                m = selmon;
-                if (r->factorx == 1.0 || r->factory == 1.0 || r->factorw == 1.0 || r->factorh == 1.0)
-                    resize(c, m->wx + m->gappx, m->wy + m->gappx, m->ww - 2 * c->bw - (2 * m->gappx), m->wh - 2 * c->bw - (2 * m->gappx), 0);
-                else
+            if (r->isfloating && !ispanel(c)) {
+                if (r->isfactor) {
+                    int cx, cy, cw, ch, x1, y1, x2, y2;
+                    m = selmon;
+                    cx = m->wx + m->gappx;
+                    cy = m->wy + m->gappx;
+                    cw = m->ww - 2 * c->bw - (2 * m->gappx);
+                    ch = m->wh - 2 * c->bw - (2 * m->gappx);
+                    x1 = cx;
+                    y1 = cy;
+                    if (r->factorx == 1.0 && r->factory <= 1.0) {
+                        x2 = x1 + cw - m->gappx - c->bw;
+                        y2 = y1 + ch;
+                    } else if (r->factory == 1.0 && r->factorx <= 1.0) {
+                        x2 = x1 + cw;
+                        y2 = y1 + ch - bh - m->gappx - c->bw;
+                    } else {
+                        x2 = x1 + cw;
+                        y2 = y1 + ch;
+                    }
                     resizeclient(c,
-                                 (m->mw - m->mw * r->factorx) / 2,
-                                 (m->mh - m->mh * r->factory) / 2,
-                                 m->mw * r->factorw,
-                                 m->mh * r->factorh);
+                                 r->factorx == 1.0 ? x1 : (r->factorx == 0.0 ? x1 : x2 * (1 - r->factorx)),
+                                 r->factory == 1.0 ? y1 : (r->factory == 0.0 ? y1 : y2 * (1 - r->factory)),
+                                 ((x2 * r->factorx) == x2 ? cw : (r->factorx == 0.0 ? cw : x2 * r->factorx)) * (r->factorw == 0.0 ? 1.0 : r->factorw),
+                                 ((y2 * r->factory) == y2 ? ch : (r->factory == 0.0 ? ch : y2 * r->factory)) * (r->factorh == 0.0 ? 1.0 : r->factorh));
+                }
 
                 if (r->floatborderpx >= 0) {
                     c->floatborderpx = r->floatborderpx;
