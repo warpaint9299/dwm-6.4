@@ -5,7 +5,7 @@
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int gappx     = 8;        /* gap pixel between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
-static const int rmaster            = 1;        /* 1 means master-area is initially on the right */
+static const int rmaster            = 0;        /* 1 means master-area is initially on the right */
 static const char panel[][32]       = { "xfce4-panel", "Xfce4-panel", "xfce4-notifyd", "Xfce4-notifyd" }; /* name & cls of panel win */
 static const int entagmon			= 0;
 static const int viewontag          = 1;        /* Switch view on tag switch */
@@ -15,7 +15,7 @@ static const int vertpad            = 0;        /* vertical padding of bar */
 static const int sidepad            = 0;        /* horizontal padding of bar */
 static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const int min_tag            = 4;        /* min number of tag */
-static const int isfloatingontoggle	= 0;		/* 1 means that if the client called togglefloating (Alt-Shift-Space),
+static const int ispreventfloat		= 0;		/* 0 means that if the client called togglefloating (Alt-Shift-Space),
 											       it will still auto-float when another client is closed;
 											       vice versa. */
 static const char *fonts[] 	= { "VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
@@ -94,29 +94,30 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      	          instance		title	tags mask	isfloating	CenterThisWindow	monitor		isfactor	factor x,y,w,h(0.0~1.0)		floatborderpx	iswarppointer */
-//	{ "st",                   NULL,			NULL,      0,			1,			0,				-1,			1,			1.0,1.0,1.0,1.0,		   	3 				1 },
-	{ "st",                   NULL,       	NULL,      0,			0,			0,				-1,			1,			1.0,1.0,1.0,1.0,			3,				1 },
-	{ "kitty",                NULL,       	NULL,      0,			1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "firefox-esr",          NULL,       	NULL,      0,			1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "Brave-browser",        NULL,       	NULL,      0,			1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "Google-chrome",        NULL,       	NULL,      0,			1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "Thunar",               NULL,       	NULL,      0,			1,			1,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "Mousepad",             NULL,       	NULL,      0,       	1,			1,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "gnome-calculator",     NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.23,1.0,1.0,0.32,			3,				1 },
-	{ "rnote",                NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "GoldenDict",           NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.5,0.5,1.0,1.0,			3,				1 },
-	{ "kdeconnect.app",       NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "MyEclipse",        	  NULL,       	NULL,      2,       	1,			1,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "Clash for Windows",    NULL,       	NULL,      0,       	1,			0,				-1,			0,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "steam",                NULL,       	NULL,      0,       	1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				0 },
-	{ "Xfce4-clipman-history",NULL,       	NULL,      0,      		1,			0,				-1,			1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,			0,				-1,			1,			1.0,1.0,1.0,1.0,			0,				1 },
+	/* class      	          instance		title	tags mask	isfloating	ispreventtile	monitor	isfactor	factor x,y,w,h(double)		floatborderpx	iswarppointer */
+//	{ "st",                   NULL,			NULL,      0,			1,			0,		-1,		1,			1.0,1.0,1.0,1.0,		   	3 				1 },
+	{ "st",                   NULL,       	NULL,      0,			0,			0,		-1,		1,			1.0,1.0,1.0,1.0,			3,				1 },
+	{ "kitty",                NULL,       	NULL,      0,			1,			0,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "firefox-esr",          NULL,       	NULL,      0,			1,			0,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "Brave-browser",        NULL,       	NULL,      0,			1,			0,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "Google-chrome",        NULL,       	NULL,      0,			1,			0,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "libreoffice",          NULL,       	NULL,      0,			1,			0,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "Thunar",               NULL,       	NULL,      0,			1,			0,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "Mousepad",             NULL,       	NULL,      0,       	1,			0,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "gnome-calculator",     NULL,       	NULL,      0,       	1,			1,		-1,		1,			0.23,1.0,1.0,0.32,			3,				1 },
+	{ "rnote",                NULL,       	NULL,      0,       	1,			1,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "GoldenDict",           NULL,       	NULL,      0,       	1,			1,		-1,		1,			0.5,0.5,1.0,1.0,			3,				1 },
+	{ "kdeconnect.app",       NULL,       	NULL,      0,       	1,			1,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "MyEclipse",        	  NULL,       	NULL,      2,       	1,			0,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "Clash for Windows",    NULL,       	NULL,      0,       	1,			0,		-1,		0,			0.9,0.9,0.9,0.9,			3,				1 },
+	{ "steam",                NULL,       	NULL,      0,       	1,			0,		-1,		1,			0.9,0.9,0.9,0.9,			3,				0 },
+	{ "Xfce4-clipman-history",NULL,       	NULL,      0,      		1,			0,		-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
+	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,			1,		-1,		1,			1.0,1.0,1.0,1.0,			0,				1 },
 };
 
 /* layout(s) */
 static const float mfact     = 0.60; /* factor of master area size [0.05..0.95] */
-static const int nmaster     = 2;    /* number of clients in master area */
+static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 0; /* 1 will force focus on the fullscreen window */
 static const int attachdirection = 4;    /* 0 default, 1 above, 2 aside, 3 below, 4 bottom, 5 top */

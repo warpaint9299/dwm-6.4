@@ -145,7 +145,7 @@ struct Client {
     int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
     int bw, oldbw;
     unsigned int tags;
-    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, CenterThisWindow, iswarppointer, istoggledfloating;
+    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, ispreventtile, iswarppointer, ispreventfloating;
     int floatborderpx;
     int hasfloatbw;
     Client *next;
@@ -201,7 +201,7 @@ typedef struct
     const char *title;
     unsigned int tags;
     int isfloating;
-    int CenterThisWindow;
+    int ispreventtile;
     int monitor;
     int isfactor;
     double factorx, factory, factorw, factorh;
@@ -439,8 +439,8 @@ applyrules(Client *c)
     /* rule matching */
     c->iswarppointer = 1;
     c->isfloating = 0;
-    c->istoggledfloating = 0;
-    c->CenterThisWindow = 0;
+    c->ispreventtile = 1;
+    c->ispreventfloating = 0;
     c->tags = 0;
     XGetClassHint(dpy, c->win, &ch);
     class = ch.res_class ? ch.res_class : broken;
@@ -451,7 +451,7 @@ applyrules(Client *c)
             && (!r->class || strstr(class, r->class))
             && (!r->instance || strstr(instance, r->instance))) {
             c->isfloating = r->isfloating;
-            c->CenterThisWindow = r->CenterThisWindow;
+            c->ispreventtile = r->ispreventtile;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
 
@@ -1184,11 +1184,14 @@ unfloatexceptlatest(Client *c, int action)
         r = &rules[i];
         switch (action) {
             case OPEN_CLIENT:
+                if (c->ispreventtile)
+                    return;
                 for (Client *cl = selmon->clients; cl; cl = cl->next) {
                     XGetClassHint(dpy, cl->win, &ch);
                     class = ch.res_class ? ch.res_class : broken;
                     instance = ch.res_name ? ch.res_name : broken;
-                    if (cl != c
+                    if (!cl->ispreventtile
+                        && cl != c
                         && !ispanel(cl)
                         && cl->isfloating
                         && (!r->title || strstr(cl->name, r->title))
@@ -1198,10 +1201,18 @@ unfloatexceptlatest(Client *c, int action)
                 }
                 break;
             case CLOSE_CLIENT:
-                if (c->istoggledfloating) {
+
+                for (Client *cl = selmon->clients; cl; cl = cl->next)
+                    if (cl != c
+                        && !ispanel(cl)
+                        && cl->isfloating && !cl->ispreventtile)
+                        return;
+
+                if (c->ispreventfloating) {
                     c->isfloating ^= 1;
                     return;
                 }
+
                 XGetClassHint(dpy, c->win, &ch);
                 class = ch.res_class ? ch.res_class : broken;
                 instance = ch.res_name ? ch.res_name : broken;
@@ -1209,7 +1220,7 @@ unfloatexceptlatest(Client *c, int action)
                     && (!r->title || strstr(c->name, r->title))
                     && (!r->class || strstr(class, r->class))
                     && (!r->instance || strstr(instance, r->instance))) {
-                    if (r->isfactor) {
+                    if (r->isfactor && !r->ispreventtile) {
                         if (r->isfactor)
                             applyfactor(c, r);
 
@@ -2635,13 +2646,6 @@ tile(Monitor *m)
             if (ty + HEIGHT(c) + m->gappx < m->wh)
                 ty += HEIGHT(c) + m->gappx;
         }
-
-    if (n == 1 && selmon->sel->CenterThisWindow)
-        resizeclient(selmon->sel,
-                     (selmon->mw - selmon->mw * 0.8) / 2,
-                     (selmon->mh - selmon->mh * 0.8) / 2,
-                     selmon->mw * 0.8,
-                     selmon->mh * 0.8);
 }
 
 void
@@ -2673,8 +2677,8 @@ togglefloating(const Arg *arg)
                  (selmon->mh - selmon->mh * 0.8) / 2,
                  selmon->mw * 0.8,
                  selmon->mh * 0.8);
-    if (!isfloatingontoggle)
-        selmon->sel->istoggledfloating ^= 1;
+    if (ispreventfloat)
+        selmon->sel->ispreventfloating ^= 1;
     arrange(selmon);
 }
 
@@ -2769,6 +2773,7 @@ unmanage(Client *c, int destroyed)
 {
     Monitor *m = c->mon;
     XWindowChanges wc;
+    int ispreventtile = c->ispreventtile;
 
     detach(c);
     detachstack(c);
@@ -2789,7 +2794,8 @@ unmanage(Client *c, int destroyed)
         Client *cl = selmon->clients;
         while (cl->next && !ispanel(cl->next))
             cl = cl->next;
-        unfloatexceptlatest(cl, CLOSE_CLIENT);
+        if (!ispreventtile)
+            unfloatexceptlatest(cl, CLOSE_CLIENT);
     }
     focus(NULL);
     updateclientlist();
