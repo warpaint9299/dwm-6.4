@@ -14,16 +14,16 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 static const int vertpad            = 0;        /* vertical padding of bar */
 static const int sidepad            = 0;        /* horizontal padding of bar */
 static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
-static const int min_tag             = 4;       /* min number of tag */
-// static const char *fonts[]          = { "Comic Code:style=Medium:size=18" };
-static const char *fonts[]          = {
-		"VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
-		"LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
-		"Comic Code:style=Medium:size=16:antialias=true:autohint=true",
-		};
-static const unsigned int twidth          = 720;
-static const unsigned int baralpha        = 0xd0;
-static const unsigned int borderalpha     = OPAQUE;
+static const int min_tag            = 4;        /* min number of tag */
+static const int isfloatingontoggle	= 0;		/* 1 means that if the client called togglefloating (Alt-Shift-Space),
+											       it will still auto-float when another client is closed;
+											       vice versa. */
+static const char *fonts[] 	= { "VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
+								"LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
+								"Comic Code:style=Medium:size=16:antialias=true:autohint=true", };
+static const unsigned int twidth		= 720;
+static const unsigned int baralpha		= 0xd0;
+static const unsigned int borderalpha	= OPAQUE;
 static const char fgcolor1[]    = "#0e0e0e";
 static const char bgcolor1[]    = "#efefef";
 static const char bdcolor1[]    = "#efefef";
@@ -79,6 +79,7 @@ static const unsigned int alphas[][3]      = {
     [SchemeInfoSel]  = { OPAQUE, baralpha, borderalpha },
     [SchemeInfoNorm] = { OPAQUE, baralpha, borderalpha },
 };
+
 /* Select the font index for you statusbar
  * the index is zero based*/
 static const int statusfontindex = 1;

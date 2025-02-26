@@ -69,7 +69,6 @@ enum {
     CurHand,
     CurLast
 }; /* cursor */
-
 enum {
     SchemeNorm,
     SchemeSel,
@@ -115,6 +114,10 @@ enum {
     WIN_E,
     WIN_S,
 }; /* coordinates for movethrow */
+enum {
+    OPEN_CLIENT,
+    CLOSE_CLIENT
+}; /* actions of unfloatexceptlatest */
 
 typedef union {
     int i;
@@ -142,7 +145,7 @@ struct Client {
     int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
     int bw, oldbw;
     unsigned int tags;
-    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, CenterThisWindow, iswarppointer;
+    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, CenterThisWindow, iswarppointer, istoggledfloating;
     int floatborderpx;
     int hasfloatbw;
     Client *next;
@@ -207,6 +210,7 @@ typedef struct
 } Rule;
 
 /* function declarations */
+static void applyfactor(Client *c, const Rule *r);
 static void applyrules(Client *c);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 static void arrange(Monitor *m);
@@ -308,6 +312,7 @@ static void togglebehide(const Arg *arg);
 static void togglermaster(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
+static void unfloatexceptlatest(Client *c, int action);
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
 static void unmapnotify(XEvent *e);
@@ -394,6 +399,35 @@ struct NumTags {
 
 /* function implementations */
 void
+applyfactor(Client *c, const Rule *r)
+{
+
+    int cx, cy, cw, ch, x1, y1, x2, y2;
+    Monitor *m = selmon;
+    cx = m->wx + m->gappx;
+    cy = m->wy + m->gappx;
+    cw = m->ww - 2 * c->bw - (2 * m->gappx);
+    ch = m->wh - 2 * c->bw - (2 * m->gappx);
+    x1 = cx;
+    y1 = cy;
+    if (r->factorx == 1.0 && r->factory <= 1.0) {
+        x2 = x1 + cw - m->gappx - c->bw;
+        y2 = y1 + ch;
+    } else if (r->factory == 1.0 && r->factorx <= 1.0) {
+        x2 = x1 + cw;
+        y2 = y1 + ch - bh - m->gappx - c->bw;
+    } else {
+        x2 = x1 + cw;
+        y2 = y1 + ch;
+    }
+    resizeclient(c,
+                 r->factorx == 1.0 ? x1 : (r->factorx == 0.0 ? x1 : x2 * (1 - r->factorx)),
+                 r->factory == 1.0 ? y1 : (r->factory == 0.0 ? y1 : y2 * (1 - r->factory)),
+                 ((x2 * r->factorx) == x2 ? cw : (r->factorx == 0.0 ? cw : x2 * r->factorx)) * (r->factorw == 0.0 ? 1.0 : r->factorw),
+                 ((y2 * r->factory) == y2 ? ch : (r->factory == 0.0 ? ch : y2 * r->factory)) * (r->factorh == 0.0 ? 1.0 : r->factorh));
+}
+
+void
 applyrules(Client *c)
 {
     const char *class, *instance;
@@ -405,12 +439,12 @@ applyrules(Client *c)
     /* rule matching */
     c->iswarppointer = 1;
     c->isfloating = 0;
+    c->istoggledfloating = 0;
     c->CenterThisWindow = 0;
     c->tags = 0;
     XGetClassHint(dpy, c->win, &ch);
     class = ch.res_class ? ch.res_class : broken;
     instance = ch.res_name ? ch.res_name : broken;
-
     for (i = 0; i < LENGTH(rules); i++) {
         r = &rules[i];
         if ((!r->title || strstr(c->name, r->title))
@@ -420,32 +454,10 @@ applyrules(Client *c)
             c->CenterThisWindow = r->CenterThisWindow;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
-            if (r->isfloating && !ispanel(c)) {
-                if (r->isfactor) {
-                    int cx, cy, cw, ch, x1, y1, x2, y2;
-                    m = selmon;
-                    cx = m->wx + m->gappx;
-                    cy = m->wy + m->gappx;
-                    cw = m->ww - 2 * c->bw - (2 * m->gappx);
-                    ch = m->wh - 2 * c->bw - (2 * m->gappx);
-                    x1 = cx;
-                    y1 = cy;
-                    if (r->factorx == 1.0 && r->factory <= 1.0) {
-                        x2 = x1 + cw - m->gappx - c->bw;
-                        y2 = y1 + ch;
-                    } else if (r->factory == 1.0 && r->factorx <= 1.0) {
-                        x2 = x1 + cw;
-                        y2 = y1 + ch - bh - m->gappx - c->bw;
-                    } else {
-                        x2 = x1 + cw;
-                        y2 = y1 + ch;
-                    }
-                    resizeclient(c,
-                                 r->factorx == 1.0 ? x1 : (r->factorx == 0.0 ? x1 : x2 * (1 - r->factorx)),
-                                 r->factory == 1.0 ? y1 : (r->factory == 0.0 ? y1 : y2 * (1 - r->factory)),
-                                 ((x2 * r->factorx) == x2 ? cw : (r->factorx == 0.0 ? cw : x2 * r->factorx)) * (r->factorw == 0.0 ? 1.0 : r->factorw),
-                                 ((y2 * r->factory) == y2 ? ch : (r->factory == 0.0 ? ch : y2 * r->factory)) * (r->factorh == 0.0 ? 1.0 : r->factorh));
-                }
+
+            if (c->isfloating && !ispanel(c)) {
+                if (r->isfactor)
+                    applyfactor(c, r);
 
                 if (r->floatborderpx >= 0) {
                     c->floatborderpx = r->floatborderpx;
@@ -1159,6 +1171,62 @@ expose(XEvent *e)
 }
 
 void
+unfloatexceptlatest(Client *c, int action)
+{
+    if (!c->isfloating)
+        c->isfloating ^= 1;
+
+    const char *class, *instance;
+    unsigned int i;
+    const Rule *r;
+    XClassHint ch = {NULL, NULL};
+    for (i = 0; i < LENGTH(rules); i++) {
+        r = &rules[i];
+        switch (action) {
+            case OPEN_CLIENT:
+                for (Client *cl = selmon->clients; cl; cl = cl->next) {
+                    XGetClassHint(dpy, cl->win, &ch);
+                    class = ch.res_class ? ch.res_class : broken;
+                    instance = ch.res_name ? ch.res_name : broken;
+                    if (cl != c
+                        && !ispanel(cl)
+                        && cl->isfloating
+                        && (!r->title || strstr(cl->name, r->title))
+                        && (!r->class || strstr(class, r->class))
+                        && (!r->instance || strstr(instance, r->instance)))
+                        cl->isfloating ^= 1;
+                }
+                break;
+            case CLOSE_CLIENT:
+                if (c->istoggledfloating) {
+                    c->isfloating ^= 1;
+                    return;
+                }
+                XGetClassHint(dpy, c->win, &ch);
+                class = ch.res_class ? ch.res_class : broken;
+                instance = ch.res_name ? ch.res_name : broken;
+                if (!ispanel(c)
+                    && (!r->title || strstr(c->name, r->title))
+                    && (!r->class || strstr(class, r->class))
+                    && (!r->instance || strstr(instance, r->instance))) {
+                    if (r->isfactor) {
+                        if (r->isfactor)
+                            applyfactor(c, r);
+
+                        if (r->floatborderpx >= 0) {
+                            c->floatborderpx = r->floatborderpx;
+                            c->hasfloatbw = 1;
+                        }
+                    }
+                }
+                break;
+            default:
+                return;
+        }
+    }
+}
+
+void
 focus(Client *c)
 {
     if (!c || !ISVISIBLE(c))
@@ -1557,8 +1625,10 @@ manage(Window w, XWindowAttributes *wa)
     grabbuttons(c, 0);
     if (!c->isfloating)
         c->isfloating = c->oldstate = trans != None || c->isfixed;
-    if (c->isfloating)
+    if (c->isfloating) {
+        unfloatexceptlatest(c, OPEN_CLIENT);
         XRaiseWindow(dpy, c->win);
+    }
     switch (attachdirection) {
         case 1:
             attachabove(c);
@@ -2598,13 +2668,13 @@ togglefloating(const Arg *arg)
     if (selmon->sel->isfloating)
         resize(selmon->sel, selmon->sel->x, selmon->sel->y,
                selmon->sel->w, selmon->sel->h, 0);
-
     resizeclient(selmon->sel,
                  (selmon->mw - selmon->mw * 0.8) / 2,
                  (selmon->mh - selmon->mh * 0.8) / 2,
                  selmon->mw * 0.8,
                  selmon->mh * 0.8);
-
+    if (!isfloatingontoggle)
+        selmon->sel->istoggledfloating ^= 1;
     arrange(selmon);
 }
 
@@ -2715,6 +2785,12 @@ unmanage(Client *c, int destroyed)
         XUngrabServer(dpy);
     }
     free(c);
+    if (selmon->clients) {
+        Client *cl = selmon->clients;
+        while (cl->next && !ispanel(cl->next))
+            cl = cl->next;
+        unfloatexceptlatest(cl, CLOSE_CLIENT);
+    }
     focus(NULL);
     updateclientlist();
     arrange(m);
