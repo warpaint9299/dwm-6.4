@@ -28,6 +28,7 @@
 #include <X11/keysym.h>
 #include <errno.h>
 #include <locale.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -145,7 +146,7 @@ struct Client {
     int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
     int bw, oldbw;
     unsigned int tags;
-    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, ispreventtile, iswarppointer, ispreventfloating;
+    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, ispreventtile, iswarppointer;
     int floatborderpx;
     int hasfloatbw;
     Client *next;
@@ -223,6 +224,7 @@ static void attachbottom(Client *c);
 static void attachtop(Client *c);
 static void attachstack(Client *c);
 static void buttonpress(XEvent *e);
+static void changerule(void);
 static void checkotherwm(void);
 static void cleanup(void);
 static void cleanupmon(Monitor *mon);
@@ -379,6 +381,8 @@ static int useargb = 0;
 static Visual *visual;
 static int depth;
 static Colormap cmap;
+static int preventfloating = 0;
+pthread_mutex_t rule_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -440,7 +444,6 @@ applyrules(Client *c)
     c->iswarppointer = 1;
     c->isfloating = 0;
     c->ispreventtile = 1;
-    c->ispreventfloating = 0;
     c->tags = 0;
     XGetClassHint(dpy, c->win, &ch);
     class = ch.res_class ? ch.res_class : broken;
@@ -701,6 +704,34 @@ buttonpress(XEvent *e)
         if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
             && CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
             buttons[i].func(click == ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
+}
+
+void
+changerule(void)
+{
+
+    const char *class, *instance;
+    unsigned int i;
+    Monitor *m = selmon;
+    Client *c = m->sel;
+    Rule *r;
+    XClassHint ch = {NULL, NULL};
+    XGetClassHint(dpy, c->win, &ch);
+    class = ch.res_class ? ch.res_class : broken;
+    instance = ch.res_name ? ch.res_name : broken;
+    pthread_mutex_lock(&rule_mutex);
+    for (i = 0; i < LENGTH(rules); i++) {
+        r = &rules[i];
+        if ((!r->title || strstr(c->name, r->title))
+            && (!r->class || strstr(class, r->class))
+            && (!r->instance || strstr(instance, r->instance)))
+            r->isfloating ^= 1;
+    }
+    pthread_mutex_unlock(&rule_mutex);
+    if (ch.res_class)
+        XFree(ch.res_class);
+    if (ch.res_name)
+        XFree(ch.res_name);
 }
 
 void
@@ -1173,8 +1204,6 @@ expose(XEvent *e)
 void
 unfloatexceptlatest(Client *c, int action)
 {
-    if (!c->isfloating)
-        c->isfloating ^= 1;
 
     const char *class, *instance;
     unsigned int i;
@@ -1201,17 +1230,15 @@ unfloatexceptlatest(Client *c, int action)
                 }
                 break;
             case CLOSE_CLIENT:
-
                 for (Client *cl = selmon->clients; cl; cl = cl->next)
                     if (cl != c
                         && !ispanel(cl)
-                        && cl->isfloating && !cl->ispreventtile)
+                        && cl->isfloating
+                        && !cl->ispreventtile)
                         return;
 
-                if (c->ispreventfloating) {
+                if (!c->isfloating)
                     c->isfloating ^= 1;
-                    return;
-                }
 
                 XGetClassHint(dpy, c->win, &ch);
                 class = ch.res_class ? ch.res_class : broken;
@@ -2666,20 +2693,27 @@ togglebar(const Arg *arg)
 void
 togglefloating(const Arg *arg)
 {
-    if (!selmon->sel)
+    Monitor *m = selmon;
+    Client *c = m->sel;
+    if (!c)
         return;
-    selmon->sel->isfloating = !selmon->sel->isfloating || selmon->sel->isfixed;
-    if (selmon->sel->isfloating)
-        resize(selmon->sel, selmon->sel->x, selmon->sel->y,
-               selmon->sel->w, selmon->sel->h, 0);
-    resizeclient(selmon->sel,
-                 (selmon->mw - selmon->mw * 0.8) / 2,
-                 (selmon->mh - selmon->mh * 0.8) / 2,
-                 selmon->mw * 0.8,
-                 selmon->mh * 0.8);
-    if (ispreventfloat)
-        selmon->sel->ispreventfloating ^= 1;
-    arrange(selmon);
+
+    c->isfloating = !c->isfloating || selmon->sel->isfixed;
+    if (c->isfloating)
+        resize(c, c->x, c->y, c->w, c->h, 0);
+
+    resizeclient(c,
+                 (m->mw - m->mw * 0.8) / 2,
+                 (m->mh - m->mh * 0.8) / 2,
+                 m->mw * 0.8,
+                 m->mh * 0.8);
+
+    if (dynamicrule) {
+        preventfloating ^= 1;
+        changerule();
+    }
+
+    arrange(m);
 }
 
 void
@@ -2794,8 +2828,11 @@ unmanage(Client *c, int destroyed)
         Client *cl = selmon->clients;
         while (cl->next && !ispanel(cl->next))
             cl = cl->next;
-        if (!ispreventtile)
+        if (!ispreventtile && !preventfloating) {
             unfloatexceptlatest(cl, CLOSE_CLIENT);
+            if (cl->isfloating)
+                XRaiseWindow(dpy, cl->win);
+        }
     }
     focus(NULL);
     updateclientlist();
@@ -3140,8 +3177,11 @@ wintomon(Window w)
 void
 warppointer(Monitor *selmon)
 {
-    if (!ispanel(selmon->sel) && !isnotifyd(selmon->sel) && selmon->sel->iswarppointer)
+    if (!ispanel(selmon->sel) && !isnotifyd(selmon->sel) && selmon->sel->iswarppointer) {
+        while (selmon->sel->ispreventtile && selmon->sel->next)
+            selmon->sel = selmon->sel->next;
         XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
+    }
 }
 
 /* There's no way to check accesses to destroyed windows, thus those cases are

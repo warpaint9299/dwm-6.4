@@ -15,9 +15,7 @@ static const int vertpad            = 0;        /* vertical padding of bar */
 static const int sidepad            = 0;        /* horizontal padding of bar */
 static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const int min_tag            = 4;        /* min number of tag */
-static const int ispreventfloat		= 0;		/* 0 means that if the client called togglefloating (Alt-Shift-Space),
-											       it will still auto-float when another client is closed;
-											       vice versa. */
+static const int dynamicrule		= 1;		/* 1 means dynamically changing isfloating rule of a selected client, and vice versa. */
 static const char *fonts[] 	= { "VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
 								"LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
 								"Comic Code:style=Medium:size=16:antialias=true:autohint=true", };
@@ -89,7 +87,7 @@ static const char *tags[] = { "", "󰰶", "󰰡", "󰰛", "󰰰", "󰰰", "�
 /* Lockfile */
 static char lockfile[] = "/tmp/dwm.lock";
 
-static const Rule rules[] = {
+static Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
