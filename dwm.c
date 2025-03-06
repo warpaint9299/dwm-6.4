@@ -224,7 +224,7 @@ static void attachbottom(Client *c);
 static void attachtop(Client *c);
 static void attachstack(Client *c);
 static void buttonpress(XEvent *e);
-static void changerule(void);
+static void changerule(Client *c);
 static void checkotherwm(void);
 static void cleanup(void);
 static void cleanupmon(Monitor *mon);
@@ -443,7 +443,7 @@ applyrules(Client *c)
     /* rule matching */
     c->iswarppointer = 1;
     c->isfloating = 0;
-    c->ispreventtile = 1;
+    c->ispreventtile = 0;
     c->tags = 0;
     XGetClassHint(dpy, c->win, &ch);
     class = ch.res_class ? ch.res_class : broken;
@@ -707,13 +707,11 @@ buttonpress(XEvent *e)
 }
 
 void
-changerule(void)
+changerule(Client *c)
 {
 
     const char *class, *instance;
     unsigned int i;
-    Monitor *m = selmon;
-    Client *c = m->sel;
     Rule *r;
     XClassHint ch = {NULL, NULL};
     XGetClassHint(dpy, c->win, &ch);
@@ -2695,7 +2693,7 @@ togglefloating(const Arg *arg)
 {
     Monitor *m = selmon;
     Client *c = m->sel;
-    if (!c)
+    if (!c || ispanel(c))
         return;
 
     c->isfloating = !c->isfloating || selmon->sel->isfixed;
@@ -2710,7 +2708,7 @@ togglefloating(const Arg *arg)
 
     if (dynamicrule) {
         preventfloating ^= 1;
-        changerule();
+        changerule(c);
     }
 
     arrange(m);
