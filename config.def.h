@@ -145,11 +145,12 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *thuncmd[]  = { "thunar", NULL };
-static const char *roficmd[]  = { "rofi", "-theme", "DarkBlue", "-modes", "drun,run", "-show", "drun", NULL };
+static const char *menucmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/powermenu.sh" , NULL };
+static const char *roficmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/runner.sh" , NULL };
+static const char *lockcmd[]  = { "i3lock", "-c", "0e0e0e", NULL };
 static const char *rangcmd[]  = { "st", "-e", "ranger", NULL };
 static const char *flamcmd[]  = { "flameshot", "gui", NULL };
-static const char *lockcmd[]  = { "i3lock", "-c", "0e0e0e", NULL };
+static const char *thuncmd[]  = { "thunar", NULL };
 static const char *termcmd[]  = { "kitty", NULL };
 
 #include "movestack.c"
@@ -157,6 +158,7 @@ static const Key keys[] = {
 	/* modifier                     key            function            argument */
 	{ MODKEY,             			XK_e,          spawn,              {.v = thuncmd } },
 	{ MODKEY,             			XK_p,          spawn,              {.v = roficmd } },
+	{ MODKEY|ShiftMask,    			XK_p,          spawn,              {.v = menucmd } },
 	{ MODKEY|ShiftMask,    			XK_r,          spawn,              {.v = rangcmd } },
 	{ MODKEY|ShiftMask,             XK_f,          spawn,              {.v = flamcmd } },
 	{ MODKEY|ShiftMask,             XK_i,          spawn,              {.v = lockcmd } },
