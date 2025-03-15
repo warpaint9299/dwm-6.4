@@ -1554,12 +1554,12 @@ isfirstinstance(Client *c)
             if (!(cl->tags & curtags))
                 continue;
             if (!strcmp(cl->class, c->class) && !strcmp(cl->instance, c->instance)) {
-                fprintf(stderr, "\n\nThe client %s is not first instance in the tag %d, on the %d monitor\n\n", c->class, curtags, c->mon->num);
+                fprintf(stderr, "\n\nThe client %s is not the first instance on the tag %d of the %d monitor\n\n", c->class, curtags, c->mon->num);
                 return 0;
             }
         }
     }
-    fprintf(stderr, "\n\nThe client %s is first instance in the tag %d, on the %d monitor\n\n", c->class, curtags, c->mon->num);
+    fprintf(stderr, "\n\nThe client %s is the first instance on the tag %d of the %d monitor\n\n", c->class, curtags, c->mon->num);
     return 1;
 }
 
@@ -1724,7 +1724,7 @@ manage(Window w, XWindowAttributes *wa)
 
     if (ch.res_class) XFree(ch.res_class);
     if (ch.res_name) XFree(ch.res_name);
-    fprintf(stderr, "\n\nWindow managed: class=%s, instance=%s\n", c->class, c->instance);
+    fprintf(stderr, "\nWindow managed: class=%s, instance=%s", c->class, c->instance);
 
     // no border - even when active
     if (ispanel(c)) c->bw = c->oldbw = 0;
