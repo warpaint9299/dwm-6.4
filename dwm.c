@@ -139,7 +139,7 @@ typedef struct
 typedef struct Monitor Monitor;
 typedef struct Client Client;
 struct Client {
-    char name[256];
+    char name[256], class[256], instance[256];
     float mina, maxa;
     int x, y, w, h;
     int oldx, oldy, oldw, oldh;
@@ -262,6 +262,7 @@ static void grabkeys(void);
 static void hide(const Arg *arg);
 static void hideall(const Arg *arg);
 static void hidewin(Client *c);
+static int isfirstinstance(Client *c);
 static int ispanel(Client *c);
 static int isnotifyd(Client *c);
 static void incnmaster(const Arg *arg);
@@ -457,7 +458,7 @@ applyrules(Client *c)
             && (!r->class || strstr(class, r->class))
             && (!r->instance || strstr(instance, r->instance))) {
             // the `!(c->mon->num)` is a primary or first monitor
-            c->isfloating = !(c->mon->num) ? r->isfloating : c->isfloating;
+            c->isfloating = !(c->mon->num) ? (isfirstinstance(c) ? 1 : r->isfloating) : c->isfloating;
             c->ispreventtile = r->ispreventtile;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
@@ -735,6 +736,7 @@ changerule(Client *c)
         if ((!r->title || strstr(c->name, r->title))
             && (!r->class || strstr(class, r->class))
             && (!r->instance || strstr(instance, r->instance))) {
+
             if (dynamicrule) {
                 if (!r->ispreventtile)
                     r->isfloating ^= 1;
@@ -1536,6 +1538,25 @@ grabkeys(void)
 }
 
 int
+isfirstinstance(Client *c)
+{
+    if (!c) {
+        fprintf(stderr, "the function isfirstinstance: the client parameter is null\n");
+        return 0;
+    }
+    Monitor *m = c->mon;
+    Client *cl;
+    if (m->clients) {
+        for (cl = m->clients; cl; cl = cl->next)
+            if (cl != c
+                && !strcmp(cl->class, c->class)
+                && !strcmp(cl->instance, c->instance))
+                return 0;
+    }
+    return 1;
+}
+
+int
 ispanel(Client *c)
 {
     return !strcmp(c->name, panel[0]);
@@ -1654,6 +1675,8 @@ manage(Window w, XWindowAttributes *wa)
     Client *c, *t = NULL;
     Window trans = None;
     XWindowChanges wc;
+    XClassHint ch = {NULL, NULL};
+    const char *broken = "unknown";
 
     c = ecalloc(1, sizeof(Client));
     c->win = w;
@@ -1680,6 +1703,21 @@ manage(Window w, XWindowAttributes *wa)
     c->x = MAX(c->x, c->mon->wx);
     c->y = MAX(c->y, c->mon->wy);
     c->bw = borderpx;
+
+    if (XGetClassHint(dpy, c->win, &ch)) {
+        strncpy(c->class, ch.res_class ? ch.res_class : broken, sizeof(c->class) - 1);
+        c->class[sizeof(c->class) - 1] = '\0';
+
+        strncpy(c->instance, ch.res_name ? ch.res_name : broken, sizeof(c->instance) - 1);
+        c->instance[sizeof(c->instance) - 1] = '\0';
+    } else {
+        strncpy(c->class, broken, sizeof(c->class));
+        strncpy(c->instance, broken, sizeof(c->instance));
+    }
+
+    if (ch.res_class) XFree(ch.res_class);
+    if (ch.res_name) XFree(ch.res_name);
+    fprintf(stderr, "Window managed: class=%s, instance=%s\n", c->class, c->instance);
 
     // no border - even when active
     if (ispanel(c)) c->bw = c->oldbw = 0;

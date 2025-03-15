@@ -87,7 +87,7 @@ static const char *tags[] = { "", "󰰶", "󰰡", "󰰛", "󰰰", "󰰰", "�
 static char lockfile[] = "/tmp/dwm.lock";
 
 /* 1 means dynamically changing isfloating rule of a selected client, and vice versa. */
-static int dynamicrule = 1;
+static const int dynamicrule = 1;
 static Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
