@@ -384,6 +384,7 @@ static Visual *visual;
 static int depth;
 static Colormap cmap;
 static int isfloating_src = 0;
+static int istoggled = 0;
 
 pthread_mutex_t rule_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -2692,7 +2693,7 @@ tagmon(const Arg *arg)
         && destination != primary && c->isfloating) {
         dotogglefloating(c->mon, c);
         arrange(c->mon);
-        if (isfloating_src) {
+        if (isfloating_src && !istoggled) {
             // primany --> displayPort-0
             if (m->clients) {
                 Client *cl = m->clients;
@@ -2706,7 +2707,7 @@ tagmon(const Arg *arg)
                && source != destination
                && destination == primary && !c->isfloating) {
         // displayPort-0 --> primany
-        if (isfloating_src) {
+        if (isfloating_src && !istoggled) {
             c->isfloating ^= 1;
             changerule(c);
             XRaiseWindow(dpy, c->win);
@@ -2767,8 +2768,11 @@ togglefloating(const Arg *arg)
 {
     Monitor *m = selmon;
     Client *c = m->sel;
+    if (!m || !c || ispanel(c))
+        return;
     dotogglefloating(m, c);
     isfloating_src = c->isfloating;
+    istoggled ^= 1;
     arrange(m);
     warppointer(m);
 }
