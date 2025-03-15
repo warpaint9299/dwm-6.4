@@ -2,7 +2,8 @@ void
 movestack(const Arg *arg)
 {
     Client *c = NULL, *p = NULL, *pc = NULL, *i;
-
+    if (!selmon->sel) {
+    }
     if (arg->i > 0) {
         /* find the client after selmon->sel */
         for (c = selmon->sel->next; c && (!ISVISIBLE(c) || c->isfloating); c = c->next)
@@ -44,8 +45,7 @@ movestack(const Arg *arg)
         else if (c == selmon->clients)
             selmon->clients = selmon->sel;
         arrange(selmon);
+        if (c->mon == selmon && !ispanel(selmon->sel) && !isnotifyd(selmon->sel) && selmon->sel->iswarppointer)
+            XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
     }
-
-    if (c->mon == selmon && !ispanel(selmon->sel) && !isnotifyd(selmon->sel) && selmon->sel->iswarppointer)
-        XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
 }

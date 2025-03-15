@@ -117,7 +117,7 @@ enum {
 }; /* coordinates for movethrow */
 enum {
     OPEN_CLIENT,
-    CLOSE_CLIENT
+    CLOSE_CLIENT,
 }; /* actions of unfloatexceptlatest */
 
 typedef union {
@@ -147,8 +147,8 @@ struct Client {
     int bw, oldbw;
     unsigned int tags;
     int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, ispreventtile, iswarppointer;
-    int floatborderpx;
-    int hasfloatbw;
+    int borderpx;
+    int hasrulebw;
     Client *next;
     Client *snext;
     Monitor *mon;
@@ -206,7 +206,7 @@ typedef struct
     int monitor;
     int isfactor;
     double factorx, factory, factorw, factorh;
-    int floatborderpx;
+    int borderpx;
     int iswarppointer;
 } Rule;
 
@@ -238,6 +238,7 @@ static void destroynotify(XEvent *e);
 static void detach(Client *c);
 static void detachstack(Client *c);
 static Monitor *dirtomon(int dir);
+static void dotogglefloating(Monitor *m, Client *c);
 static void drawbar(Monitor *m);
 static void drawbars(void);
 static void drawhoverbar(Monitor *m, XMotionEvent *ev);
@@ -314,7 +315,7 @@ static void togglebehide(const Arg *arg);
 static void togglermaster(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
-static void unfloatexceptlatest(Client *c, int action);
+static void unfloatexceptlatest(Monitor *m, Client *c, int action);
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
 static void unmapnotify(XEvent *e);
@@ -329,6 +330,7 @@ static void updatetitle(Client *c);
 static void updatewindowtype(Client *c);
 static void updatewmhints(Client *c);
 static void view(const Arg *arg);
+static void viewall(const Arg *arg);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
 static void warppointer(Monitor *m);
@@ -381,7 +383,8 @@ static int useargb = 0;
 static Visual *visual;
 static int depth;
 static Colormap cmap;
-static int preventfloating = 0;
+static int isfloating_src = 0;
+
 pthread_mutex_t rule_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* configuration, allows nested code to access above variables */
@@ -405,9 +408,8 @@ struct NumTags {
 void
 applyfactor(Client *c, const Rule *r)
 {
-
     int cx, cy, cw, ch, x1, y1, x2, y2;
-    Monitor *m = selmon;
+    Monitor *m = c->mon;
     cx = m->wx + m->gappx;
     cy = m->wy + m->gappx;
     cw = m->ww - 2 * c->bw - (2 * m->gappx);
@@ -443,7 +445,7 @@ applyrules(Client *c)
     /* rule matching */
     c->iswarppointer = 1;
     c->isfloating = 0;
-    c->ispreventtile = 0;
+    c->ispreventtile = 1;
     c->tags = 0;
     XGetClassHint(dpy, c->win, &ch);
     class = ch.res_class ? ch.res_class : broken;
@@ -453,19 +455,21 @@ applyrules(Client *c)
         if ((!r->title || strstr(c->name, r->title))
             && (!r->class || strstr(class, r->class))
             && (!r->instance || strstr(instance, r->instance))) {
-            c->isfloating = r->isfloating;
+            // the `!(c->mon->num)` is a primary or first monitor
+            c->isfloating = !(c->mon->num) ? r->isfloating : c->isfloating;
             c->ispreventtile = r->ispreventtile;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
+            isfloating_src = c->isfloating;
 
             if (c->isfloating && !ispanel(c)) {
                 if (r->isfactor)
                     applyfactor(c, r);
+            }
 
-                if (r->floatborderpx >= 0) {
-                    c->floatborderpx = r->floatborderpx;
-                    c->hasfloatbw = 1;
-                }
+            if (r->borderpx >= 0) {
+                c->borderpx = r->borderpx;
+                c->hasrulebw = 1;
             }
 
             for (m = mons; m && m->num != r->monitor; m = m->next)
@@ -552,6 +556,7 @@ applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact)
 void
 arrange(Monitor *m)
 {
+    XEvent ev;
     if (m)
         showhide(m->stack);
     else
@@ -560,9 +565,13 @@ arrange(Monitor *m)
     if (m) {
         arrangemon(m);
         restack(m);
-    } else
+    } else {
         for (m = mons; m; m = m->next)
             arrangemon(m);
+        XSync(dpy, False);
+        while (XCheckMaskEvent(dpy, EnterWindowMask, &ev))
+            ;
+    }
 }
 
 void
@@ -709,7 +718,9 @@ buttonpress(XEvent *e)
 void
 changerule(Client *c)
 {
-
+    if (!c)
+        return;
+    Monitor *m = c->mon;
     const char *class, *instance;
     unsigned int i;
     Rule *r;
@@ -722,8 +733,18 @@ changerule(Client *c)
         r = &rules[i];
         if ((!r->title || strstr(c->name, r->title))
             && (!r->class || strstr(class, r->class))
-            && (!r->instance || strstr(instance, r->instance)))
-            r->isfloating ^= 1;
+            && (!r->instance || strstr(instance, r->instance))) {
+            if (dynamicrule) {
+                if (!r->ispreventtile)
+                    r->isfloating ^= 1;
+            }
+
+            if (!ispanel(c)) {
+                // the `!m->num` is a primary or first monitor
+                if (c->isfloating && !m->num)
+                    applyfactor(c, r);
+            }
+        }
     }
     pthread_mutex_unlock(&rule_mutex);
     if (ch.res_class)
@@ -1008,6 +1029,19 @@ dirtomon(int dir)
 }
 
 void
+dotogglefloating(Monitor *m, Client *c)
+{
+    if (!m || !c || ispanel(c))
+        return;
+
+    c->isfloating = !c->isfloating || c->mon->sel->isfixed;
+    if (c->isfloating)
+        resize(c, c->x, c->y, c->w, c->h, 0);
+
+    changerule(c);
+}
+
+void
 drawbar(Monitor *m)
 {
     int x, w, tw = 0;
@@ -1200,7 +1234,7 @@ expose(XEvent *e)
 }
 
 void
-unfloatexceptlatest(Client *c, int action)
+unfloatexceptlatest(Monitor *m, Client *c, int action)
 {
 
     const char *class, *instance;
@@ -1213,7 +1247,7 @@ unfloatexceptlatest(Client *c, int action)
             case OPEN_CLIENT:
                 if (c->ispreventtile)
                     return;
-                for (Client *cl = selmon->clients; cl; cl = cl->next) {
+                for (Client *cl = m->clients; cl; cl = cl->next) {
                     XGetClassHint(dpy, cl->win, &ch);
                     class = ch.res_class ? ch.res_class : broken;
                     instance = ch.res_name ? ch.res_name : broken;
@@ -1228,7 +1262,7 @@ unfloatexceptlatest(Client *c, int action)
                 }
                 break;
             case CLOSE_CLIENT:
-                for (Client *cl = selmon->clients; cl; cl = cl->next)
+                for (Client *cl = m->clients; cl; cl = cl->next)
                     if (cl != c
                         && !ispanel(cl)
                         && cl->isfloating
@@ -1246,12 +1280,9 @@ unfloatexceptlatest(Client *c, int action)
                     && (!r->class || strstr(class, r->class))
                     && (!r->instance || strstr(instance, r->instance))) {
                     if (r->isfactor && !r->ispreventtile) {
-                        if (r->isfactor)
+                        if (r->isfactor) {
                             applyfactor(c, r);
-
-                        if (r->floatborderpx >= 0) {
-                            c->floatborderpx = r->floatborderpx;
-                            c->hasfloatbw = 1;
+                            XRaiseWindow(dpy, c->win);
                         }
                     }
                 }
@@ -1292,7 +1323,8 @@ focus(Client *c)
             setfocus(c);
         }
     } else {
-        XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
+        // XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
+        XSetInputFocus(dpy, selmon->barwin, RevertToPointerRoot, CurrentTime);
         XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
     }
     selmon->sel = c;
@@ -1377,8 +1409,8 @@ focusstack(int inc, int vis)
         return;
     else {
         focus(c);
-        restack(selmon);
-        warppointer(selmon);
+        restack(c->mon);
+        warppointer(c->mon);
         if (HIDDEN(c)) {
             showwin(c);
             c->mon->hidsel = 1;
@@ -1650,7 +1682,10 @@ manage(Window w, XWindowAttributes *wa)
 
     // no border - even when active
     if (ispanel(c)) c->bw = c->oldbw = 0;
-    wc.border_width = c->bw;
+    if (c->hasrulebw && !c->isfullscreen)
+        wc.border_width = c->borderpx;
+    else
+        wc.border_width = c->bw;
     XConfigureWindow(dpy, w, CWBorderWidth, &wc);
     XSetWindowBorder(dpy, w, scheme[SchemeNorm][ColBorder].pixel);
     configure(c); /* propagates border_width, if size doesn't change */
@@ -1662,7 +1697,7 @@ manage(Window w, XWindowAttributes *wa)
     if (!c->isfloating)
         c->isfloating = c->oldstate = trans != None || c->isfixed;
     if (c->isfloating) {
-        unfloatexceptlatest(c, OPEN_CLIENT);
+        unfloatexceptlatest(c->mon, c, OPEN_CLIENT);
         XRaiseWindow(dpy, c->win);
     }
     switch (attachdirection) {
@@ -2043,8 +2078,8 @@ resizeclient(Client *c, int x, int y, int w, int h)
     c->w = wc.width = w;
     c->oldh = c->h;
     c->h = wc.height = h;
-    if (c->isfloating && c->hasfloatbw && !c->isfullscreen)
-        wc.border_width = c->floatborderpx;
+    if (c->hasrulebw && !c->isfullscreen)
+        wc.border_width = c->borderpx;
     else
         wc.border_width = c->bw;
     // nail it to no border & y=0:
@@ -2637,9 +2672,48 @@ tag(const Arg *arg)
 void
 tagmon(const Arg *arg)
 {
-    if (!selmon->sel || !mons->next || !entagmon)
+    Monitor *m;
+    Client *c = selmon->sel;
+    unsigned int source, destination, primary;
+
+    if (!c || !mons->next || !entagmon)
         return;
-    sendmon(selmon->sel, dirtomon(arg->i));
+
+    source = c->mon->num;
+    sendmon(c, dirtomon(arg->i));
+    focusmon(arg);
+    destination = c->mon->num;
+    primary = !selmon->num ? 0 : !selmon->num;
+    // get primary monitor
+    for (m = mons; m->num; m = m->next)
+        ;
+    if (source == primary
+        && source != destination
+        && destination != primary && c->isfloating) {
+        dotogglefloating(c->mon, c);
+        arrange(c->mon);
+        if (isfloating_src) {
+            // primany --> displayPort-0
+            if (m->clients) {
+                Client *cl = m->clients;
+                while (cl->next && !ispanel(cl->next))
+                    cl = cl->next;
+                unfloatexceptlatest(cl->mon, cl, CLOSE_CLIENT);
+            }
+            arrange(m);
+        }
+    } else if (source != primary
+               && source != destination
+               && destination == primary && !c->isfloating) {
+        // displayPort-0 --> primany
+        if (isfloating_src) {
+            c->isfloating ^= 1;
+            changerule(c);
+            XRaiseWindow(dpy, c->win);
+            unfloatexceptlatest(m, c, OPEN_CLIENT);
+            arrange(m);
+        }
+    }
 }
 
 void
@@ -2693,25 +2767,10 @@ togglefloating(const Arg *arg)
 {
     Monitor *m = selmon;
     Client *c = m->sel;
-    if (!c || ispanel(c))
-        return;
-
-    c->isfloating = !c->isfloating || selmon->sel->isfixed;
-    if (c->isfloating)
-        resize(c, c->x, c->y, c->w, c->h, 0);
-
-    resizeclient(c,
-                 (m->mw - m->mw * 0.8) / 2,
-                 (m->mh - m->mh * 0.8) / 2,
-                 m->mw * 0.8,
-                 m->mh * 0.8);
-
-    if (dynamicrule) {
-        preventfloating ^= 1;
-        changerule(c);
-    }
-
+    dotogglefloating(m, c);
+    isfloating_src = c->isfloating;
     arrange(m);
+    warppointer(m);
 }
 
 void
@@ -2806,7 +2865,7 @@ unmanage(Client *c, int destroyed)
     Monitor *m = c->mon;
     XWindowChanges wc;
     int ispreventtile = c->ispreventtile;
-
+    int isfloating = c->isfloating;
     detach(c);
     detachstack(c);
     if (!destroyed) {
@@ -2822,12 +2881,12 @@ unmanage(Client *c, int destroyed)
         XUngrabServer(dpy);
     }
     free(c);
-    if (selmon->clients) {
-        Client *cl = selmon->clients;
+    if (m->clients) {
+        Client *cl = m->clients;
         while (cl->next && !ispanel(cl->next))
             cl = cl->next;
-        if (!ispreventtile && !preventfloating) {
-            unfloatexceptlatest(cl, CLOSE_CLIENT);
+        if (!ispreventtile && isfloating) {
+            unfloatexceptlatest(m, cl, CLOSE_CLIENT);
             if (cl->isfloating)
                 XRaiseWindow(dpy, cl->win);
         }
@@ -2835,7 +2894,7 @@ unmanage(Client *c, int destroyed)
     focus(NULL);
     updateclientlist();
     arrange(m);
-    if (m == selmon && selmon->sel)
+    if (m == selmon && selmon->sel && !isfloating)
         warppointer(m);
 }
 
@@ -3142,6 +3201,18 @@ view(const Arg *arg)
     arrange(selmon);
 }
 
+void
+viewall(const Arg *arg)
+{
+    Monitor *m;
+
+    for (m = mons; m; m = m->next) {
+        m->tagset[m->seltags] = arg->ui;
+        arrange(m);
+    }
+    focus(NULL);
+}
+
 Client *
 wintoclient(Window w)
 {
@@ -3175,11 +3246,10 @@ wintomon(Window w)
 void
 warppointer(Monitor *selmon)
 {
-    if (!ispanel(selmon->sel) && !isnotifyd(selmon->sel) && selmon->sel->iswarppointer) {
-        while (selmon->sel->ispreventtile && selmon->sel->next)
-            selmon->sel = selmon->sel->next;
+    if (!selmon->sel)
+        return;
+    if (!ispanel(selmon->sel) && !isnotifyd(selmon->sel) && selmon->sel->iswarppointer)
         XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
-    }
 }
 
 /* There's no way to check accesses to destroyed windows, thus those cases are

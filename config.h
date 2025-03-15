@@ -7,7 +7,7 @@ static const unsigned int gappx     = 8;        /* gap pixel between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int rmaster            = 0;        /* 1 means master-area is initially on the right */
 static const char panel[][32]       = { "xfce4-panel", "Xfce4-panel", "xfce4-notifyd", "Xfce4-notifyd" }; /* name & cls of panel win */
-static const int entagmon			= 0;
+static const int entagmon			= 1;		/* 0 means dosn't send selclient when switch monitor*/
 static const int viewontag          = 1;        /* Switch view on tag switch */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
@@ -15,7 +15,6 @@ static const int vertpad            = 0;        /* vertical padding of bar */
 static const int sidepad            = 0;        /* horizontal padding of bar */
 static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const int min_tag            = 4;        /* min number of tag */
-static const int dynamicrule		= 1;		/* 1 means dynamically changing isfloating rule of a selected client, and vice versa. */
 static const char *fonts[] 	= { "VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
 								"LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
 								"Comic Code:style=Medium:size=16:antialias=true:autohint=true", };
@@ -87,34 +86,40 @@ static const char *tags[] = { "", "󰰶", "󰰡", "󰰛", "󰰰", "󰰰", "�
 /* Lockfile */
 static char lockfile[] = "/tmp/dwm.lock";
 
+/* 1 means dynamically changing isfloating rule of a selected client, and vice versa. */
+static int dynamicrule = 1;
 static Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      	          instance		title	tags mask	isfloating	ispreventtile	monitor	isfactor	factor x,y,w,h(double)		floatborderpx	iswarppointer */
-//	{ "st",                   NULL,			NULL,      0,			1,			0,			-1,		1,			1.0,1.0,1.0,1.0,		   	3 				1 },
-	{ "st",                   NULL,       	NULL,      0,			0,			0,			-1,		1,			1.0,1.0,1.0,1.0,			3,				1 },
-	{ "kitty",                 NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "firefox-esr",          NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "Brave-browser",        NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "Google-chrome",        NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "libreoffice",          NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "Thunar",               NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "Mousepad",             NULL,       	NULL,      0,       	1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "gnome-calculator",     NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.23,1.0,1.0,0.32,			3,				1 },
-	{ "rnote",                NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "GoldenDict",           NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.3957,0.5,1.0,1.0,			3,				1 },
-	{ "kdeconnect.app",       NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "MyEclipse",        	  NULL,       	NULL,      2,       	1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "Clash for Windows",    NULL,       	NULL,      0,       	1,			1,			-1,		0,			0.9,0.9,0.9,0.9,			3,				1 },
-	{ "steam",                NULL,       	NULL,      0,       	1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			3,				0 },
-	{ "Xfce4-clipman-history",NULL,       	NULL,      0,      		1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			3,				1 },
-	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,			1,			-1,		1,			1.0,1.0,1.0,1.0,			0,				1 },
+	/* class      	          instance		title	tags mask	isfloating	ispreventtile	monitor	isfactor	factor x,y,w,h(double)		borderpx	iswarppointer */
+//	{ "st",                   NULL,			NULL,      0,			1,			0,			-1,		1,			1.0,1.0,1.0,1.0,		   	2 			1 },
+	{ "st",                   NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "kitty",                NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "firefox-esr",          NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Brave-browser",        NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Google-chrome",        NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "libreoffice",          NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Thunar",               NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Mousepad",             NULL,       	NULL,      0,       	1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "gnome-calculator",     NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.23,1.0,1.0,0.32,			0,			1 },
+	{ "org.gnome.clocks",     NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.23,1.0,1.0,0.70,			0,			1 },
+	{ "rnote",                NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			0,			1 },
+	{ "GoldenDict",           NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.3957,0.5,1.0,1.0,			2,			1 },
+	{ "kdeconnect.app",       NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "superProductivity",    NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "MyEclipse",        	  NULL,       	NULL,      2,       	1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Clash for Windows",    NULL,       	NULL,      0,       	1,			1,			-1,		0,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "steam",                NULL,       	NULL,      0,       	1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			0 },
+	{ "qv2ray",               NULL,       	NULL,      0,			1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "pavucontrol",		  NULL,       	NULL,      0,      		1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Xfce4-clipman-history",NULL,       	NULL,      0,      		1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,			1,			-1,		1,			1.0,1.0,1.0,1.0,			0,			0 },
 };
 
 /* layout(s) */
-static const float mfact     = 0.61; /* factor of master area size [0.05..0.95] */
+static const float mfact     = 0.63; /* factor of master area size [0.05..0.95] */
 static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 0; /* 1 will force focus on the fullscreen window */
@@ -135,8 +140,10 @@ static const Layout layouts[] = {
 
 /* key definitions */
 #define MODKEY Mod1Mask
+#define SUPERKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
+	{ MODKEY|SUPERKEY,              KEY,      viewall,        {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
 	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },

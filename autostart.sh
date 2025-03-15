@@ -22,7 +22,7 @@ while true; do
 	for browser in "firefox" "brave" "chrome"; do
 		xdotool search --class "${browser}" | while read wm_id; do
 			if [[ 0 -ne $(xprop -id ${wm_id} | grep '_NET_WM_STATE_FULLSCREEN' | wc -l) ]]; then
-				if [[ 0 -ne $(xprop -id ${wm_id} | grep 'YouTube' | wc -l) ]]; then
+				if [[ 0 -ne $(xprop -id ${wm_id} | grep -E 'YouTube|小宝影院' | wc -l) ]]; then
 					[[ $(pgrep -x 'xautolock') ]] && killall xautolock
 				fi
 			fi
