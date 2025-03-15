@@ -458,7 +458,7 @@ applyrules(Client *c)
             && (!r->class || strstr(class, r->class))
             && (!r->instance || strstr(instance, r->instance))) {
             // the `!(c->mon->num)` is a primary or first monitor
-            c->isfloating = !(c->mon->num) ? (isfirstinstance(c) ? 1 : r->isfloating) : c->isfloating;
+            c->isfloating = !(c->mon->num) ? r->isfloating : c->isfloating;
             c->ispreventtile = r->ispreventtile;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
@@ -1541,18 +1541,25 @@ int
 isfirstinstance(Client *c)
 {
     if (!c) {
-        fprintf(stderr, "the function isfirstinstance: the client parameter is null\n");
+        fprintf(stderr, "\n\nThe function isfirstinstance: the client parameter is null\n\n");
         return 0;
     }
     Monitor *m = c->mon;
     Client *cl;
+    unsigned int curtags = m->tagset[m->seltags];
     if (m->clients) {
-        for (cl = m->clients; cl; cl = cl->next)
-            if (cl != c
-                && !strcmp(cl->class, c->class)
-                && !strcmp(cl->instance, c->instance))
+        for (cl = m->clients; cl; cl = cl->next) {
+            if (cl == c)
+                continue;
+            if (!(cl->tags & curtags))
+                continue;
+            if (!strcmp(cl->class, c->class) && !strcmp(cl->instance, c->instance)) {
+                fprintf(stderr, "\n\nThe client %s is not first instance in the tag %d, on the %d monitor\n\n", c->class, curtags, c->mon->num);
                 return 0;
+            }
+        }
     }
+    fprintf(stderr, "\n\nThe client %s is first instance in the tag %d, on the %d monitor\n\n", c->class, curtags, c->mon->num);
     return 1;
 }
 
@@ -1717,7 +1724,7 @@ manage(Window w, XWindowAttributes *wa)
 
     if (ch.res_class) XFree(ch.res_class);
     if (ch.res_name) XFree(ch.res_name);
-    fprintf(stderr, "Window managed: class=%s, instance=%s\n", c->class, c->instance);
+    fprintf(stderr, "\n\nWindow managed: class=%s, instance=%s\n", c->class, c->instance);
 
     // no border - even when active
     if (ispanel(c)) c->bw = c->oldbw = 0;
@@ -1733,6 +1740,7 @@ manage(Window w, XWindowAttributes *wa)
     updatewmhints(c);
     XSelectInput(dpy, w, EnterWindowMask | FocusChangeMask | PropertyChangeMask | StructureNotifyMask);
     grabbuttons(c, 0);
+    c->isfloating = isfirstinstance(c) ? 1 : c->isfloating;
     if (!c->isfloating)
         c->isfloating = c->oldstate = trans != None || c->isfixed;
     if (c->isfloating) {
