@@ -449,16 +449,25 @@ applyrules(Client *c)
     c->isfloating = 0;
     c->ispreventtile = 1;
     c->tags = 0;
+
     XGetClassHint(dpy, c->win, &ch);
     class = ch.res_class ? ch.res_class : broken;
     instance = ch.res_name ? ch.res_name : broken;
+    strncpy(c->class, class, sizeof(c->class) - 1);
+    c->class[sizeof(c->class) - 1] = '\0';
+    strncpy(c->instance, instance, sizeof(c->instance) - 1);
+    c->instance[sizeof(c->instance) - 1] = '\0';
+    if (ch.res_class) XFree(ch.res_class);
+    if (ch.res_name) XFree(ch.res_name);
+    fprintf(stderr, "\nClass and Instance is Initialized:\nclass=%s, instance=%s\n", c->class, c->instance);
+
     for (i = 0; i < LENGTH(rules); i++) {
         r = &rules[i];
         if ((!r->title || strstr(c->name, r->title))
-            && (!r->class || strstr(class, r->class))
-            && (!r->instance || strstr(instance, r->instance))) {
+            && (!r->class || strstr(c->class, r->class))
+            && (!r->instance || strstr(c->instance, r->instance))) {
             // the `!(c->mon->num)` is a primary or first monitor
-            c->isfloating = !(c->mon->num) ? r->isfloating : c->isfloating;
+            c->isfloating = !(c->mon->num) ? (isfirstinstance(c) ? 1 : r->isfloating) : c->isfloating;
             c->ispreventtile = r->ispreventtile;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
@@ -480,10 +489,6 @@ applyrules(Client *c)
                 c->mon = m;
         }
     }
-    if (ch.res_class)
-        XFree(ch.res_class);
-    if (ch.res_name)
-        XFree(ch.res_name);
     c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : c->mon->tagset[c->mon->seltags];
 }
 
@@ -723,19 +728,14 @@ changerule(Client *c)
     if (!c)
         return;
     Monitor *m = c->mon;
-    const char *class, *instance;
     unsigned int i;
     Rule *r;
-    XClassHint ch = {NULL, NULL};
-    XGetClassHint(dpy, c->win, &ch);
-    class = ch.res_class ? ch.res_class : broken;
-    instance = ch.res_name ? ch.res_name : broken;
     pthread_mutex_lock(&rule_mutex);
     for (i = 0; i < LENGTH(rules); i++) {
         r = &rules[i];
         if ((!r->title || strstr(c->name, r->title))
-            && (!r->class || strstr(class, r->class))
-            && (!r->instance || strstr(instance, r->instance))) {
+            && (!r->class || strstr(c->class, r->class))
+            && (!r->instance || strstr(c->instance, r->instance))) {
 
             if (dynamicrule) {
                 if (!r->ispreventtile)
@@ -750,10 +750,6 @@ changerule(Client *c)
         }
     }
     pthread_mutex_unlock(&rule_mutex);
-    if (ch.res_class)
-        XFree(ch.res_class);
-    if (ch.res_name)
-        XFree(ch.res_name);
 }
 
 void
@@ -1240,29 +1236,23 @@ void
 unfloatexceptlatest(Monitor *m, Client *c, int action)
 {
 
-    const char *class, *instance;
     unsigned int i;
     const Rule *r;
-    XClassHint ch = {NULL, NULL};
     for (i = 0; i < LENGTH(rules); i++) {
         r = &rules[i];
         switch (action) {
             case OPEN_CLIENT:
                 if (c->ispreventtile)
                     return;
-                for (Client *cl = m->clients; cl; cl = cl->next) {
-                    XGetClassHint(dpy, cl->win, &ch);
-                    class = ch.res_class ? ch.res_class : broken;
-                    instance = ch.res_name ? ch.res_name : broken;
+                for (Client *cl = m->clients; cl; cl = cl->next)
                     if (!cl->ispreventtile
                         && cl != c
                         && !ispanel(cl)
                         && cl->isfloating
                         && (!r->title || strstr(cl->name, r->title))
-                        && (!r->class || strstr(class, r->class))
-                        && (!r->instance || strstr(instance, r->instance)))
+                        && (!r->class || strstr(cl->class, r->class))
+                        && (!r->instance || strstr(cl->instance, r->instance)))
                         cl->isfloating ^= 1;
-                }
                 break;
             case CLOSE_CLIENT:
                 for (Client *cl = m->clients; cl; cl = cl->next)
@@ -1275,13 +1265,10 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
                 if (!c->isfloating)
                     c->isfloating ^= 1;
 
-                XGetClassHint(dpy, c->win, &ch);
-                class = ch.res_class ? ch.res_class : broken;
-                instance = ch.res_name ? ch.res_name : broken;
                 if (!ispanel(c)
                     && (!r->title || strstr(c->name, r->title))
-                    && (!r->class || strstr(class, r->class))
-                    && (!r->instance || strstr(instance, r->instance))) {
+                    && (!r->class || strstr(c->class, r->class))
+                    && (!r->instance || strstr(c->instance, r->instance))) {
                     if (r->isfactor && !r->ispreventtile) {
                         if (r->isfactor) {
                             applyfactor(c, r);
@@ -1682,8 +1669,6 @@ manage(Window w, XWindowAttributes *wa)
     Client *c, *t = NULL;
     Window trans = None;
     XWindowChanges wc;
-    XClassHint ch = {NULL, NULL};
-    const char *broken = "unknown";
 
     c = ecalloc(1, sizeof(Client));
     c->win = w;
@@ -1711,21 +1696,6 @@ manage(Window w, XWindowAttributes *wa)
     c->y = MAX(c->y, c->mon->wy);
     c->bw = borderpx;
 
-    if (XGetClassHint(dpy, c->win, &ch)) {
-        strncpy(c->class, ch.res_class ? ch.res_class : broken, sizeof(c->class) - 1);
-        c->class[sizeof(c->class) - 1] = '\0';
-
-        strncpy(c->instance, ch.res_name ? ch.res_name : broken, sizeof(c->instance) - 1);
-        c->instance[sizeof(c->instance) - 1] = '\0';
-    } else {
-        strncpy(c->class, broken, sizeof(c->class));
-        strncpy(c->instance, broken, sizeof(c->instance));
-    }
-
-    if (ch.res_class) XFree(ch.res_class);
-    if (ch.res_name) XFree(ch.res_name);
-    fprintf(stderr, "\nWindow managed: class=%s, instance=%s", c->class, c->instance);
-
     // no border - even when active
     if (ispanel(c)) c->bw = c->oldbw = 0;
     if (c->hasrulebw && !c->isfullscreen)
@@ -1740,7 +1710,6 @@ manage(Window w, XWindowAttributes *wa)
     updatewmhints(c);
     XSelectInput(dpy, w, EnterWindowMask | FocusChangeMask | PropertyChangeMask | StructureNotifyMask);
     grabbuttons(c, 0);
-    c->isfloating = isfirstinstance(c) ? 1 : c->isfloating;
     if (!c->isfloating)
         c->isfloating = c->oldstate = trans != None || c->isfixed;
     if (c->isfloating) {

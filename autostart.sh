@@ -39,9 +39,9 @@ while true; do
 done &
 )
 
+xfce4-panel --disable-wm-check &
 blueman-applet &
 flameshot &
 fcitx5 &
 tmux has-session && exec kitty -e tmux attach || exec kitty -e tmux &
-xfce4-panel --disable-wm-check &
 exec xset -b & # disable console bell volume
