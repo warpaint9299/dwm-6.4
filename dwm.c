@@ -146,7 +146,7 @@ struct Client {
     int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
     int bw, oldbw;
     unsigned int tags;
-    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, ispreventtile, iswarppointer;
+    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, forcetile, iswarppointer;
     int borderpx;
     int hasrulebw;
     Client *next;
@@ -202,7 +202,7 @@ typedef struct
     const char *title;
     unsigned int tags;
     int isfloating;
-    int ispreventtile;
+    int forcetile;
     int monitor;
     int isfactor;
     double factorx, factory, factorw, factorh;
@@ -262,7 +262,6 @@ static void grabkeys(void);
 static void hide(const Arg *arg);
 static void hideall(const Arg *arg);
 static void hidewin(Client *c);
-static int isfirstinstance(Client *c);
 static int ispanel(Client *c);
 static int isnotifyd(Client *c);
 static void incnmaster(const Arg *arg);
@@ -384,7 +383,7 @@ static int useargb = 0;
 static Visual *visual;
 static int depth;
 static Colormap cmap;
-static int isfloating_src = 0;
+static int oldfloatingstate = 0;
 static int istoggled = 0;
 
 pthread_mutex_t rule_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -445,9 +444,9 @@ applyrules(Client *c)
     XClassHint ch = {NULL, NULL};
 
     /* rule matching */
-    c->iswarppointer = 1;
+    c->iswarppointer = 0;
     c->isfloating = 0;
-    c->ispreventtile = 1;
+    c->forcetile = 0;
     c->tags = 0;
 
     XGetClassHint(dpy, c->win, &ch);
@@ -467,11 +466,11 @@ applyrules(Client *c)
             && (!r->class || strstr(c->class, r->class))
             && (!r->instance || strstr(c->instance, r->instance))) {
             // the `!(c->mon->num)` is a primary or first monitor
-            c->isfloating = !(c->mon->num) ? (isfirstinstance(c) ? 1 : r->isfloating) : c->isfloating;
-            c->ispreventtile = r->ispreventtile;
+            c->isfloating = !(c->mon->num) ? r->isfloating : c->isfloating;
+            c->forcetile = r->forcetile;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
-            isfloating_src = c->isfloating;
+            oldfloatingstate = c->isfloating;
 
             if (c->isfloating && !ispanel(c)) {
                 if (r->isfactor)
@@ -738,8 +737,8 @@ changerule(Client *c)
             && (!r->instance || strstr(c->instance, r->instance))) {
 
             if (dynamicrule) {
-                if (!r->ispreventtile)
-                    r->isfloating ^= 1;
+                if (r->forcetile)
+                    r->isfloating = c->isfloating;
             }
 
             if (!ispanel(c)) {
@@ -1235,51 +1234,47 @@ expose(XEvent *e)
 void
 unfloatexceptlatest(Monitor *m, Client *c, int action)
 {
-
     unsigned int i;
     const Rule *r;
-    for (i = 0; i < LENGTH(rules); i++) {
-        r = &rules[i];
-        switch (action) {
-            case OPEN_CLIENT:
-                if (c->ispreventtile)
-                    return;
-                for (Client *cl = m->clients; cl; cl = cl->next)
-                    if (!cl->ispreventtile
-                        && cl != c
-                        && !ispanel(cl)
-                        && cl->isfloating
-                        && (!r->title || strstr(cl->name, r->title))
-                        && (!r->class || strstr(cl->class, r->class))
-                        && (!r->instance || strstr(cl->instance, r->instance)))
-                        cl->isfloating ^= 1;
-                break;
-            case CLOSE_CLIENT:
-                for (Client *cl = m->clients; cl; cl = cl->next)
-                    if (cl != c
-                        && !ispanel(cl)
-                        && cl->isfloating
-                        && !cl->ispreventtile)
-                        return;
-
-                if (!c->isfloating)
-                    c->isfloating ^= 1;
-
-                if (!ispanel(c)
-                    && (!r->title || strstr(c->name, r->title))
-                    && (!r->class || strstr(c->class, r->class))
-                    && (!r->instance || strstr(c->instance, r->instance))) {
-                    if (r->isfactor && !r->ispreventtile) {
-                        if (r->isfactor) {
-                            applyfactor(c, r);
-                            XRaiseWindow(dpy, c->win);
-                        }
+    switch (action) {
+        case OPEN_CLIENT:
+            if (!c->forcetile)
+                return;
+            for (Client *cl = m->clients; cl; cl = cl->next)
+                if (cl->forcetile && cl != c && !ispanel(cl) && cl->isfloating) {
+                    for (i = 0; i < LENGTH(rules); i++) {
+                        r = &rules[i];
+                        if (((!r->title || strstr(cl->name, r->title))
+                             && (!r->class || strstr(cl->class, r->class))
+                             && (!r->instance || strstr(cl->instance, r->instance))))
+                            cl->isfloating ^= 1;
                     }
                 }
-                break;
-            default:
-                return;
-        }
+            break;
+        case CLOSE_CLIENT:
+            for (c = m->stack; c; c = c->snext) {
+                for (i = 0; i < LENGTH(rules); i++) {
+                    r = &rules[i];
+                    if ((!c->isfloating && r->isfloating)
+                        && (!r->title || strstr(c->name, r->title))
+                        && (!r->class || strstr(c->class, r->class))
+                        && (!r->instance || strstr(c->instance, r->instance))) {
+                        if (r->isfloating && r->forcetile) {
+                            c->isfloating ^= 1;
+                            if (r->isfactor) {
+                                applyfactor(c, r);
+                                XRaiseWindow(dpy, c->win);
+                                focus(c);
+                            }
+                        }
+                        goto end_close_client;
+                    }
+                }
+            }
+        end_close_client:
+            break;
+        default:
+            return;
     }
 }
 
@@ -1522,32 +1517,6 @@ grabkeys(void)
                     XGrabKey(dpy, code, keys[i].mod | modifiers[j], root,
                              True, GrabModeAsync, GrabModeAsync);
     }
-}
-
-int
-isfirstinstance(Client *c)
-{
-    if (!c) {
-        fprintf(stderr, "\n\nThe function isfirstinstance: the client parameter is null\n\n");
-        return 0;
-    }
-    Monitor *m = c->mon;
-    Client *cl;
-    unsigned int curtags = m->tagset[m->seltags];
-    if (m->clients) {
-        for (cl = m->clients; cl; cl = cl->next) {
-            if (cl == c)
-                continue;
-            if (!(cl->tags & curtags))
-                continue;
-            if (!strcmp(cl->class, c->class) && !strcmp(cl->instance, c->instance)) {
-                fprintf(stderr, "\n\nThe client %s is not the first instance on the tag %d of the %d monitor\n\n", c->class, curtags, c->mon->num);
-                return 0;
-            }
-        }
-    }
-    fprintf(stderr, "\n\nThe client %s is the first instance on the tag %d of the %d monitor\n\n", c->class, curtags, c->mon->num);
-    return 1;
 }
 
 int
@@ -2708,7 +2677,7 @@ tagmon(const Arg *arg)
         && destination != primary && c->isfloating) {
         dotogglefloating(c->mon, c);
         arrange(c->mon);
-        if (isfloating_src && !istoggled) {
+        if (oldfloatingstate && !istoggled) {
             // primany --> displayPort-0
             if (m->clients) {
                 Client *cl = m->clients;
@@ -2722,7 +2691,7 @@ tagmon(const Arg *arg)
                && source != destination
                && destination == primary && !c->isfloating) {
         // displayPort-0 --> primany
-        if (isfloating_src && !istoggled) {
+        if (oldfloatingstate && !istoggled) {
             c->isfloating ^= 1;
             changerule(c);
             XRaiseWindow(dpy, c->win);
@@ -2786,7 +2755,7 @@ togglefloating(const Arg *arg)
     if (!m || !c || ispanel(c))
         return;
     dotogglefloating(m, c);
-    isfloating_src = c->isfloating;
+    oldfloatingstate = c->isfloating;
     istoggled ^= 1;
     arrange(m);
     warppointer(m);
@@ -2883,7 +2852,7 @@ unmanage(Client *c, int destroyed)
 {
     Monitor *m = c->mon;
     XWindowChanges wc;
-    int ispreventtile = c->ispreventtile;
+    int forcetile = c->forcetile;
     int isfloating = c->isfloating;
     detach(c);
     detachstack(c);
@@ -2900,17 +2869,17 @@ unmanage(Client *c, int destroyed)
         XUngrabServer(dpy);
     }
     free(c);
+    focus(NULL);
     if (m->clients) {
         Client *cl = m->clients;
         while (cl->next && !ispanel(cl->next))
             cl = cl->next;
-        if (!ispreventtile && isfloating) {
+        if (forcetile && isfloating) {
             unfloatexceptlatest(m, cl, CLOSE_CLIENT);
             if (cl->isfloating)
                 XRaiseWindow(dpy, cl->win);
         }
     }
-    focus(NULL);
     updateclientlist();
     arrange(m);
     if (m == selmon && selmon->sel && !isfloating)

@@ -93,29 +93,29 @@ static Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      	          instance		title	tags mask	isfloating	ispreventtile	monitor	isfactor	factor x,y,w,h(double)		borderpx	iswarppointer */
-//	{ "st",                   NULL,			NULL,      0,			1,			0,			-1,		1,			1.0,1.0,1.0,1.0,		   	2 			1 },
-	{ "st",                   NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "kitty",                NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "firefox-esr",          NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "Brave-browser",        NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "Google-chrome",        NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "libreoffice",          NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "Thunar",               NULL,       	NULL,      0,			1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "Mousepad",             NULL,       	NULL,      0,       	1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "gnome-calculator",     NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.23,1.0,1.0,0.32,			0,			1 },
-	{ "org.gnome.clocks",     NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.23,1.0,1.0,0.70,			0,			1 },
-	{ "rnote",                NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			0,			1 },
-	{ "GoldenDict",           NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.3957,0.5,1.0,1.0,			2,			1 },
-	{ "kdeconnect.app",       NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "superProductivity",    NULL,       	NULL,      0,       	1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "MyEclipse",        	  NULL,       	NULL,      2,       	1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "Clash for Windows",    NULL,       	NULL,      0,       	1,			1,			-1,		0,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "steam",                NULL,       	NULL,      0,       	1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			0 },
-	{ "qv2ray",               NULL,       	NULL,      0,			1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "pavucontrol",		  NULL,       	NULL,      0,      		1,			1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{ "Xfce4-clipman-history",NULL,       	NULL,      0,      		1,			0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,			1,			-1,		1,			1.0,1.0,1.0,1.0,			0,			0 },
+	/* class      	          instance		title	tags mask	isfloating	forcetile	monitor	isfactor	factor x,y,w,h(double)		borderpx	iswarppointer */
+//	{ "st",                   NULL,			NULL,      0,			1,		1,			-1,		1,			1.0,1.0,1.0,1.0,		   	2 			1 },
+	{ "st",                   NULL,       	NULL,      0,			1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "kitty",                NULL,       	NULL,      0,			1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "firefox-esr",          NULL,       	NULL,      0,			1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Brave-browser",        NULL,       	NULL,      0,			1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Google-chrome",        NULL,       	NULL,      0,			1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "libreoffice",          NULL,       	NULL,      0,			1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Thunar",               NULL,       	NULL,      0,			1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Mousepad",             NULL,       	NULL,      0,       	1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "gnome-calculator",     NULL,       	NULL,      0,       	1,		0,			-1,		1,			0.23,1.0,1.0,0.32,			0,			1 },
+	{ "org.gnome.clocks",     NULL,       	NULL,      0,       	1,		0,			-1,		1,			0.23,1.0,1.0,0.70,			0,			1 },
+	{ "rnote",                NULL,       	NULL,      0,       	1,		0,			-1,		1,			0.9,0.9,0.9,0.9,			0,			1 },
+	{ "GoldenDict",           NULL,       	NULL,      0,       	1,		0,			-1,		1,			0.3957,0.5,1.0,1.0,			2,			1 },
+	{ "kdeconnect.app",       NULL,       	NULL,      0,       	1,		0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "superProductivity",    NULL,       	NULL,      0,       	1,		0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "MyEclipse",        	  NULL,       	NULL,      2,       	1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Clash for Windows",    NULL,       	NULL,      0,       	1,		0,			-1,		0,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "steam",                NULL,       	NULL,      0,       	1,		0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			0 },
+	{ "qv2ray",               NULL,       	NULL,      0,			1,		0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "pavucontrol",		  NULL,       	NULL,      0,      		1,		0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{ "Xfce4-clipman-history",NULL,       	NULL,      0,      		1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
+	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,		1,			-1,		1,			1.0,1.0,1.0,1.0,			0,			0 },
 };
 
 /* layout(s) */
@@ -153,9 +153,8 @@ static const Layout layouts[] = {
 
 /* commands */
 static const char *menucmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/powermenu.sh" , NULL };
-static const char *roficmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/runner.sh" , NULL };
-static const char *lockcmd[]  = { "i3lock", "-c", "0e0e0e", NULL };
-static const char *rangcmd[]  = { "st", "-e", "ranger", NULL };
+static const char *roficmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/launcher.sh" , NULL };
+static const char *rangcmd[]  = { "kitty", "ranger", NULL };
 static const char *flamcmd[]  = { "flameshot", "gui", NULL };
 static const char *thuncmd[]  = { "thunar", NULL };
 static const char *termcmd[]  = { "kitty", NULL };
@@ -168,7 +167,6 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,    			XK_p,          spawn,              {.v = menucmd } },
 	{ MODKEY|ShiftMask,    			XK_r,          spawn,              {.v = rangcmd } },
 	{ MODKEY|ShiftMask,             XK_f,          spawn,              {.v = flamcmd } },
-	{ MODKEY|ShiftMask,             XK_i,          spawn,              {.v = lockcmd } },
 	{ MODKEY|ShiftMask,             XK_Return,     spawn,              {.v = termcmd } },
 	{ MODKEY,                       XK_b,          togglebar,          {0} },
 	{ MODKEY|ShiftMask,             XK_h,          rotatestack,        {.i = +1 } },

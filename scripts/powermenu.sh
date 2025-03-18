@@ -2,29 +2,42 @@
 
 ## Author : Aditya Shakya (adi1090x)
 ## Github : @adi1090x
+## Modifier: @warpaint9299
 ## Rofi   : Power Menu
 
 # Options
-shutdown='Shutdown'
-reboot='Reboot'
-lock='Lock'
-suspend='Suspend'
-logout='Logout'
-yes='Yes'
-no='No'
+# shutdown='Shutdown'
+# reboot='Reboot'
+# lock='Lock'
+# suspend='Suspend'
+# logout='Logout'
+# yes='Yes'
+# no='No'
+
+dir="$HOME/.dwm/scripts"
+theme="power_menu-style"
+
+# Options
+shutdown=''
+reboot=''
+lock=''
+suspend=''
+logout=''
+yes=''
+no=''
 
 # Rofi CMD
 rofi_cmd() {
 	rofi -dmenu \
-		-p "power menu" \
-		-theme 'DarkBlue'
+		-p "Power Menu" \
+		-theme ${dir}/${theme}.rasi
 }
 
 # Confirmation CMD
 confirm_cmd() {
 	rofi -dmenu \
-		-p 'Are you Sure?' \
-		-theme 'DarkBlue'
+		-p "Are you sure ?" \
+		-theme ${dir}/shared/confirm.rasi
 }
 
 # Ask for confirmation
