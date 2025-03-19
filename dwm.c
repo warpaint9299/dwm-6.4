@@ -1253,6 +1253,8 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
             break;
         case CLOSE_CLIENT:
             for (c = m->stack; c; c = c->snext) {
+                if (!ispanel(c) && c->isfloating)
+                    return;
                 for (i = 0; i < LENGTH(rules); i++) {
                     r = &rules[i];
                     if ((!c->isfloating && r->isfloating)
