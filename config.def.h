@@ -155,7 +155,7 @@ static const Layout layouts[] = {
 /* commands */
 static const char *menucmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/powermenu.sh" , NULL };
 static const char *roficmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/launcher.sh" , NULL };
-static const char *rangcmd[]  = { "kitty", "ranger", NULL };
+static const char *rangcmd[]  = { "st", "-e", "ranger", NULL };
 static const char *flamcmd[]  = { "flameshot", "gui", NULL };
 static const char *thuncmd[]  = { "thunar", NULL };
 static const char *termcmd[]  = { "kitty", NULL };
@@ -163,11 +163,11 @@ static const char *termcmd[]  = { "kitty", NULL };
 #include "movestack.c"
 static const Key keys[] = {
 	/* modifier                     key            function            argument */
-	{ MODKEY,             			XK_e,          spawn,              {.v = thuncmd } },
 	{ MODKEY,             			XK_p,          spawn,              {.v = roficmd } },
 	{ MODKEY|ShiftMask,    			XK_p,          spawn,              {.v = menucmd } },
-	{ MODKEY|ShiftMask,    			XK_r,          spawn,              {.v = rangcmd } },
-	{ MODKEY|ShiftMask,             XK_f,          spawn,              {.v = flamcmd } },
+	{ MODKEY,             			XK_e,          spawn,              {.v = thuncmd } },
+	{ MODKEY|ShiftMask,    			XK_e,          spawn,              {.v = rangcmd } },
+	{ MODKEY,             			XK_s,          spawn,              {.v = flamcmd } },
 	{ MODKEY|ShiftMask,             XK_Return,     spawn,              {.v = termcmd } },
 	{ MODKEY,                       XK_b,          togglebar,          {0} },
 	{ MODKEY|ShiftMask,             XK_h,          rotatestack,        {.i = +1 } },
