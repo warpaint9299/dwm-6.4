@@ -1792,7 +1792,7 @@ movemouse(const Arg *arg)
     XEvent ev;
     Time lasttime = 0;
 
-    if (!(c = selmon->sel))
+    if (!(c = selmon->sel) || ispanel(selmon->sel))
         return;
     restack(selmon);
     ocx = c->x;
@@ -2045,7 +2045,7 @@ resetnmaster(const Arg *arg)
 void
 resize(Client *c, int x, int y, int w, int h, int interact)
 {
-    if (ispanel(c) || applysizehints(c, &x, &y, &w, &h, interact))
+    if (ispanel(c) || ismagnifier(c) || applysizehints(c, &x, &y, &w, &h, interact))
         resizeclient(c, x, y, w, h);
 }
 
@@ -2082,7 +2082,8 @@ resizeclient(Client *c, int x, int y, int w, int h)
         c->h = wc.height += c->bw * 2;
         wc.border_width = 0;
     }
-    if (ispanel(c) || ismagnifier(c)) c->y = c->oldy = c->bw = wc.y = wc.border_width = 0;
+    if (ispanel(c)) c->y = c->oldy = c->bw = wc.y = wc.border_width = 0;
+    if (ismagnifier(c)) wc.border_width = 0;
     XConfigureWindow(dpy, c->win, CWX | CWY | CWWidth | CWHeight | CWBorderWidth, &wc);
     configure(c);
     XSync(dpy, False);
@@ -2102,7 +2103,7 @@ resizemouse(const Arg *arg)
     Window dummy;
     Time lasttime = 0;
 
-    if (!(c = selmon->sel))
+    if (!(c = selmon->sel) || ispanel(selmon->sel))
         return;
     restack(selmon);
     ocx = c->x;
