@@ -146,7 +146,7 @@ struct Client {
     int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
     int bw, oldbw;
     unsigned int tags;
-    int isfixed, isfloating, isbehide, isurgent, neverfocus, oldstate, isfullscreen, forcetile, iswarppointer;
+    int isfixed, isfloating, islowest, isurgent, neverfocus, oldstate, isfullscreen, forcetile, iswarppointer;
     int borderpx;
     int hasrulebw;
     Client *next;
@@ -262,8 +262,8 @@ static void grabkeys(void);
 static void hide(const Arg *arg);
 static void hideall(const Arg *arg);
 static void hidewin(Client *c);
+static int ismagnifier(Client *c);
 static int ispanel(Client *c);
-static int isnotifyd(Client *c);
 static void incnmaster(const Arg *arg);
 static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
@@ -311,7 +311,7 @@ static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
-static void togglebehide(const Arg *arg);
+static void togglelayer(const Arg *arg);
 static void togglermaster(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
@@ -444,6 +444,7 @@ applyrules(Client *c)
     XClassHint ch = {NULL, NULL};
 
     /* rule matching */
+    c->islowest = 0;
     c->iswarppointer = 0;
     c->isfloating = 0;
     c->forcetile = 0;
@@ -1060,7 +1061,7 @@ drawbar(Monitor *m)
 
     for (c = m->clients; c; c = c->next) {
         // prevent showing the panel as active application:
-        if (ispanel(c)) continue;
+        if (ispanel(c) || ismagnifier(c)) continue;
         occ |= c->tags;
         if (c->isurgent)
             urg |= c->tags;
@@ -1124,7 +1125,7 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
 
     for (c = m->clients; c; c = c->next) {
         // prevent showing the panel as active application:
-        if (ispanel(c)) continue;
+        if (ispanel(c) || ismagnifier(c)) continue;
         occ |= c->tags;
         if (c->isurgent)
             urg |= c->tags;
@@ -1253,7 +1254,7 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
             break;
         case CLOSE_CLIENT:
             for (c = m->stack; c; c = c->snext) {
-                if (!ispanel(c) && c->isfloating)
+                if (!ispanel(c) && !ismagnifier(c) && c->isfloating)
                     return;
                 for (i = 0; i < LENGTH(rules); i++) {
                     r = &rules[i];
@@ -1265,7 +1266,7 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
                             c->isfloating ^= 1;
                             if (r->isfactor) {
                                 applyfactor(c, r);
-                                XRaiseWindow(dpy, c->win);
+                                // XRaiseWindow(dpy, c->win);
                                 focus(c);
                             }
                         }
@@ -1341,7 +1342,7 @@ focusmon(const Arg *arg)
     XWarpPointer(dpy, None, m->barwin, 0, 0, 0, 0, m->mw / 2, m->mh / 2);
     selmon = m;
     focus(NULL);
-    if (selmon->sel && !ispanel(selmon->sel) && !isnotifyd(selmon->sel))
+    if (selmon->sel && !ispanel(selmon->sel))
         XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
 }
 
@@ -1522,15 +1523,15 @@ grabkeys(void)
 }
 
 int
-ispanel(Client *c)
+ismagnifier(Client *c)
 {
-    return !strcmp(c->name, panel[0]);
+    return !strcmp(c->name, panel[2]);
 }
 
 int
-isnotifyd(Client *c)
+ispanel(Client *c)
 {
-    return !strcmp(c->name, panel[2]);
+    return !strcmp(c->name, panel[0]);
 }
 
 void
@@ -2172,7 +2173,7 @@ restack(Monitor *m)
     if (m->sel->isfloating || !m->lt[m->sellt]->arrange)
         XRaiseWindow(dpy, m->sel->win);
 
-    if (m->sel->isfloating && m->sel->isbehide)
+    if (m->sel->isfloating && m->sel->islowest)
         XLowerWindow(dpy, m->sel->win);
 
     if (m->lt[m->sellt]->arrange) {
@@ -2764,7 +2765,7 @@ togglefloating(const Arg *arg)
 }
 
 void
-togglebehide(const Arg *arg)
+togglelayer(const Arg *arg)
 {
     if (!selmon->sel)
         return;
@@ -2775,7 +2776,7 @@ togglebehide(const Arg *arg)
     if (ispanel(selmon->sel))
         return;
     if (selmon->sel->isfloating)
-        selmon->sel->isbehide ^= 1;
+        selmon->sel->islowest ^= 1;
     focus(NULL);
     arrange(selmon);
 }
@@ -3161,6 +3162,7 @@ updatewmhints(Client *c)
 void
 view(const Arg *arg)
 {
+
     int i;
     unsigned int tmptag;
 
@@ -3238,7 +3240,7 @@ warppointer(Monitor *selmon)
 {
     if (!selmon->sel)
         return;
-    if (!ispanel(selmon->sel) && !isnotifyd(selmon->sel) && selmon->sel->iswarppointer)
+    if (!ispanel(selmon->sel) && selmon->sel->iswarppointer)
         XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
 }
 

@@ -14,8 +14,8 @@ configuration {
 }
 
 /*****----- Global Properties -----*****/
-@import                          "colors.rasi"
-@import                          "fonts.rasi"
+@import                          "shared/colors.rasi"
+@import                          "shared/fonts.rasi"
 
 * {
     /* Resolution : 1920x1080 */
@@ -84,7 +84,6 @@ dummy {
     background-color:            transparent;
 }
 
-
 textbox-prompt-colon {
     enabled:                     false;
     expand:                      false;
@@ -111,7 +110,7 @@ message {
     border:                      0px solid;
     border-radius:               var(general-radius);
     border-color:                @selected;
-    background-color:            @background-alt;
+    background-color:            @background;
     text-color:                  @foreground;
 }
 textbox {
@@ -135,7 +134,7 @@ error-message {
 /*****----- Listview -----*****/
 listview {
     enabled:                     true;
-    columns:                     2;
+    columns:                     5;
     lines:                       1;
     cycle:                       true;
     dynamic:                     true;
@@ -144,6 +143,7 @@ listview {
     reverse:                     false;
     fixed-height:                true;
     fixed-columns:               true;
+
     spacing:                     var(list-spacing);
     margin:                      0px;
     padding:                     0px;
@@ -151,7 +151,7 @@ listview {
     border-radius:               0px;
     border-color:                @selected;
     background-color:            transparent;
-    text-color:                  @background;
+    text-color:                  @foreground;
     cursor:                      "default";
 }
 
@@ -164,11 +164,10 @@ element {
     border:                      0px solid;
     border-radius:               var(element-radius);
     border-color:                @selected;
-    background-color:            @background-alt;
+    background-color:            @background;
     text-color:                  @foreground;
     cursor:                      pointer;
 }
-
 element-text {
     font:                        var(element-font);
     background-color:            transparent;
@@ -178,6 +177,6 @@ element-text {
     horizontal-align:            0.5;
 }
 element selected.normal {
-    background-color:            @transparent;
-    text-color:                  @selected;
+    background-color:            @selected;
+    text-color:                  @background;
 }

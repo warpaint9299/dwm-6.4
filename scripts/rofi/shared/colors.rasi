@@ -13,4 +13,4 @@
 
 /* Import color-scheme from `colors` directory */
 
-@import "~/.dwm/scripts/colors/darkblue.rasi"
+@import "~/.dwm/scripts/rofi/colors/darkblue.rasi"

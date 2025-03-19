@@ -6,7 +6,7 @@ static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int gappx     = 8;        /* gap pixel between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int rmaster            = 0;        /* 1 means master-area is initially on the right */
-static const char panel[][32]       = { "xfce4-panel", "Xfce4-panel", "xfce4-notifyd", "Xfce4-notifyd" }; /* name & cls of panel win */
+static const char panel[][32]       = { "xfce4-panel", "Xfce4-panel", "KMagnifier", "kmag" }; /* name & cls of panel win */
 static const int entagmon			= 1;		/* 0 means dosn't send selclient when switch monitor*/
 static const int viewontag          = 1;        /* Switch view on tag switch */
 static const int showbar            = 1;        /* 0 means no bar */
@@ -87,7 +87,7 @@ static const char *tags[] = { "", "󰰶", "󰰡", "󰰛", "󰰰", "󰰰", "�
 static char lockfile[] = "/tmp/dwm.lock";
 
 /* 1 means dynamically changing isfloating rule of a selected client, and vice versa. */
-static const int dynamicrule = 1;
+static const int dynamicrule = 0;
 static Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
@@ -116,7 +116,9 @@ static Rule rules[] = {
 	{ "broken",               NULL,       	NULL,      0,       	1,		0,			-1,		1,			0.5,0.5,0.5,0.5,			2,			0 },
 	{ "pavucontrol",		  NULL,       	NULL,      0,      		1,		0,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
 	{ "Xfce4-clipman-history",NULL,       	NULL,      0,      		1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			1 },
-	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,		1,			-1,		1,			1.0,1.0,1.0,1.0,			0,			0 },
+	{ "Xfce4-notifyd",        NULL,       	NULL,      0,      		1,		1,			-1,		1,			0.9,0.9,0.9,0.9,			2,			0 },
+	{  panel[3],              NULL,       	NULL,      (1 << 9) - 1,1,		0,			-1,		1,			0.4,1.0,1.0,0.17,		   	2,			0 },
+	{  panel[1],              NULL,       	NULL,      (1 << 9) - 1,1,		0,			-1,		1,			1.0,1.0,1.0,1.0,			0,			0 },
 };
 
 /* layout(s) */
@@ -153,8 +155,10 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *menucmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/powermenu.sh" , NULL };
-static const char *roficmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/launcher.sh" , NULL };
+static const char *menucmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/rofi/powermenu.sh" , NULL };
+static const char *roficmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/rofi/launcher.sh" , NULL };
+static const char *scrkcmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/screenkey/screenkey.sh" , NULL };
+static const char *kmagcmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/kmagnifier/kmagnifier.sh" , NULL };
 static const char *rangcmd[]  = { "st", "-e", "ranger", NULL };
 static const char *flamcmd[]  = { "flameshot", "gui", NULL };
 static const char *thuncmd[]  = { "thunar", NULL };
@@ -168,6 +172,8 @@ static const Key keys[] = {
 	{ MODKEY,             			XK_e,          spawn,              {.v = thuncmd } },
 	{ MODKEY|ShiftMask,    			XK_e,          spawn,              {.v = rangcmd } },
 	{ MODKEY,             			XK_s,          spawn,              {.v = flamcmd } },
+	{ MODKEY|ShiftMask,             XK_s,          spawn,              {.v = scrkcmd } },
+	{ MODKEY|ShiftMask,             XK_z,          spawn,              {.v = kmagcmd } },
 	{ MODKEY|ShiftMask,             XK_Return,     spawn,              {.v = termcmd } },
 	{ MODKEY,                       XK_b,          togglebar,          {0} },
 	{ MODKEY|ShiftMask,             XK_h,          rotatestack,        {.i = +1 } },
@@ -185,7 +191,7 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_c,          killclient,         {0} },
 	{ MODKEY,                       XK_space,      cyclelayout,        {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_space,      togglefloating,     {0} },
-	{ MODKEY,             			XK_z,          togglebehide,       {0} },
+	{ MODKEY,             			XK_z,          togglelayer,        {0} },
 	{ MODKEY,                       XK_r,          togglermaster,      {0} },
 	{ MODKEY,                       XK_slash,      show,               {0} },
 	{ MODKEY|ShiftMask,             XK_slash, 	   showall,            {0} },

@@ -10,7 +10,7 @@
 #
 ## launcher-style
 
-dir="$HOME/.dwm/scripts"
+dir="$HOME/.dwm/scripts/rofi"
 theme="launcher-style"
 
 rofi -show drun  \

@@ -14,7 +14,7 @@
 # yes='Yes'
 # no='No'
 
-dir="$HOME/.dwm/scripts"
+dir="$HOME/.dwm/scripts/rofi"
 theme="power_menu-style"
 
 # Options

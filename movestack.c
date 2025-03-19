@@ -45,7 +45,7 @@ movestack(const Arg *arg)
         else if (c == selmon->clients)
             selmon->clients = selmon->sel;
         arrange(selmon);
-        if (c->mon == selmon && !ispanel(selmon->sel) && !isnotifyd(selmon->sel) && selmon->sel->iswarppointer)
+        if (c->mon == selmon && !ispanel(selmon->sel) && selmon->sel->iswarppointer)
             XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
     }
 }
