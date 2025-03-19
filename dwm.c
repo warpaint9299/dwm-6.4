@@ -692,7 +692,7 @@ buttonpress(XEvent *e)
     if (ev->window == selmon->barwin) {
         i = x = occ = 0;
         for (c = m->clients; c; c = c->next) {
-            if (ispanel(c)) continue;
+            if (ispanel(c) || ismagnifier(c)) continue;
             occ |= c->tags;
         }
         do {
@@ -1030,7 +1030,7 @@ dirtomon(int dir)
 void
 dotogglefloating(Monitor *m, Client *c)
 {
-    if (!m || !c || ispanel(c))
+    if (!m || !c || ispanel(c) || ismagnifier(c))
         return;
 
     c->isfloating = !c->isfloating || c->mon->sel->isfixed;
@@ -1083,9 +1083,9 @@ drawbar(Monitor *m)
     if ((w = m->ww - tw - x) > bh) {
         if (m->sel) {
             drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
-            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, ispanel(m->sel) ? "" : m->sel->name, 0, statusfontindex);
+            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, (ispanel(m->sel) || ismagnifier(m->sel)) ? "" : m->sel->name, 0, statusfontindex);
             drw_rect(drw, x + twidth, 0, w - twidth - 2 * sp, bh, 1, 1);
-            if (m->sel->isfloating && !ispanel(m->sel))
+            if (m->sel->isfloating && !ispanel(m->sel) && !ismagnifier(m->sel))
                 drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
         } else {
             drw_setscheme(drw, scheme[SchemeInfoNorm]);
@@ -1158,9 +1158,9 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
     if ((w = m->ww - tw - x) > bh) {
         if (m->sel) {
             drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
-            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, ispanel(m->sel) ? "" : m->sel->name, 0, statusfontindex);
+            drw_text(drw, x, 0, twidth - 2 * sp, bh, lrpad / 2, (ispanel(m->sel) || ismagnifier(m->sel)) ? "" : m->sel->name, 0, statusfontindex);
             drw_rect(drw, x + twidth, 0, w - twidth - 2 * sp, bh, 1, 1);
-            if (m->sel->isfloating && !ispanel(m->sel))
+            if (m->sel->isfloating && !ispanel(m->sel) && !ismagnifier(m->sel))
                 drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
         } else {
             drw_setscheme(drw, scheme[SchemeInfoNorm]);
@@ -1242,35 +1242,39 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
             if (!c->forcetile)
                 return;
             for (Client *cl = m->clients; cl; cl = cl->next)
-                if (cl->forcetile && cl != c && !ispanel(cl) && cl->isfloating) {
-                    for (i = 0; i < LENGTH(rules); i++) {
-                        r = &rules[i];
-                        if (((!r->title || strstr(cl->name, r->title))
-                             && (!r->class || strstr(cl->class, r->class))
-                             && (!r->instance || strstr(cl->instance, r->instance))))
-                            cl->isfloating ^= 1;
+                if (ISVISIBLE(cl)) {
+                    if (cl->forcetile && cl != c && !ispanel(cl) && cl->isfloating) {
+                        for (i = 0; i < LENGTH(rules); i++) {
+                            r = &rules[i];
+                            if (((!r->title || strstr(cl->name, r->title))
+                                 && (!r->class || strstr(cl->class, r->class))
+                                 && (!r->instance || strstr(cl->instance, r->instance))))
+                                cl->isfloating ^= 1;
+                        }
                     }
                 }
             break;
         case CLOSE_CLIENT:
             for (c = m->stack; c; c = c->snext) {
-                if (!ispanel(c) && !ismagnifier(c) && c->isfloating)
-                    return;
-                for (i = 0; i < LENGTH(rules); i++) {
-                    r = &rules[i];
-                    if ((!c->isfloating && r->isfloating)
-                        && (!r->title || strstr(c->name, r->title))
-                        && (!r->class || strstr(c->class, r->class))
-                        && (!r->instance || strstr(c->instance, r->instance))) {
-                        if (r->isfloating && r->forcetile) {
-                            c->isfloating ^= 1;
-                            if (r->isfactor) {
-                                applyfactor(c, r);
-                                // XRaiseWindow(dpy, c->win);
-                                focus(c);
+                if (ISVISIBLE(c)) {
+                    if (!ispanel(c) && !ismagnifier(c) && c->isfloating)
+                        return;
+                    for (i = 0; i < LENGTH(rules); i++) {
+                        r = &rules[i];
+                        if ((!c->isfloating && r->isfloating)
+                            && (!r->title || strstr(c->name, r->title))
+                            && (!r->class || strstr(c->class, r->class))
+                            && (!r->instance || strstr(c->instance, r->instance))) {
+                            if (r->isfloating && r->forcetile) {
+                                c->isfloating ^= 1;
+                                if (r->isfactor) {
+                                    applyfactor(c, r);
+                                    // XRaiseWindow(dpy, c->win);
+                                    focus(c);
+                                }
                             }
+                            goto end_close_client;
                         }
-                        goto end_close_client;
                     }
                 }
             }
@@ -1303,7 +1307,7 @@ focus(Client *c)
         if (c->isurgent)
             seturgent(c, 0);
         // prevents the panel getting focus when tag switching:
-        if (!ispanel(c)) {
+        if (!ispanel(c) && !ismagnifier(c)) {
             detachstack(c);
             attachstack(c);
             grabbuttons(c, 1);
@@ -1342,8 +1346,7 @@ focusmon(const Arg *arg)
     XWarpPointer(dpy, None, m->barwin, 0, 0, 0, 0, m->mw / 2, m->mh / 2);
     selmon = m;
     focus(NULL);
-    if (selmon->sel && !ispanel(selmon->sel))
-        XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
+    warppointer(selmon);
 }
 
 void
@@ -1382,13 +1385,13 @@ focusstack(int inc, int vis)
     } else {
         if (selmon->sel) {
             for (i = selmon->clients; i != selmon->sel; i = i->next)
-                if (!ispanel(i) && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
+                if (!ispanel(i) && !ismagnifier(c) && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
                     c = i;
         } else
             c = selmon->clients;
         if (!c) {
             for (; i; i = i->next)
-                if (!ispanel(i) && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
+                if (!ispanel(i) && !ismagnifier(c) && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
                     c = i;
         }
     }
@@ -1539,7 +1542,7 @@ hide(const Arg *arg)
 {
     if (!selmon->sel)
         return;
-    if (ispanel(selmon->sel))
+    if (ispanel(selmon->sel) || ismagnifier(selmon->sel))
         return;
     hidewin(selmon->sel);
     focus(NULL);
@@ -1551,7 +1554,7 @@ hideall(const Arg *arg)
 {
     Client *c = NULL;
     for (c = selmon->clients; c; c = c->next) {
-        if (ispanel(c)) continue;
+        if (ispanel(c) || ismagnifier(c)) continue;
         // hide clients in the current tagset
         if (c->tags == selmon->tagset[selmon->seltags])
             hidewin(c);
@@ -1669,7 +1672,7 @@ manage(Window w, XWindowAttributes *wa)
     c->bw = borderpx;
 
     // no border - even when active
-    if (ispanel(c)) c->bw = c->oldbw = 0;
+    if (ispanel(c) || ismagnifier(c)) c->bw = c->oldbw = 0;
     if (c->hasrulebw && !c->isfullscreen)
         wc.border_width = c->borderpx;
     else
@@ -2079,7 +2082,7 @@ resizeclient(Client *c, int x, int y, int w, int h)
         c->h = wc.height += c->bw * 2;
         wc.border_width = 0;
     }
-    if (ispanel(c)) c->y = c->oldy = c->bw = wc.y = wc.border_width = 0;
+    if (ispanel(c) || ismagnifier(c)) c->y = c->oldy = c->bw = wc.y = wc.border_width = 0;
     XConfigureWindow(dpy, c->win, CWX | CWY | CWWidth | CWHeight | CWBorderWidth, &wc);
     configure(c);
     XSync(dpy, False);
@@ -2346,7 +2349,7 @@ sendmon(Client *c, Monitor *m)
     if (!c)
         return;
 
-    if (ispanel(c))
+    if (ispanel(c) || ismagnifier(c))
         return;
 
     unfocus(c, 1);
@@ -2755,7 +2758,7 @@ togglefloating(const Arg *arg)
 {
     Monitor *m = selmon;
     Client *c = m->sel;
-    if (!m || !c || ispanel(c))
+    if (!m || !c || ispanel(c) || ismagnifier(c))
         return;
     dotogglefloating(m, c);
     oldfloatingstate = c->isfloating;
