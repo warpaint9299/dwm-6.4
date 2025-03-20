@@ -444,6 +444,7 @@ applyrules(Client *c)
     const Rule *r;
     Monitor *m;
     XClassHint ch = {NULL, NULL};
+    Arg arg = {0};
 
     /* rule matching */
     c->iscentered = 0;
@@ -495,6 +496,9 @@ applyrules(Client *c)
         }
     }
     c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : c->mon->tagset[c->mon->seltags];
+    arg.ui = c->tags;
+    if (((arg.ui & TAGMASK) != TAGMASK))
+        view(&arg);
 }
 
 int
@@ -3269,7 +3273,7 @@ wintomon(Window w)
 void
 warppointer(Client *c)
 {
-    if (!c)
+    if (!c || c->mon != selmon)
         return;
     if (!ispanel(c) && c->iswarppointer)
         XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
