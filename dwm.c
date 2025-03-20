@@ -1,4 +1,4 @@
-/* See LICENSE file for copyright and license details.
+/* See LICENSE file or copyright and license details.
  *
  * dynamic window manager is designed like any other X client as well. It is
  * driven through handling X events. In contrast to other X clients, a window
@@ -146,7 +146,7 @@ struct Client {
     int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
     int bw, oldbw;
     unsigned int tags;
-    int isfixed, isfloating, islowest, isurgent, neverfocus, oldstate, isfullscreen, forcetile, iswarppointer;
+    int isfixed, isfloating, islowest, isurgent, neverfocus, oldstate, isfullscreen, forcetile, iswarppointer, istoggled, iscentered;
     int borderpx;
     int hasrulebw;
     Client *next;
@@ -202,6 +202,7 @@ typedef struct
     const char *title;
     unsigned int tags;
     int isfloating;
+    int iscentered;
     int forcetile;
     int monitor;
     int isfactor;
@@ -224,6 +225,7 @@ static void attachbottom(Client *c);
 static void attachtop(Client *c);
 static void attachstack(Client *c);
 static void buttonpress(XEvent *e);
+static void center(Client *c);
 static void changerule(Client *c);
 static void checkotherwm(void);
 static void cleanup(void);
@@ -333,7 +335,7 @@ static void view(const Arg *arg);
 static void viewall(const Arg *arg);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
-static void warppointer(Monitor *m);
+static void warppointer(Client *c);
 static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
@@ -444,6 +446,8 @@ applyrules(Client *c)
     XClassHint ch = {NULL, NULL};
 
     /* rule matching */
+    c->iscentered = 0;
+    c->istoggled = 0;
     c->islowest = 0;
     c->iswarppointer = 0;
     c->isfloating = 0;
@@ -471,6 +475,7 @@ applyrules(Client *c)
             c->forcetile = r->forcetile;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
+            c->iscentered = r->iscentered;
             oldfloatingstate = c->isfloating;
 
             if (c->isfloating && !ispanel(c)) {
@@ -689,6 +694,7 @@ buttonpress(XEvent *e)
         selmon = m;
         focus(NULL);
     }
+
     if (ev->window == selmon->barwin) {
         i = x = occ = 0;
         for (c = m->clients; c; c = c->next) {
@@ -720,6 +726,17 @@ buttonpress(XEvent *e)
         if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
             && CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
             buttons[i].func(click == ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
+}
+
+void
+center(Client *c)
+{
+    if (c->iscentered) {
+        c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
+        c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
+        c->iswarppointer = 1;
+        warppointer(c);
+    }
 }
 
 void
@@ -1241,7 +1258,7 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
         case OPEN_CLIENT:
             if (!c->forcetile)
                 return;
-            for (Client *cl = m->clients; cl; cl = cl->next)
+            for (Client *cl = m->clients; cl; cl = cl->next) {
                 if (ISVISIBLE(cl)) {
                     if (cl->forcetile && cl != c && !ispanel(cl) && cl->isfloating) {
                         for (i = 0; i < LENGTH(rules); i++) {
@@ -1253,6 +1270,7 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
                         }
                     }
                 }
+            }
             break;
         case CLOSE_CLIENT:
             for (c = m->stack; c; c = c->snext) {
@@ -1261,15 +1279,16 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
                         return;
                     for (i = 0; i < LENGTH(rules); i++) {
                         r = &rules[i];
-                        if ((!c->isfloating && r->isfloating)
+                        if (!c->isfloating
+                            && !c->istoggled
+                            && r->isfloating
                             && (!r->title || strstr(c->name, r->title))
                             && (!r->class || strstr(c->class, r->class))
                             && (!r->instance || strstr(c->instance, r->instance))) {
-                            if (r->isfloating && r->forcetile) {
+                            if (r->forcetile) {
                                 c->isfloating ^= 1;
                                 if (r->isfactor) {
                                     applyfactor(c, r);
-                                    // XRaiseWindow(dpy, c->win);
                                     focus(c);
                                 }
                             }
@@ -1346,7 +1365,7 @@ focusmon(const Arg *arg)
     XWarpPointer(dpy, None, m->barwin, 0, 0, 0, 0, m->mw / 2, m->mh / 2);
     selmon = m;
     focus(NULL);
-    warppointer(selmon);
+    warppointer(selmon->sel);
 }
 
 void
@@ -1401,7 +1420,7 @@ focusstack(int inc, int vis)
     else {
         focus(c);
         restack(c->mon);
-        warppointer(c->mon);
+        warppointer(c);
         if (HIDDEN(c)) {
             showwin(c);
             c->mon->hidsel = 1;
@@ -1683,6 +1702,7 @@ manage(Window w, XWindowAttributes *wa)
     updatewindowtype(c);
     updatesizehints(c);
     updatewmhints(c);
+    center(c);
     XSelectInput(dpy, w, EnterWindowMask | FocusChangeMask | PropertyChangeMask | StructureNotifyMask);
     grabbuttons(c, 0);
     if (!c->isfloating)
@@ -1722,7 +1742,7 @@ manage(Window w, XWindowAttributes *wa)
     arrange(c->mon);
     if (!HIDDEN(c))
         XMapWindow(dpy, c->win);
-    warppointer(c->mon);
+    warppointer(c);
     focus(NULL);
 }
 
@@ -1859,6 +1879,7 @@ movemouse(const Arg *arg)
                         cl1->y = cl2->y;
                         cl1->w = cl2->w;
                         cl1->h = cl2->h;
+                        cl1->istoggled = cl2->istoggled;
 
                         cl2->win = ocl1.win;
                         strcpy(cl2->name, ocl1.name);
@@ -1866,6 +1887,7 @@ movemouse(const Arg *arg)
                         cl2->y = ocl1.y;
                         cl2->w = ocl1.w;
                         cl2->h = ocl1.h;
+                        cl2->istoggled = ocl1.istoggled;
 
                         selmon->sel = cl2;
 
@@ -2221,7 +2243,7 @@ rotatestack(const Arg *arg)
         arrange(selmon);
         // unfocus(f, 1);
         focus(f);
-        warppointer(selmon);
+        warppointer(c);
         restack(selmon);
     }
 }
@@ -2441,6 +2463,7 @@ setfullscreen(Client *c, int fullscreen)
                         PropModeReplace, (unsigned char *)0, 0);
         c->isfullscreen = 0;
     }
+    arrange(c->mon);
 }
 
 void
@@ -2761,11 +2784,13 @@ togglefloating(const Arg *arg)
     Client *c = m->sel;
     if (!m || !c || ispanel(c) || ismagnifier(c))
         return;
+    c->istoggled = c->isfloating ? 1 : 0;
     dotogglefloating(m, c);
     oldfloatingstate = c->isfloating;
     istoggled ^= 1;
+    c->iscentered = c->isfloating ? 1 : 0;
     arrange(m);
-    warppointer(m);
+    warppointer(c);
 }
 
 void
@@ -2793,7 +2818,7 @@ togglermaster(const Arg *arg)
     selmon->mfact = 1.0 - selmon->mfact;
     if (selmon->lt[selmon->sellt]->arrange)
         arrange(selmon);
-    warppointer(selmon);
+    warppointer(selmon->sel);
 }
 
 void
@@ -2890,7 +2915,7 @@ unmanage(Client *c, int destroyed)
     updateclientlist();
     arrange(m);
     if (m == selmon && selmon->sel && !isfloating)
-        warppointer(m);
+        warppointer(m->sel);
 }
 
 void
@@ -3140,8 +3165,10 @@ updatewindowtype(Client *c)
 
     if (state == netatom[NetWMFullscreen])
         setfullscreen(c, 1);
-    if (wtype == netatom[NetWMWindowTypeDialog])
+    if (wtype == netatom[NetWMWindowTypeDialog]) {
+        c->iscentered = 1;
         c->isfloating = 1;
+    }
 }
 
 void
@@ -3240,12 +3267,12 @@ wintomon(Window w)
 }
 
 void
-warppointer(Monitor *selmon)
+warppointer(Client *c)
 {
-    if (!selmon->sel)
+    if (!c)
         return;
-    if (!ispanel(selmon->sel) && selmon->sel->iswarppointer)
-        XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
+    if (!ispanel(c) && c->iswarppointer)
+        XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
 }
 
 /* There's no way to check accesses to destroyed windows, thus those cases are
