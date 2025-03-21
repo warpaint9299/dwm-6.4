@@ -2607,15 +2607,14 @@ setpanel(void)
     char command[255];
     int x = selmon->mw;
     int y = selmon->mh;
+
     if (topbar)
         snprintf(command, sizeof(command), "xfconf-query -c xfce4-panel -p /panels/panel-1/position -s 'p=0;x=%d;y=%d' &", x, 0);
     else
         snprintf(command, sizeof(command), "xfconf-query -c xfce4-panel -p /panels/panel-1/position -s 'p=0;x=%d;y=%d' &", x, y);
 
-    fprintf(stderr, "\n%s\n", command);
     if (system(command) != 0)
         fprintf(stderr, "\nWarning: Failed to execute xfconf-query\n");
-    arrange(NULL);
 }
 void
 setup(void)

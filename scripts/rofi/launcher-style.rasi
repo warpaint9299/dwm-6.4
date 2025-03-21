@@ -26,8 +26,8 @@ configuration {
 
 
 * {
-	background:					 #0e0e0e;
-	selected:					 #b8bb26;
+    background:                  #0e0e0e;
+    selected:                    #b8bb26;
     border-colour:               var(selected);
     handle-colour:               var(foreground);
     background-colour:           var(background);
