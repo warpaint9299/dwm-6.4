@@ -584,7 +584,6 @@ void
 arrange(Monitor *m)
 {
     XEvent ev;
-    Client *c;
     if (m)
         showhide(m->stack);
     else
@@ -1335,6 +1334,7 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
                                 if (r->isfactor) {
                                     applyfactor(c, r);
                                     focus(c);
+                                    warppointer(c);
                                 }
                             }
                             goto end_close_client;
@@ -1410,7 +1410,6 @@ focusmon(const Arg *arg)
     XWarpPointer(dpy, None, m->barwin, 0, 0, 0, 0, m->mw / 2, m->mh / 2);
     selmon = m;
     focus(NULL);
-    warppointer(selmon->sel);
 }
 
 void
@@ -2746,7 +2745,7 @@ showwin(Client *c)
 void
 showhide(Client *c)
 {
-    if (!c)
+    if (!c || ispanel(c))
         return;
     if (ISVISIBLE(c)) {
         /* show clients top down */
@@ -3031,8 +3030,6 @@ unmanage(Client *c, int destroyed)
     updateclientlist();
     viewafterclose(oldname);
     arrange(m);
-    if (m == selmon && selmon->sel && !isfloating)
-        warppointer(m->sel);
 }
 
 void
@@ -3350,7 +3347,6 @@ viewafterclose(char *name)
     for (cl = selmon->clients; cl; cl = cl->next) {
         if (ISVISIBLE(cl) && !ispanel(cl) && !matchregex(cl->name, regexarray[1])) {
             c = cl;
-            warppointer(cl);
             break;
         }
     }
