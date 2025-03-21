@@ -10,7 +10,7 @@ static const char panel[][32]       = { "xfce4-panel", "Xfce4-panel", "KMagnifie
 static const int entagmon			= 1;		/* 0 means dosn't send selclient when switch monitor*/
 static const int viewontag          = 1;        /* Switch view on tag switch */
 static const int showbar            = 1;        /* 0 means no bar */
-static const int topbar             = 1;        /* 0 means bottom bar */
+static const int topbar             = 0;        /* 0 means bottom bar */
 static const int vertpad            = 0;        /* vertical padding of bar */
 static const int sidepad            = 0;        /* horizontal padding of bar */
 static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
@@ -18,7 +18,6 @@ static const int min_tag            = 4;        /* min number of tag */
 static const char *fonts[] 	= { "VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
 								"LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
 								"Comic Code:style=Medium:size=16:antialias=true:autohint=true", };
-static const unsigned int twidth		= 720;
 static const unsigned int baralpha		= 0xd0;
 static const unsigned int borderalpha	= OPAQUE;
 static const char fgcolor1[]    = "#0e0e0e";
@@ -86,6 +85,9 @@ static const char *tags[] = { "", "󰰶", "󰰡", "󰰛", "󰰰", "󰰰", "�
 /* Lockfile */
 static char lockfile[] = "/tmp/dwm.lock";
 
+/* title width */
+static unsigned int twidth	= 720;
+
 /* 1 means dynamically changing isfloating rule of a selected client, and vice versa. */
 static const int dynamicrule = 0;
 static char regexarray[][255] = { "^nvim$", "^(Minecraft Launcher|Sign in to Minecraft|Welcome to Xbox)$" };
@@ -121,7 +123,7 @@ static Rule rules[] = {
     { NULL,                   NULL,         regexarray[1],1 << 3,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { NULL,                   NULL,         regexarray[0],0,           0,         1,          0,         0,         -1,      1,        0.6,1.0,1.0,0.8,        2,        1 },
     { panel[3],               NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        0.4,1.0,1.0,0.17,       2,        0 },
-    { panel[1],               NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        1.0,1.0,1.0,1.0,        0,        0 },
+    { panel[1],               NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      0,        1.0,1.0,1.0,1.0,        0,        0 },
     { broken,                 NULL,         NULL,         0,           0,         1,          1,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
 };
 

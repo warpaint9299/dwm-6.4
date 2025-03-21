@@ -262,6 +262,7 @@ static Atom getatomprop(Client *c, Atom prop);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
+static int getpanelwidth(Client *c);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
 static void hide(const Arg *arg);
@@ -304,6 +305,7 @@ static void setfullscreen(Client *c, int fullscreen);
 static void setgaps(const Arg *arg);
 static void setlayout(const Arg *arg);
 static void setmfact(const Arg *arg);
+static void setpanel(void);
 static void setup(void);
 static void seturgent(Client *c, int urg);
 static void show(const Arg *arg);
@@ -582,6 +584,7 @@ void
 arrange(Monitor *m)
 {
     XEvent ev;
+    Client *c;
     if (m)
         showhide(m->stack);
     else
@@ -1079,8 +1082,15 @@ drawbar(Monitor *m)
     unsigned int i, occ = 0, urg = 0;
     Client *c;
 
-    if (!m->showbar)
+    if (!m->showbar) {
+        for (c = selmon->clients; c; c = c->next) {
+            if (ispanel(c)) {
+                hidewin(c);
+                break;
+            }
+        }
         return;
+    }
 
     //	/* draw status first so it can be overdrawn by tags later */
     if (m == selmon) {                    /* status is only drawn on selected monitor */
@@ -1091,7 +1101,12 @@ drawbar(Monitor *m)
 
     for (c = m->clients; c; c = c->next) {
         // prevent showing the panel as active application:
-        if (ispanel(c) || ismagnifier(c)) continue;
+        if (ispanel(c)) {
+            twidth = m->mw - getpanelwidth(c);
+            continue;
+        }
+        if (ismagnifier(c))
+            continue;
         occ |= c->tags;
         if (c->isurgent)
             urg |= c->tags;
@@ -1110,6 +1125,7 @@ drawbar(Monitor *m)
     w = TEXTW(m->ltsymbol, 0);
     drw_setscheme(drw, scheme[SchemeTagsNorm]);
     x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0, 0);
+    twidth -= x;
     if ((w = m->ww - tw - x) > bh) {
         if (m->sel) {
             drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
@@ -1143,8 +1159,15 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
     unsigned int i, occ = 0, urg = 0;
     Client *c;
 
-    if (!m->showbar)
+    if (!m->showbar) {
+        for (c = selmon->clients; c; c = c->next) {
+            if (ispanel(c)) {
+                hidewin(c);
+                break;
+            }
+        }
         return;
+    }
 
     //	/* draw status first so it can be overdrawn by tags later */
     if (m == selmon) {                    /* status is only drawn on selected monitor */
@@ -1155,7 +1178,13 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
 
     for (c = m->clients; c; c = c->next) {
         // prevent showing the panel as active application:
-        if (ispanel(c) || ismagnifier(c)) continue;
+        if (ispanel(c)) {
+            twidth = m->mw - getpanelwidth(c);
+            // fprintf(stderr, "\nThe  twidth is %dpx.\n\n", twidth);
+            continue;
+        }
+        if (ismagnifier(c))
+            continue;
         occ |= c->tags;
         if (c->isurgent)
             urg |= c->tags;
@@ -1179,6 +1208,7 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
     w = TEXTW(m->ltsymbol, 0);
     drw_setscheme(drw, scheme[SchemeTagsNorm]);
     x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0, 0);
+    twidth -= x;
 
     if (ev->x < x)
         XDefineCursor(dpy, selmon->barwin, cursor[CurHand]->cursor);
@@ -1520,6 +1550,19 @@ gettextprop(Window w, Atom atom, char *text, unsigned int size)
     return 1;
 }
 
+int
+getpanelwidth(Client *c)
+{
+    int width = 0;
+    if (!c || !ispanel(c))
+        return width;
+    XWindowAttributes wa;
+    XGetWindowAttributes(dpy, c->win, &wa);
+    // fprintf(stderr, "\nThe xfce4-panel width is %dpx.\n\n", wa.width);
+    width = wa.width;
+    return width;
+}
+
 void
 grabbuttons(Client *c, int focused)
 {
@@ -1562,12 +1605,16 @@ grabkeys(void)
 int
 ismagnifier(Client *c)
 {
+    if (!c)
+        return 0;
     return !strcmp(c->name, panel[2]);
 }
 
 int
 ispanel(Client *c)
 {
+    if (!c)
+        return 0;
     return !strcmp(c->name, panel[0]);
 }
 
@@ -1707,6 +1754,7 @@ manage(Window w, XWindowAttributes *wa)
 
     // no border - even when active
     if (ispanel(c) || ismagnifier(c)) c->bw = c->oldbw = 0;
+    if (ispanel(c)) setpanel();
     if (c->hasrulebw && !c->isfullscreen)
         wc.border_width = c->borderpx;
     else
@@ -2250,11 +2298,12 @@ restack(Monitor *m)
     if (m->lt[m->sellt]->arrange) {
         wc.stack_mode = Below;
         wc.sibling = m->barwin;
-        for (c = m->stack; c; c = c->snext)
+        for (c = m->stack; c; c = c->snext) {
             if (!c->isfloating && ISVISIBLE(c)) {
                 XConfigureWindow(dpy, c->win, CWSibling | CWStackMode, &wc);
                 wc.sibling = c->win;
             }
+        }
     }
     XSync(dpy, False);
     while (XCheckMaskEvent(dpy, EnterWindowMask, &ev))
@@ -2554,6 +2603,22 @@ setmfact(const Arg *arg)
 }
 
 void
+setpanel(void)
+{
+    char command[255];
+    int x = selmon->mw;
+    int y = selmon->mh;
+    if (topbar)
+        snprintf(command, sizeof(command), "xfconf-query -c xfce4-panel -p /panels/panel-1/position -s 'p=0;x=%d;y=%d' &", x, 0);
+    else
+        snprintf(command, sizeof(command), "xfconf-query -c xfce4-panel -p /panels/panel-1/position -s 'p=0;x=%d;y=%d' &", x, y);
+
+    fprintf(stderr, "\n%s\n", command);
+    if (system(command) != 0)
+        fprintf(stderr, "\nWarning: Failed to execute xfconf-query\n");
+    arrange(NULL);
+}
+void
 setup(void)
 {
     int i;
@@ -2813,9 +2878,10 @@ togglebar(const Arg *arg)
     Client *c;
     selmon->showbar = !selmon->showbar;
     for (c = selmon->clients; c; c = c->next) {
-        if (!ispanel(c))
-            continue;
-        selmon->showbar ? showwin(c) : hidewin(c);
+        if (ispanel(c)) {
+            selmon->showbar ? showwin(c) : hidewin(c);
+            break;
+        }
     }
     updatebarpos(selmon);
     resizebarwin(selmon);

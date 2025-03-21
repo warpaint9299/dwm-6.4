@@ -43,6 +43,6 @@ blueman-applet &
 fcitx5 &
 flameshot &
 xfce4-panel --disable-wm-check &
-sleep 0.2
+sleep 0.3
 tmux has-session && exec kitty tmux attach || exec kitty tmux &
 exec xset -b & # disable console bell volume
