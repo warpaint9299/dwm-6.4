@@ -10,7 +10,7 @@ static const char panel[][32]       = { "xfce4-panel", "Xfce4-panel", "KMagnifie
 static const int entagmon			= 1;		/* 0 means dosn't send selclient when switch monitor*/
 static const int viewontag          = 1;        /* Switch view on tag switch */
 static const int showbar            = 1;        /* 0 means no bar */
-static const int topbar             = 0;        /* 0 means bottom bar */
+static const int topbar             = 1;        /* 0 means bottom bar */
 static const int vertpad            = 0;        /* vertical padding of bar */
 static const int sidepad            = 0;        /* horizontal padding of bar */
 static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
