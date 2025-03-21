@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <locale.h>
 #include <pthread.h>
+#include <regex.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -146,6 +147,7 @@ struct Client {
     int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
     int bw, oldbw;
     unsigned int tags;
+    unsigned int viewontag;
     int isfixed, isfloating, islowest, isurgent, neverfocus, oldstate, isfullscreen, forcetile, iswarppointer, istoggled, iscentered;
     int borderpx;
     int hasrulebw;
@@ -201,6 +203,7 @@ typedef struct
     const char *instance;
     const char *title;
     unsigned int tags;
+    unsigned int viewontag;
     int isfloating;
     int iscentered;
     int forcetile;
@@ -272,6 +275,7 @@ static void killclient(const Arg *arg);
 static void manage(Window w, XWindowAttributes *wa);
 static void mappingnotify(XEvent *e);
 static void maprequest(XEvent *e);
+static int matchregex(const char *name, const char *reg);
 static void monocle(Monitor *m);
 static void motionnotify(XEvent *e);
 static void movemouse(const Arg *arg);
@@ -332,6 +336,7 @@ static void updatetitle(Client *c);
 static void updatewindowtype(Client *c);
 static void updatewmhints(Client *c);
 static void view(const Arg *arg);
+static void viewafterclose(char *name);
 static void viewall(const Arg *arg);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
@@ -444,16 +449,16 @@ applyrules(Client *c)
     const Rule *r;
     Monitor *m;
     XClassHint ch = {NULL, NULL};
-    Arg arg = {0};
 
     /* rule matching */
-    c->iscentered = 0;
-    c->istoggled = 0;
-    c->islowest = 0;
-    c->iswarppointer = 0;
-    c->isfloating = 0;
-    c->forcetile = 0;
     c->tags = 0;
+    c->viewontag = 0;
+    c->isfloating = 0;
+    c->islowest = 0;
+    c->forcetile = 0;
+    c->iswarppointer = 0;
+    c->istoggled = 0;
+    c->iscentered = 0;
 
     XGetClassHint(dpy, c->win, &ch);
     class = ch.res_class ? ch.res_class : broken;
@@ -464,11 +469,11 @@ applyrules(Client *c)
     c->instance[sizeof(c->instance) - 1] = '\0';
     if (ch.res_class) XFree(ch.res_class);
     if (ch.res_name) XFree(ch.res_name);
-    fprintf(stderr, "\nClass and Instance is Initialized:\nclass=%s, instance=%s\n", c->class, c->instance);
+    fprintf(stderr, "\nIn the applyrules: the class and instance is initialized:\nclass=%s, instance=%s\n\n", c->class, c->instance);
 
     for (i = 0; i < LENGTH(rules); i++) {
         r = &rules[i];
-        if ((!r->title || strstr(c->name, r->title))
+        if ((!r->title || matchregex(c->name, r->title))
             && (!r->class || strstr(c->class, r->class))
             && (!r->instance || strstr(c->instance, r->instance))) {
             // the `!(c->mon->num)` is a primary or first monitor
@@ -477,6 +482,7 @@ applyrules(Client *c)
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
             c->iscentered = r->iscentered;
+            c->viewontag = r->viewontag;
             oldfloatingstate = c->isfloating;
 
             if (c->isfloating && !ispanel(c)) {
@@ -496,9 +502,12 @@ applyrules(Client *c)
         }
     }
     c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : c->mon->tagset[c->mon->seltags];
-    arg.ui = c->tags;
-    if (((arg.ui & TAGMASK) != TAGMASK))
-        view(&arg);
+
+    if (c->viewontag) {
+        Arg arg = {.ui = c->tags};
+        if ((arg.ui & TAGMASK) != TAGMASK)
+            view(&arg);
+    }
 }
 
 int
@@ -754,7 +763,7 @@ changerule(Client *c)
     pthread_mutex_lock(&rule_mutex);
     for (i = 0; i < LENGTH(rules); i++) {
         r = &rules[i];
-        if ((!r->title || strstr(c->name, r->title))
+        if ((!r->title || matchregex(c->name, r->title))
             && (!r->class || strstr(c->class, r->class))
             && (!r->instance || strstr(c->instance, r->instance))) {
 
@@ -1260,16 +1269,18 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
     const Rule *r;
     switch (action) {
         case OPEN_CLIENT:
-            if (!c->forcetile)
+            fprintf(stderr, "\nIn the unfloatexceptlatest: the selmon->tagset[selmon->seltags] is %d, the c->tags is %d,c->name is %s\n", selmon->tagset[selmon->seltags], c->tags, c->name);
+            // if (!c->forcetile || selmon->tagset[selmon->seltags] != c->tags)
+            if (!c->forcetile || !ISVISIBLE(c))
                 return;
             for (Client *cl = m->clients; cl; cl = cl->next) {
                 if (ISVISIBLE(cl)) {
                     if (cl->forcetile && cl != c && !ispanel(cl) && cl->isfloating) {
                         for (i = 0; i < LENGTH(rules); i++) {
                             r = &rules[i];
-                            if (((!r->title || strstr(cl->name, r->title))
-                                 && (!r->class || strstr(cl->class, r->class))
-                                 && (!r->instance || strstr(cl->instance, r->instance))))
+                            if ((!r->title || matchregex(c->name, r->title))
+                                && (!r->class || strstr(cl->class, r->class))
+                                && (!r->instance || strstr(cl->instance, r->instance)))
                                 cl->isfloating ^= 1;
                         }
                     }
@@ -1286,7 +1297,7 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
                         if (!c->isfloating
                             && !c->istoggled
                             && r->isfloating
-                            && (!r->title || strstr(c->name, r->title))
+                            && (!r->title || matchregex(c->name, r->title))
                             && (!r->class || strstr(c->class, r->class))
                             && (!r->instance || strstr(c->instance, r->instance))) {
                             if (r->forcetile) {
@@ -1772,6 +1783,26 @@ maprequest(XEvent *e)
         manage(ev->window, &wa);
 }
 
+int
+matchregex(const char *name, const char *reg)
+{
+    regex_t regex;
+    int matched;
+    int ret = 0;
+    if (!reg || !name)
+        return ret;
+    fprintf(stderr, "In the matchregex: the reg of r->title is %s, the c->name is %s\n", reg, name);
+    if (regcomp(&regex, reg, REG_EXTENDED) == 0) {
+        matched = regexec(&regex, name, 0, NULL, 0);
+        fprintf(stderr, "In the matchregex: the matched is %d, the c->name is %s\n", matched, name);
+        if (matched == 0)
+            ret = 1;
+        regfree(&regex);
+    }
+    fprintf(stderr, "In the matchregex: the ret is %d, the c->name is %s\n", ret, name);
+    return ret;
+}
+
 void
 monocle(Monitor *m)
 {
@@ -2006,7 +2037,17 @@ propertynotify(XEvent *e)
                 break;
         }
         if (ev->atom == XA_WM_NAME || ev->atom == netatom[NetWMName]) {
+            char oldname[255];
+            strncpy(oldname, c->name, sizeof(oldname) - 1);
+            oldname[sizeof(oldname) - 1] = '\0';
             updatetitle(c);
+            if ((strcmp(oldname, broken) == 0) && (strcmp(c->name, broken) != 0)) {
+                if (matchregex(c->name, regexarray[1])) {
+                    applyrules(c);
+                    arrange(c->mon);
+                    focus(NULL);
+                }
+            }
             if (c == c->mon->sel)
                 drawbar(c->mon);
         }
@@ -2888,8 +2929,13 @@ unmanage(Client *c, int destroyed)
 {
     Monitor *m = c->mon;
     XWindowChanges wc;
+    Client *cl;
     int forcetile = c->forcetile;
     int isfloating = c->isfloating;
+    char oldname[255];
+    strncpy(oldname, c->name, sizeof(oldname) - 1);
+    oldname[sizeof(oldname) - 1] = '\0';
+
     detach(c);
     detachstack(c);
     if (!destroyed) {
@@ -2907,7 +2953,7 @@ unmanage(Client *c, int destroyed)
     free(c);
     focus(NULL);
     if (m->clients) {
-        Client *cl = m->clients;
+        cl = m->clients;
         while (cl->next && !ispanel(cl->next))
             cl = cl->next;
         if (forcetile && isfloating) {
@@ -2917,6 +2963,7 @@ unmanage(Client *c, int destroyed)
         }
     }
     updateclientlist();
+    viewafterclose(oldname);
     arrange(m);
     if (m == selmon && selmon->sel && !isfloating)
         warppointer(m->sel);
@@ -3229,6 +3276,25 @@ view(const Arg *arg)
 }
 
 void
+viewafterclose(char *name)
+{
+    Client *cl, *c = NULL;
+    int matched = matchregex(name, regexarray[1]);
+    fprintf(stderr, "\n\nIn the viewafterclose: the matched is %d\n", matched);
+    for (cl = selmon->clients; cl; cl = cl->next) {
+        if (ISVISIBLE(cl) && !ispanel(cl) && !matchregex(cl->name, regexarray[1])) {
+            c = cl;
+            warppointer(cl);
+            break;
+        }
+    }
+    if (matched && !c) {
+        Arg arg = {.ui = 1 << 0};
+        view(&arg);
+    }
+}
+
+void
 viewall(const Arg *arg)
 {
     Monitor *m;
@@ -3275,7 +3341,7 @@ warppointer(Client *c)
 {
     if (!c || c->mon != selmon)
         return;
-    if (!ispanel(c) && c->iswarppointer)
+    if (!ispanel(c) && ISVISIBLE(c) && c->iswarppointer)
         XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
 }
 
