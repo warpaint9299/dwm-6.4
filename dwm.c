@@ -319,7 +319,6 @@ static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
-static void togglelayer(const Arg *arg);
 static void togglermaster(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
@@ -1439,14 +1438,23 @@ focusstack(int inc, int vis)
         return;
 
     if (inc > 0) {
-        if (selmon->sel)
+        if (selmon->sel) {
+            if (!ispanel(selmon->sel) && selmon->sel->isfloating && !selmon->sel->islowest) {
+                XLowerWindow(dpy, selmon->sel->win);
+                selmon->sel->islowest = 1;
+            }
             for (c = selmon->sel->next; c && (!ISVISIBLE(c) || (!vis && HIDDEN(c))); c = c->next)
                 ;
+        }
         if (!c)
             for (c = selmon->clients; c && (!ISVISIBLE(c) || (!vis && HIDDEN(c))); c = c->next)
                 ;
     } else {
         if (selmon->sel) {
+            if (!ispanel(selmon->sel) && selmon->sel->isfloating && !selmon->sel->islowest) {
+                XLowerWindow(dpy, selmon->sel->win);
+                selmon->sel->islowest = 1;
+            }
             for (i = selmon->clients; i != selmon->sel; i = i->next)
                 if (!ispanel(i) && !ismagnifier(c) && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
                     c = i;
@@ -1463,6 +1471,10 @@ focusstack(int inc, int vis)
         return;
     else {
         focus(c);
+        if (!ispanel(c) && c->isfloating && c->islowest) {
+            XRaiseWindow(dpy, c->win);
+            c->islowest = 0;
+        }
         restack(c->mon);
         warppointer(c);
         if (HIDDEN(c)) {
@@ -2291,9 +2303,6 @@ restack(Monitor *m)
     if (m->sel->isfloating || !m->lt[m->sellt]->arrange)
         XRaiseWindow(dpy, m->sel->win);
 
-    if (m->sel->isfloating && m->sel->islowest)
-        XLowerWindow(dpy, m->sel->win);
-
     if (m->lt[m->sellt]->arrange) {
         wc.stack_mode = Below;
         wc.sibling = m->barwin;
@@ -2900,23 +2909,6 @@ togglefloating(const Arg *arg)
     c->iscentered = c->isfloating ? 1 : 0;
     arrange(m);
     warppointer(c);
-}
-
-void
-togglelayer(const Arg *arg)
-{
-    if (!selmon->sel)
-        return;
-    if (selmon->sel->isfullscreen)
-        return;
-    if (!ISVISIBLE(selmon->sel))
-        return;
-    if (ispanel(selmon->sel))
-        return;
-    if (selmon->sel->isfloating)
-        selmon->sel->islowest ^= 1;
-    focus(NULL);
-    arrange(selmon);
 }
 
 void
