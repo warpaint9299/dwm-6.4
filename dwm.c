@@ -26,7 +26,6 @@
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
-#include <errno.h>
 #include <locale.h>
 #include <pthread.h>
 #include <regex.h>
@@ -148,7 +147,8 @@ struct Client {
     int bw, oldbw;
     unsigned int tags;
     unsigned int viewontag;
-    int isfixed, isfloating, islowest, isurgent, neverfocus, oldstate, isfullscreen, forcetile, iswarppointer, istoggled, iscentered;
+    int isfixed, isfloating, islowest, isurgent, neverfocus, oldstate, isfullscreen;
+    int forcetile, iswarppointer, istoggled, iscentered;
     int borderpx;
     int hasrulebw;
     Client *next;
@@ -1372,6 +1372,8 @@ focus(Client *c)
             seturgent(c, 0);
         // prevents the panel getting focus when tag switching:
         if (!ispanel(c) && !ismagnifier(c)) {
+            if (c->isfloating)
+                XRaiseWindow(dpy, c->win);
             detachstack(c);
             attachstack(c);
             grabbuttons(c, 1);
@@ -1462,8 +1464,8 @@ focusstack(int inc, int vis)
     if (!c)
         return;
     else {
-        focus(c);
         restack(c->mon);
+        focus(c);
         warppointer(c);
         if (HIDDEN(c)) {
             showwin(c);
@@ -2291,9 +2293,6 @@ restack(Monitor *m)
     if (m->sel->isfloating || !m->lt[m->sellt]->arrange)
         XRaiseWindow(dpy, m->sel->win);
 
-    if (m->sel->isfloating && m->sel->islowest)
-        XLowerWindow(dpy, m->sel->win);
-
     if (m->lt[m->sellt]->arrange) {
         wc.stack_mode = Below;
         wc.sibling = m->barwin;
@@ -2905,18 +2904,14 @@ togglefloating(const Arg *arg)
 void
 togglelayer(const Arg *arg)
 {
-    if (!selmon->sel)
+    Client *c = selmon->sel;
+    if (!c || ispanel(c) || !ISVISIBLE(c) || c->isfullscreen)
         return;
-    if (selmon->sel->isfullscreen)
-        return;
-    if (!ISVISIBLE(selmon->sel))
-        return;
-    if (ispanel(selmon->sel))
-        return;
-    if (selmon->sel->isfloating)
-        selmon->sel->islowest ^= 1;
-    focus(NULL);
-    arrange(selmon);
+    if (c->isfloating)
+        c->islowest ^= 1;
+    if (c->islowest)
+        focusstackvis(arg);
+    arrange(c->mon);
 }
 
 void
@@ -2986,6 +2981,8 @@ unfocus(Client *c, int setfocus)
         XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
         XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
     }
+    if (c->isfloating && c->islowest)
+        XLowerWindow(dpy, c->win);
 }
 
 void
