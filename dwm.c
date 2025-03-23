@@ -418,29 +418,31 @@ struct NumTags {
 void
 applyfactor(Client *c, const Rule *r)
 {
-    int cx, cy, cw, ch, x1, y1, x2, y2;
+    int cx, cy, cw, ch, x, y, w, h;
+    int actualx, actualy, actualw, actualh;
     Monitor *m = c->mon;
     cx = m->wx + m->gappx;
     cy = m->wy + m->gappx;
     cw = m->ww - 2 * c->bw - (2 * m->gappx);
     ch = m->wh - 2 * c->bw - (2 * m->gappx);
-    x1 = cx;
-    y1 = cy;
+    x = cx;
+    y = cy;
     if (r->factorx == 1.0 && r->factory <= 1.0) {
-        x2 = x1 + cw - m->gappx - c->bw;
-        y2 = y1 + ch;
+        w = x + cw - m->gappx - c->bw;
+        h = y + ch;
     } else if (r->factory == 1.0 && r->factorx <= 1.0) {
-        x2 = x1 + cw;
-        y2 = y1 + ch - bh - m->gappx - c->bw;
+        w = x + cw;
+        h = y + ch - bh - m->gappx - c->bw;
     } else {
-        x2 = x1 + cw;
-        y2 = y1 + ch;
+        w = x + cw;
+        h = y + ch;
     }
-    resizeclient(c,
-                 r->factorx == 1.0 ? x1 : (r->factorx == 0.0 ? x1 : x2 * (1 - r->factorx)),
-                 r->factory == 1.0 ? y1 : (r->factory == 0.0 ? y1 : y2 * (1 - r->factory)),
-                 ((x2 * r->factorx) == x2 ? cw : (r->factorx == 0.0 ? cw : x2 * r->factorx)) * (r->factorw == 0.0 ? 1.0 : r->factorw),
-                 ((y2 * r->factory) == y2 ? ch : (r->factory == 0.0 ? ch : y2 * r->factory)) * (r->factorh == 0.0 ? 1.0 : r->factorh));
+
+    actualx = r->factorx == 1.0 ? x : (r->factorx == 0.0 ? x : w * (1 - r->factorx));
+    actualy = r->factory == 1.0 ? y : (r->factory == 0.0 ? y : h * (1 - r->factory));
+    actualw = (((w * r->factorx) == w ? cw : (r->factorx == 0.0 ? cw : w * r->factorx)) * (r->factorw == 0.0 ? 1.0 : r->factorw) - 3);
+    actualh = (((h * r->factory) == h ? ch : (r->factory == 0.0 ? ch : h * r->factory)) * (r->factorh == 0.0 ? 1.0 : r->factorh) - 4);
+    resizeclient(c, actualx, actualy, actualw, actualh);
 }
 
 void
