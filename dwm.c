@@ -1443,14 +1443,23 @@ focusstack(int inc, int vis)
         return;
 
     if (inc > 0) {
-        if (selmon->sel)
+        if (selmon->sel) {
+            if (!ispanel(selmon->sel) && selmon->sel->isfloating && !selmon->sel->islowest) {
+                XLowerWindow(dpy, selmon->sel->win);
+                selmon->sel->islowest = 1;
+            }
             for (c = selmon->sel->next; c && (!ISVISIBLE(c) || (!vis && HIDDEN(c))); c = c->next)
                 ;
+        }
         if (!c)
             for (c = selmon->clients; c && (!ISVISIBLE(c) || (!vis && HIDDEN(c))); c = c->next)
                 ;
     } else {
         if (selmon->sel) {
+            if (!ispanel(selmon->sel) && selmon->sel->isfloating && !selmon->sel->islowest) {
+                XLowerWindow(dpy, selmon->sel->win);
+                selmon->sel->islowest = 1;
+            }
             for (i = selmon->clients; i != selmon->sel; i = i->next)
                 if (!ispanel(i) && !ismagnifier(c) && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
                     c = i;
