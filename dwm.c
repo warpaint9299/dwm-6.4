@@ -20,6 +20,7 @@
  *
  * To understand everything else, start reading main().
  */
+#include <X11/X.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xproto.h>
@@ -286,6 +287,7 @@ static Client *nexttiled(Client *c);
 static void pop(Client *c);
 static void propertynotify(XEvent *e);
 static void quit(const Arg *arg);
+static void raiseclient(const Arg *arg);
 static Monitor *recttomon(int x, int y, int w, int h);
 static void resetnmaster(const Arg *arg);
 static void resize(Client *c, int x, int y, int w, int h, int interact);
@@ -1374,8 +1376,6 @@ focus(Client *c)
             seturgent(c, 0);
         // prevents the panel getting focus when tag switching:
         if (!ispanel(c) && !ismagnifier(c)) {
-            if (c->isfloating)
-                XRaiseWindow(dpy, c->win);
             detachstack(c);
             attachstack(c);
             grabbuttons(c, 1);
@@ -1466,8 +1466,11 @@ focusstack(int inc, int vis)
     if (!c)
         return;
     else {
+        if (!ispanel(c) && c->isfloating)
+            XRaiseWindow(dpy, c->win);
         restack(c->mon);
         focus(c);
+        arrange(c->mon);
         warppointer(c);
         if (HIDDEN(c)) {
             showwin(c);
@@ -2139,6 +2142,21 @@ quit(const Arg *arg)
     }
 }
 
+void
+raiseclient(const Arg *arg)
+{
+    Client *c = selmon->sel;
+    if (!c || ispanel(c))
+        return;
+
+    if (c->isfloating)
+        XRaiseWindow(dpy, c->win);
+
+    focus(c);
+    restack(c->mon);
+    arrange(c->mon);
+}
+
 Monitor *
 recttomon(int x, int y, int w, int h)
 {
@@ -2302,6 +2320,11 @@ restack(Monitor *m)
             if (!c->isfloating && ISVISIBLE(c)) {
                 XConfigureWindow(dpy, c->win, CWSibling | CWStackMode, &wc);
                 wc.sibling = c->win;
+            }
+            if (c->isfloating && ISVISIBLE(c)) {
+                Atom wtype = getatomprop(c, netatom[NetWMWindowType]);
+                if (wtype == netatom[NetWMWindowTypeDialog])
+                    XRaiseWindow(dpy, c->win);
             }
         }
     }
