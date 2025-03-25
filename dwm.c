@@ -315,6 +315,7 @@ static void showall(const Arg *arg);
 static void showhide(Client *c);
 static void showwin(Client *c);
 static void sigchld(int unused);
+static int solitary(Client *c);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
@@ -394,7 +395,7 @@ static int useargb = 0;
 static Visual *visual;
 static int depth;
 static Colormap cmap;
-static int oldfloatingstate = 0;
+static int oldstate = 0;
 static int istoggled = 0;
 
 pthread_mutex_t rule_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -489,7 +490,7 @@ applyrules(Client *c)
             c->iswarppointer = r->iswarppointer;
             c->iscentered = r->iscentered;
             c->viewontag = r->viewontag;
-            oldfloatingstate = c->isfloating;
+            oldstate = c->isfloating;
 
             if (c->isfloating && !ispanel(c)) {
                 if (r->isfactor)
@@ -608,9 +609,24 @@ arrange(Monitor *m)
 void
 arrangemon(Monitor *m)
 {
+    int n = 0;
+    Client *c;
     strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, sizeof m->ltsymbol);
-    if (m->lt[m->sellt]->arrange)
-        m->lt[m->sellt]->arrange(m);
+    for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++)
+        ;
+    if ((m->lt[m->sellt]->arrange != monocle && n > 1) || !m->lt[m->sellt]->arrange) {
+        for (c = m->clients; c; c = c->next) {
+            if (ISVISIBLE(c) && (!m->lt[m->sellt]->arrange || !c->isfloating) && (c->bw != borderpx)) {
+                c->oldbw = c->bw;
+                c->bw = borderpx;
+                resizeclient(c, m->wx + m->gappx, m->wy + m->gappx, m->ww - (2 * m->gappx), m->wh - (2 * m->gappx));
+            }
+        }
+        if (m->lt[m->sellt]->arrange)
+            m->lt[m->sellt]->arrange(m);
+    } else {
+        monocle(m);
+    }
 }
 
 void
@@ -1070,8 +1086,14 @@ dotogglefloating(Monitor *m, Client *c)
         return;
 
     c->isfloating = !c->isfloating || c->mon->sel->isfixed;
-    if (c->isfloating)
-        resize(c, c->x, c->y, c->w, c->h, 0);
+    if (c->isfloating) {
+        if (c->bw != borderpx) {
+            c->oldbw = c->bw;
+            c->bw = borderpx;
+        }
+        resize(c, c->x, c->y,
+               c->w - c->bw * 2, c->h - c->bw * 2, 0);
+    }
 
     changerule(c);
 }
@@ -1379,7 +1401,10 @@ focus(Client *c)
             detachstack(c);
             attachstack(c);
             grabbuttons(c, 1);
-            XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
+            /* Avoid flickering when another client appears and the border
+             * is restored */
+            if (!solitary(c))
+                XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
             setfocus(c);
         }
     } else {
@@ -1865,10 +1890,19 @@ monocle(Monitor *m)
     for (c = m->clients; c; c = c->next)
         if (ISVISIBLE(c))
             n++;
-    if (n > 0) /* override layout symbol */
+    if (n > 0 && m->lt[m->sellt]->arrange == monocle) /* override layout symbol */
         snprintf(m->ltsymbol, sizeof m->ltsymbol, "%s", "󰬔");
-    for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
-        resize(c, m->wx + m->gappx, m->wy + m->gappx, m->ww - 2 * c->bw - (2 * m->gappx), m->wh - 2 * c->bw - (2 * m->gappx), 0);
+    for (c = nexttiled(m->clients); c; c = nexttiled(c->next)) {
+        // I'm not sure, but calling resize with the border width subtractions
+        // fixes a glitch where windows would not redraw until they were
+        // manually resized after restarting dwm.
+        resize(c, m->wx + m->gappx, m->wy + m->gappx, m->ww - (2 * c->bw) - (2 * m->gappx), m->wh - (2 * c->bw) - (2 * m->gappx), False);
+        if (c->bw) {
+            c->oldbw = c->bw;
+            c->bw = 0;
+            resizeclient(c, m->wx + m->gappx, m->wy + m->gappx, m->ww - (2 * m->gappx), m->wh - (2 * m->gappx));
+        }
+    }
 }
 
 void
@@ -2210,10 +2244,7 @@ resizeclient(Client *c, int x, int y, int w, int h)
     else
         wc.border_width = c->bw;
     // nail it to no border & y=0:
-    if (((nexttiled(c->mon->clients) == c && !nexttiled(c->next))
-         || &monocle == c->mon->lt[c->mon->sellt]->arrange)
-        && !c->isfullscreen && !c->isfloating
-        && NULL != c->mon->lt[c->mon->sellt]->arrange) {
+    if (solitary(c)) {
         c->w = wc.width += c->bw * 2;
         c->h = wc.height += c->bw * 2;
         wc.border_width = 0;
@@ -2580,6 +2611,7 @@ setfullscreen(Client *c, int fullscreen)
                         PropModeReplace, (unsigned char *)0, 0);
         c->isfullscreen = 0;
     }
+    resizeclient(c, c->x, c->y, c->w, c->h);
     arrange(c->mon);
 }
 
@@ -2792,6 +2824,16 @@ sigchld(int unused)
         ;
 }
 
+int
+solitary(Client *c)
+{
+
+    return ((nexttiled(c->mon->clients) == c && !nexttiled(c->next))
+            || &monocle == c->mon->lt[c->mon->sellt]->arrange)
+        && !c->isfullscreen && !c->isfloating
+        && NULL != c->mon->lt[c->mon->sellt]->arrange;
+}
+
 void
 spawn(const Arg *arg)
 {
@@ -2839,7 +2881,7 @@ tagmon(const Arg *arg)
         && destination != primary && c->isfloating) {
         dotogglefloating(c->mon, c);
         arrange(c->mon);
-        if (oldfloatingstate && !istoggled) {
+        if (oldstate && !istoggled) {
             // primany --> displayPort-0
             if (m->clients) {
                 Client *cl = m->clients;
@@ -2853,7 +2895,7 @@ tagmon(const Arg *arg)
                && source != destination
                && destination == primary && !c->isfloating) {
         // displayPort-0 --> primany
-        if (oldfloatingstate && !istoggled) {
+        if (oldstate && !istoggled) {
             c->isfloating ^= 1;
             changerule(c);
             XRaiseWindow(dpy, c->win);
@@ -2919,7 +2961,7 @@ togglefloating(const Arg *arg)
         return;
     c->istoggled = c->isfloating ? 1 : 0;
     dotogglefloating(m, c);
-    oldfloatingstate = c->isfloating;
+    oldstate = c->isfloating;
     istoggled ^= 1;
     c->iscentered = c->isfloating ? 1 : 0;
     arrange(m);
