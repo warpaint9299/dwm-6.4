@@ -90,6 +90,7 @@ enum {
     NetActiveWindow,
     NetWMWindowType,
     NetWMWindowTypeDialog,
+    NetWMWindowTypeNotification,
     NetClientList,
     NetLast
 }; /* EWMH atoms */
@@ -2711,6 +2712,7 @@ setup(void)
     netatom[NetWMFullscreen] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
     netatom[NetWMWindowType] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
     netatom[NetWMWindowTypeDialog] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+    netatom[NetWMWindowTypeNotification] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_NOTIFICATION", False);
     netatom[NetClientList] = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
     /* init cursors */
     cursor[CurNormal] = drw_cur_create(drw, XC_left_ptr);
@@ -2827,10 +2829,10 @@ sigchld(int unused)
 int
 solitary(Client *c)
 {
-
     return ((nexttiled(c->mon->clients) == c && !nexttiled(c->next))
             || &monocle == c->mon->lt[c->mon->sellt]->arrange)
-        && !c->isfullscreen && !c->isfloating
+        && !c->isfullscreen
+        && !c->isfloating
         && NULL != c->mon->lt[c->mon->sellt]->arrange;
 }
 
