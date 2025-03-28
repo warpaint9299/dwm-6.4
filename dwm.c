@@ -249,7 +249,6 @@ static void dotogglefloating(Monitor *m, Client *c);
 static void drawbar(Monitor *m);
 static void drawbars(void);
 static void drawhoverbar(Monitor *m, XMotionEvent *ev);
-static void drawhoverbars(XMotionEvent *ev);
 static void enqueue(Client *c);
 static void enqueuestack(Client *c);
 static void enternotify(XEvent *e);
@@ -1127,11 +1126,7 @@ drawbar(Monitor *m)
 
     for (c = m->clients; c; c = c->next) {
         // prevent showing the panel as active application:
-        if (ispanel(c)) {
-            twidth = m->mw - getpanelwidth(c);
-            continue;
-        }
-        if (ismagnifier(c))
+        if (ispanel(c) || ismagnifier(c))
             continue;
         occ |= c->tags;
         if (c->isurgent)
@@ -1151,7 +1146,6 @@ drawbar(Monitor *m)
     w = TEXTW(m->ltsymbol, 0);
     drw_setscheme(drw, scheme[SchemeTagsNorm]);
     x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0, 0);
-    twidth -= x;
     if ((w = m->ww - tw - x) > bh) {
         if (m->sel) {
             drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
@@ -1204,17 +1198,17 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
 
     for (c = m->clients; c; c = c->next) {
         // prevent showing the panel as active application:
-        if (ispanel(c)) {
-            twidth = m->mw - getpanelwidth(c);
-            // fprintf(stderr, "\nThe  twidth is %dpx.\n\n", twidth);
-            continue;
-        }
-        if (ismagnifier(c))
+        if (ispanel(c) || ismagnifier(c))
             continue;
         occ |= c->tags;
         if (c->isurgent)
             urg |= c->tags;
     }
+
+    for (Monitor *mon = mons; mon; mon = mon->next)
+        if (ev->x >= mon->mx && ev->x < mon->mx + mon->mw)
+            ev->x -= mon->mx;
+
     x = 0;
     for (i = 0; i < LENGTH(tags); i++) {
         /* Do not draw vacant tags */
@@ -1234,7 +1228,6 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
     w = TEXTW(m->ltsymbol, 0);
     drw_setscheme(drw, scheme[SchemeTagsNorm]);
     x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0, 0);
-    twidth -= x;
 
     if (ev->x < x)
         XDefineCursor(dpy, selmon->barwin, cursor[CurHand]->cursor);
@@ -1254,15 +1247,6 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
         }
     }
     drw_map(drw, m->barwin, 0, 0, m->ww, bh);
-}
-
-void
-drawhoverbars(XMotionEvent *ev)
-{
-    Monitor *m;
-
-    for (m = mons; m; m = m->next)
-        drawhoverbar(m, ev);
 }
 
 void
@@ -1298,6 +1282,7 @@ enternotify(XEvent *e)
 
     if ((ev->mode != NotifyNormal || ev->detail == NotifyInferior) && ev->window != root)
         return;
+
     c = wintoclient(ev->window);
     m = c ? c->mon : wintomon(ev->window);
     if (m != selmon) {
@@ -1916,7 +1901,8 @@ motionnotify(XEvent *e)
     if (ev->window != root)
         return;
 
-    drawhoverbars(ev);
+    if (topbar ? ev->y < bh : ev->y > selmon->by)
+        drawhoverbar(selmon, ev);
 
     if ((m = recttomon(ev->x_root, ev->y_root, 1, 1)) != mon && mon) {
         unfocus(selmon->sel, 1);
@@ -2673,6 +2659,7 @@ setpanel(void)
     if (system(command) != 0)
         fprintf(stderr, "\nWarning: Failed to execute xfconf-query\n");
 }
+
 void
 setup(void)
 {
@@ -3139,7 +3126,7 @@ updatebarpos(Monitor *m)
 {
     m->wy = m->my;
     m->wh = m->mh;
-    if (!m->num && m->showbar) { // only show bar on first monitor
+    if (m->showbar) {
         m->wh = m->wh - vertpad - bh;
         m->by = m->topbar ? m->wy : m->wy + m->wh + vertpad;
         m->wy = m->topbar ? m->wy + bh + vp : m->wy;
