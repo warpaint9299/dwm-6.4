@@ -1205,9 +1205,8 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
             urg |= c->tags;
     }
 
-    for (Monitor *mon = mons; mon; mon = mon->next)
-        if (ev->x >= mon->mx && ev->x < mon->mx + mon->mw)
-            ev->x -= mon->mx;
+    if (ev->x >= m->mx && ev->x < m->mx + m->mw)
+        ev->x -= m->mx;
 
     x = 0;
     for (i = 0; i < LENGTH(tags); i++) {
@@ -1217,7 +1216,7 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
         w = TEXTW(tags[i], 0);
         if (m->tagset[m->seltags] & 1 << i)
             drw_setscheme(drw, scheme[SchemeTagsSel]);
-        else if (ev->x > x && ev->x < x + w && (topbar ? ev->y < bh : ev->y > selmon->by))
+        else if (ev->x > x && ev->x < x + w && (topbar ? ev->y < bh : ev->y > m->by))
             drw_setscheme(drw, scheme[SchemeTagsHover]);
         else
             drw_setscheme(drw, scheme[SchemeTagsNorm]);
@@ -1230,9 +1229,9 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
     x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0, 0);
 
     if (ev->x < x)
-        XDefineCursor(dpy, selmon->barwin, cursor[CurHand]->cursor);
+        XDefineCursor(dpy, m->barwin, cursor[CurHand]->cursor);
     else
-        XDefineCursor(dpy, selmon->barwin, cursor[CurNormal]->cursor);
+        XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
 
     if ((w = m->ww - tw - x) > bh) {
         if (m->sel) {
@@ -1901,8 +1900,11 @@ motionnotify(XEvent *e)
     if (ev->window != root)
         return;
 
-    if (topbar ? ev->y < bh : ev->y > selmon->by)
-        drawhoverbar(selmon, ev);
+    if (topbar ? ev->y < bh + vp : ev->y > selmon->by + vp) {
+        for (m = mons; m; m = m->next)
+            if (ev->x > m->mx && ev->x < m->mx + m->mw)
+                drawhoverbar(m, ev);
+    }
 
     if ((m = recttomon(ev->x_root, ev->y_root, 1, 1)) != mon && mon) {
         unfocus(selmon->sel, 1);
