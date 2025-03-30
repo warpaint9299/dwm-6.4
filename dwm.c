@@ -1117,7 +1117,7 @@ drawbar(Monitor *m)
     int drawtitle = 0, drawicon = 0;
 
     if (!m->showbar) {
-        for (c = selmon->clients; c; c = c->next) {
+        for (c = m->clients; c; c = c->next) {
             if (ispanel(c)) {
                 hidewin(c);
                 break;
@@ -1164,12 +1164,12 @@ drawbar(Monitor *m)
             drw_text(drw, x, 0, twidth, bh, lrpad / 2 + (drawicon ? m->sel->icw + ICONSPACING : 0), drawtitle ? m->sel->name : "", 0, statusfontindex);
             if (drawicon) drw_pic(drw, x + lrpad / 2, (bh - m->sel->ich) / 2, m->sel->icw, m->sel->ich, m->sel->icon);
             drw_setscheme(drw, scheme[SchemeInfoSel]);
-            drw_rect(drw, x + twidth, 0, m->ww - x - twidth - (2 * sp), bh, 1, 1);
+            drw_rect(drw, x + twidth, 0, m->ww - x - twidth - 2 * sp, bh, 1, 1);
             if (m->sel->isfloating && drawtitle)
                 drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
         } else {
             drw_setscheme(drw, scheme[SchemeInfoSel]);
-            drw_rect(drw, x, 0, w - 2 * sp, bh, 1, 1);
+            drw_rect(drw, x, 0, m->ww - x - 2 * sp, bh, 1, 1);
         }
     }
     drw_map(drw, m->barwin, 0, 0, m->ww, bh);
@@ -1195,7 +1195,7 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
     int drawtitle = 0, drawicon = 0;
 
     if (!m->showbar) {
-        for (c = selmon->clients; c; c = c->next) {
+        for (c = m->clients; c; c = c->next) {
             if (ispanel(c)) {
                 hidewin(c);
                 break;
@@ -1257,12 +1257,12 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
             drw_text(drw, x, 0, twidth, bh, lrpad / 2 + (drawicon ? m->sel->icw + ICONSPACING : 0), drawtitle ? m->sel->name : "", 0, statusfontindex);
             if (drawicon) drw_pic(drw, x + lrpad / 2, (bh - m->sel->ich) / 2, m->sel->icw, m->sel->ich, m->sel->icon);
             drw_setscheme(drw, scheme[SchemeInfoSel]);
-            drw_rect(drw, x + twidth, 0, m->ww - x - twidth - (2 * sp), bh, 1, 1);
+            drw_rect(drw, x + twidth, 0, m->ww - x - twidth - 2 * sp, bh, 1, 1);
             if (m->sel->isfloating && drawtitle)
                 drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
         } else {
             drw_setscheme(drw, scheme[SchemeInfoSel]);
-            drw_rect(drw, x, 0, w - 2 * sp, bh, 1, 1);
+            drw_rect(drw, x, 0, m->ww - x - 2 * sp, bh, 1, 1);
         }
     }
     drw_map(drw, m->barwin, 0, 0, m->ww, bh);
@@ -2778,7 +2778,12 @@ setpanel(void)
         snprintf(command, sizeof(command), "xfconf-query -c xfce4-panel -p /panels/panel-1/position -s 'p=0;x=%d;y=%d' &", x, y);
 
     if (system(command) != 0)
-        fprintf(stderr, "\nWarning: Failed to execute xfconf-query\n");
+        fprintf(stderr, "\nWarning: Failed to execute %s\n", command);
+
+    snprintf(command, sizeof(command), "xfconf-query -c xfce4-panel -p /panels/panel-1/output-name  -s 'Primary'");
+
+    if (system(command) != 0)
+        fprintf(stderr, "\nWarning: Failed to execute %s'\n", command);
 }
 
 void
@@ -3051,16 +3056,19 @@ void
 togglebar(const Arg *arg)
 {
     Client *c;
-    selmon->showbar = !selmon->showbar;
-    for (c = selmon->clients; c; c = c->next) {
+    Monitor *m = selmon;
+    if (!m)
+        return;
+    m->showbar = !m->showbar;
+    for (c = m->clients; c; c = c->next) {
         if (ispanel(c)) {
-            selmon->showbar ? showwin(c) : hidewin(c);
+            m->showbar ? showwin(c) : hidewin(c);
             break;
         }
     }
-    updatebarpos(selmon);
-    resizebarwin(selmon);
-    arrange(selmon);
+    updatebarpos(m);
+    resizebarwin(m);
+    arrange(m);
 }
 
 void
