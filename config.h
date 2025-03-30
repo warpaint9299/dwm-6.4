@@ -1,5 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 #define SESSION_FILE "/tmp/dwm-session"
+#define ICONSIZE 16   /* icon size */
+#define ICONSPACING 8 /* space between icon and title */
 
 /* appearance */
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
@@ -16,6 +18,7 @@ static const int sidepad            = 0;        /* horizontal padding of bar */
 static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const int min_tag            = 4;        /* min number of tag */
 static const char *fonts[] 	= { "VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
+								"Symbola:size=16:antialias=true:autohint=true",
 								"LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
 								"Comic Code:style=Medium:size=16:antialias=true:autohint=true", };
 static const unsigned int baralpha		= 0xd0;
@@ -78,15 +81,12 @@ static const unsigned int alphas[][3]      = {
 
 /* Select the font index for you statusbar
  * the index is zero based*/
-static const int statusfontindex = 1;
+static const int statusfontindex = 2;
 /* tagging */
 static const char *tags[] = { "", "󰰶", "󰰡", "󰰛", "󰰰", "󰰰", "󰰭", "󰰘", "󰎣" };
 
 /* Lockfile */
 static char lockfile[] = "/tmp/dwm.lock";
-
-/* title width */
-static unsigned int twidth	= 720;
 
 /* 1 means dynamically changing isfloating rule of a selected client, and vice versa. */
 static const int dynamicrule = 0;
