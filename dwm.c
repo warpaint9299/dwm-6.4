@@ -777,8 +777,6 @@ center(Client *c)
     if (c->iscentered) {
         c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
         c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
-        c->iswarppointer = 1;
-        warppointer(c);
     }
 }
 
@@ -2459,11 +2457,6 @@ restack(Monitor *m)
             if (!c->isfloating && ISVISIBLE(c)) {
                 XConfigureWindow(dpy, c->win, CWSibling | CWStackMode, &wc);
                 wc.sibling = c->win;
-            }
-            if (c->isfloating && ISVISIBLE(c)) {
-                Atom wtype = getatomprop(c, netatom[NetWMWindowType]);
-                if (wtype == netatom[NetWMWindowTypeDialog])
-                    XRaiseWindow(dpy, c->win);
             }
         }
     }
