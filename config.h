@@ -139,16 +139,13 @@ static const int resizehints = 1;    /* 1 means respect size hints in tiled resi
 static const int lockfullscreen = 0; /* 1 will force focus on the fullscreen window */
 static const int attachdirection = 4;    /* 0 default, 1 above, 2 aside, 3 below, 4 bottom, 5 top */
 
-#include "layouts.c"
-#include "fibonacci.c"
 static const Layout layouts[] = {
     /* first entry is default */
 	/* symbol     arrange function */
 	{ "󰬛",           tile },
+	{ "󰬔",           monocle },
 	{ "󰬚",           spiral },
  	{ "󰬋",           dwindle },
-	{ "󰬔",           monocle },
-	{ "󰬎",           grid },
 	{ NULL,          NULL },
 };
 
@@ -175,7 +172,6 @@ static const char *flamcmd[]  = { "flameshot", "gui", NULL };
 static const char *thuncmd[]  = { "thunar", NULL };
 static const char *termcmd[]  = { "kitty", NULL };
 
-#include "movestack.c"
 static const Key keys[] = {
 	/* modifier                     key            function            argument */
 	{ MODKEY,             			XK_p,          spawn,              {.v = roficmd } },
