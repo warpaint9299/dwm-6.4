@@ -564,17 +564,11 @@ applyrules(Client *c)
                 ;
             if(m)
                 c->mon = m;
+            break;
         }
     }
     c->tags = c->tags & TAGMASK ? c->tags & TAGMASK
                                 : c->mon->tagset[c->mon->seltags];
-
-    if(c->viewontag)
-    {
-        Arg arg = { .ui = c->tags };
-        if((arg.ui & TAGMASK) != TAGMASK)
-            view(&arg);
-    }
 }
 
 int
@@ -2224,6 +2218,12 @@ manage(Window w, XWindowAttributes *wa)
     if(c->mon == selmon)
         unfocus(selmon->sel, 0);
     c->mon->sel = c;
+    if(c->viewontag)
+    {
+        Arg arg = { .ui = c->tags };
+        if((arg.ui & TAGMASK) != TAGMASK)
+            view(&arg);
+    }
     arrange(c->mon);
     if(!HIDDEN(c))
         XMapWindow(dpy, c->win);
@@ -2344,8 +2344,7 @@ movemouse(const Arg *arg)
     XEvent ev;
     Time lasttime = 0;
 
-    // if (!(c = selmon->sel) || ispanel(selmon->sel))
-    if(!(c = selmon->sel))
+    if(!(c = selmon->sel) || ispanel(selmon->sel))
         return;
     restack(selmon);
     ocx = c->x;
