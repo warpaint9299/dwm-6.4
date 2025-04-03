@@ -377,7 +377,7 @@ static void warppointer(Client *c);
 static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
-static void xinitvisual();
+static void xinitvisual(void);
 static void zoom(const Arg *arg);
 
 /* variables */
@@ -4148,7 +4148,7 @@ xerrorstart(Display *dpy, XErrorEvent *ee)
 }
 
 void
-xinitvisual()
+xinitvisual(void)
 {
     XVisualInfo *infos;
     XRenderPictFormat *fmt;
