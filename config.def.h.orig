@@ -105,6 +105,7 @@ static Rule rules[] = {
     { "Chromium",             NULL,         NULL,         0,           0,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "code-oss",             NULL,         NULL,         1 << 1,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "gnome-calculator",     NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.23,1.0,1.0,0.32,      0,        0 },
+    { "rnote",                NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        0,        1 },
     { "GoldenDict",           NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.3957,0.5,1.0,1.0,     2,        1 },
     { "kclock",               NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.23,1.0,1.0,0.70,      0,        0 },
     { "Clash for Windows",    NULL,         NULL,         0,           0,         1,          1,         0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
@@ -155,7 +156,7 @@ static const char *menucmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/rofi/powerme
 static const char *roficmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/rofi/launcher.sh" , NULL };
 static const char *scrkcmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/screenkey/screenkey.sh" , NULL };
 static const char *kmagcmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/kmagnifier/kmagnifier.sh" , NULL };
-static const char *rangcmd[]  = { "st", "-e", "ranger", NULL };
+static const char *rangcmd[]  = { "kitty", "ranger", NULL };
 static const char *flamcmd[]  = { "flameshot", "gui", NULL };
 static const char *thuncmd[]  = { "thunar", NULL };
 static const char *termcmd[]  = { "kitty", NULL };
@@ -164,8 +165,8 @@ static const Key keys[] = {
 	/* modifier                     key            function            argument */
 	{ MODKEY,             			XK_p,          spawn,              {.v = roficmd } },
 	{ MODKEY|ShiftMask,    			XK_p,          spawn,              {.v = menucmd } },
-	{ MODKEY,             			XK_e,          spawn,              {.v = thuncmd } },
-	{ MODKEY|ShiftMask,    			XK_e,          spawn,              {.v = rangcmd } },
+	{ MODKEY,    			        XK_e,          spawn,              {.v = rangcmd } },
+	{ MODKEY|ShiftMask,            	XK_e,          spawn,              {.v = thuncmd } },
 	{ MODKEY,             			XK_s,          spawn,              {.v = flamcmd } },
 	{ MODKEY|ShiftMask,             XK_s,          spawn,              {.v = scrkcmd } },
 	{ MODKEY|ShiftMask,             XK_z,          spawn,              {.v = kmagcmd } },
