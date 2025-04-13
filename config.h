@@ -111,6 +111,7 @@ static Rule rules[] = {
     { "Clash for Windows",    NULL,         NULL,         0,           0,         1,          1,         0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "Vmware",               NULL,         NULL,         1 << 7,      1,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "VirtualBox Manager",   NULL,         NULL,         1 << 8,      1,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { "VirtualBox Machine",   NULL,         NULL,         0,           1,         0,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { "steam",                NULL,         NULL,         1 << 3,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { "Xfce4-notifyd",        NULL,         NULL,         0,           0,         1,          0,         0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
     { NULL,                   NULL,         regexarray[1],1 << 3,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
