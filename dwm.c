@@ -1507,7 +1507,11 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
                            && (!r->class || strstr(cl->class, r->class))
                            && (!r->instance
                                || strstr(cl->instance, r->instance)))
+                        {
+
                             cl->isfloating ^= 1;
+                            break;
+                        }
                     }
                 }
             }
