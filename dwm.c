@@ -487,13 +487,11 @@ applyfactor(Client *c, const Rule *r)
     actualw
         = (((w * r->factorx) == w ? cw
                                   : (r->factorx == 0.0 ? cw : w * r->factorx))
-               * (r->factorw == 0.0 ? 1.0 : r->factorw)
-           - 3);
+           * (r->factorw == 0.0 ? 1.0 : r->factorw));
     actualh
         = (((h * r->factory) == h ? ch
                                   : (r->factory == 0.0 ? ch : h * r->factory))
-               * (r->factorh == 0.0 ? 1.0 : r->factorh)
-           - 4);
+           * (r->factorh == 0.0 ? 1.0 : r->factorh));
     resizeclient(c, actualx, actualy, actualw, actualh);
 }
 
@@ -2546,20 +2544,20 @@ movethrow(const Arg *arg)
         ny = selmon->wy + selmon->gappx;
         break;
     case WIN_E:
-        nx = selmon->wx + selmon->ww - c->w - c->bw * 2 - selmon->gappx;
+        nx = selmon->wx + selmon->ww - c->w - c->borderpx * 2 - selmon->gappx;
         ny = c->y;
         break;
     case WIN_S:
         nx = c->x;
-        ny = selmon->wy + selmon->wh - c->h - c->bw * 2 - selmon->gappx;
+        ny = selmon->wy + selmon->wh - c->h - c->borderpx * 2 - selmon->gappx;
         break;
     case WIN_W:
         nx = selmon->wx + selmon->gappx;
         ny = c->y;
         break;
     case WIN_C:
-        nx = selmon->wx + ((selmon->ww - c->w - c->bw * 2) / 2);
-        ny = selmon->wy + ((selmon->wh - c->h - c->bw * 2) / 2);
+        nx = selmon->wx + ((selmon->ww - c->w - c->borderpx * 2) / 2);
+        ny = selmon->wy + ((selmon->wh - c->h - c->borderpx * 2) / 2);
         break;
     default: return;
     }
