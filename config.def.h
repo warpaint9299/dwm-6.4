@@ -131,36 +131,36 @@ static const int attachdirection = 4;    /* 0 default, 1 above, 2 aside, 3 below
 
 static const Layout layouts[] = {
     /* first entry is default */
-	/* symbol     arrange function */
-	{ "󰬛",        tile },
-	{ "󰬔",        monocle },
-	{ "󰬚",        spiral },
- 	{ "󰬋",        dwindle },
-	{ NULL,       NULL },
+    /* symbol     arrange function */
+    { "󰬛",        tile },
+    { "󰬔",        monocle },
+    { "󰬚",        spiral },
+    { "󰬋",        dwindle },
+    { NULL,       NULL },
 };
 
 /* key definitions */
 #define MODKEY Mod1Mask
 #define SUPERKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
-	{ MODKEY|SUPERKEY,              KEY,      viewall,        {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
+    { MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
+    { MODKEY|SUPERKEY,              KEY,      viewall,        {.ui = 1 << TAG} }, \
+    { MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
+    { MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
+    { MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *menucmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/rofi/powermenu.sh" , NULL };
-static const char *roficmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/rofi/launcher.sh" , NULL };
-static const char *scrkcmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/screenkey/screenkey.sh" , NULL };
-static const char *kmagcmd[]  = { "/bin/sh", "-c" , "~/.dwm/scripts/kmagnifier/kmagnifier.sh" , NULL };
-static const char *rangcmd[]  = { "kitty", "ranger", NULL };
-static const char *flamcmd[]  = { "flameshot", "gui", NULL };
-static const char *thuncmd[]  = { "thunar", NULL };
-static const char *termcmd[]  = { "kitty", NULL };
+static const char *menucmd[] = { "/bin/sh", "-c" , "~/.dwm/scripts/rofi/powermenu.sh" , NULL };
+static const char *roficmd[] = { "/bin/sh", "-c" , "~/.dwm/scripts/rofi/launcher.sh" , NULL };
+static const char *scrkcmd[] = { "/bin/sh", "-c" , "~/.dwm/scripts/screenkey/screenkey.sh" , NULL };
+static const char *kmagcmd[] = { "/bin/sh", "-c" , "~/.dwm/scripts/kmagnifier/kmagnifier.sh" , NULL };
+static const char *rangcmd[] = { "kitty", "ranger", NULL };
+static const char *flamcmd[] = { "flameshot", "gui", NULL };
+static const char *thuncmd[] = { "thunar", NULL };
+static const char *termcmd[] = { "kitty", NULL };
 
 static const Key keys[] = {
     /* modifier                     key            function            argument */
