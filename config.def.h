@@ -4,58 +4,58 @@
 #define ICONSPACING 8 /* space between icon and title */
 
 /* appearance */
-static const unsigned int borderpx  = 2;        /* border pixel of windows */
-static const unsigned int gappx     = 8;        /* gap pixel between windows */
-static const unsigned int snap      = 32;       /* snap pixel */
-static const int rmaster            = 0;        /* 1 means master-area is initially on the right */
-static const char panel[][32]       = { "xfce4-panel", "KMagnifier", "Clock", "Calculator" }; /* name & cls of panel win */
-static const int entagmon			= 1;		/* 0 means dosn't send selclient when switch monitor*/
-static const int viewontag          = 1;        /* Switch view on tag switch */
-static const int showbar            = 1;        /* 0 means no bar */
-static const int topbar             = 1;        /* 0 means bottom bar */
-static const int vertpad            = 0;        /* vertical padding of bar */
-static const int sidepad            = 0;        /* horizontal padding of bar */
-static const int user_bh            = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
-static const int min_tag            = 4;        /* min number of tag */
-static const char *fonts[] 	= { "VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
+static const unsigned int borderpx = 2;        /* border pixel of windows */
+static const unsigned int gappx    = 8;        /* gap pixel between windows */
+static const unsigned int snap     = 32;       /* snap pixel */
+static const int rmaster           = 0;        /* 1 means master-area is initially on the right */
+static const char panel[][32]      = { "xfce4-panel", "KMagnifier", "Clock", "Calculator" }; /* name & cls of panel win */
+static const int entagmon          = 1;		/* 0 means dosn't send selclient when switch monitor*/
+static const int viewontag         = 1;        /* Switch view on tag switch */
+static const int showbar           = 1;        /* 0 means no bar */
+static const int topbar            = 1;        /* 0 means bottom bar */
+static const int vertpad           = 0;        /* vertical padding of bar */
+static const int sidepad           = 0;        /* horizontal padding of bar */
+static const int user_bh           = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
+static const int min_tag           = 4;        /* min number of tag */
+static const char *fonts[] = { "VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
 								"Symbola:size=16:antialias=true:autohint=true",
 								"LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
 								"Comic Code:style=Medium:size=16:antialias=true:autohint=true", };
-static const unsigned int baralpha		= 0xd0;
-static const unsigned int borderalpha	= OPAQUE;
-static const char fgcolor1[]    = "#0e0e0e";
-static const char bgcolor1[]    = "#efefef";
-static const char bdcolor1[]    = "#efefef";
+static const unsigned int baralpha    = 0xd0;
+static const unsigned int borderalpha = OPAQUE;
+static const char fgcolor1[] = "#0e0e0e";
+static const char bgcolor1[] = "#efefef";
+static const char bdcolor1[] = "#efefef";
 
-static const char fgcolor2[]    = "#0e0e0e";
-static const char bgcolor2[]    = "#b8bb26";
-static const char bdcolor2[]    = "#b8bb26";
+static const char fgcolor2[] = "#0e0e0e";
+static const char bgcolor2[] = "#b8bb26";
+static const char bdcolor2[] = "#b8bb26";
 
-static const char fgcolor3[]    = "#0e0e0e";
-static const char bgcolor3[]    = "#b8bb26";
-static const char bdcolor3[]    = "#b8bb26";
+static const char fgcolor3[] = "#0e0e0e";
+static const char bgcolor3[] = "#b8bb26";
+static const char bdcolor3[] = "#b8bb26";
 
-static const char fgcolor4[]    = "#efefef";
-static const char bgcolor4[]    = "#0e0e0e";
-static const char bdcolor4[]    = "#0e0e0e";
+static const char fgcolor4[] = "#efefef";
+static const char bgcolor4[] = "#0e0e0e";
+static const char bdcolor4[] = "#0e0e0e";
 
-static const char fgcolor5[]    = "#b8bb26";
-static const char bgcolor5[]    = "#0e0e0e";
-static const char bdcolor5[]    = "#0e0e0e";
+static const char fgcolor5[] = "#b8bb26";
+static const char bgcolor5[] = "#0e0e0e";
+static const char bdcolor5[] = "#0e0e0e";
 
-static const char fgcolor6[]    = "#0e0e0e";
-static const char bgcolor6[]    = "#b8bb26";
-static const char bdcolor6[]    = "#b8bb26";
+static const char fgcolor6[] = "#0e0e0e";
+static const char bgcolor6[] = "#b8bb26";
+static const char bdcolor6[] = "#b8bb26";
 
-static const char fgcolor7[]    = "#efefef";
-static const char bgcolor7[]    = "#0e0e0e";
-static const char bdcolor7[]    = "#0e0e0e";
+static const char fgcolor7[] = "#efefef";
+static const char bgcolor7[] = "#0e0e0e";
+static const char bdcolor7[] = "#0e0e0e";
 
-static const char fgcolor8[]    = "#0e0e0e";
-static const char bgcolor8[]    = "#b8bb26";
-static const char bdcolor8[]    = "#b8bb26";
+static const char fgcolor8[] = "#0e0e0e";
+static const char bgcolor8[] = "#b8bb26";
+static const char bdcolor8[] = "#b8bb26";
 
-static const char *colors[][3]      = {
+static const char *colors[][3] = {
 	/*                         fg         bg         border   */
 	[SchemeNorm]        =    { fgcolor1, bgcolor1, bdcolor1 },
 	[SchemeSel]         =    { fgcolor2, bgcolor2, bdcolor2 },
@@ -67,7 +67,7 @@ static const char *colors[][3]      = {
 	[SchemeInfoNorm]    =    { fgcolor8, bgcolor8, bdcolor8 },
 };
 
-static const unsigned int alphas[][3]      = {
+static const unsigned int alphas[][3] = {
     /*               fg      bg        border*/
     [SchemeNorm] = { OPAQUE, baralpha, borderalpha },
 	[SchemeSel]  = { OPAQUE, baralpha, borderalpha },
@@ -123,20 +123,20 @@ static Rule rules[] = {
 };
 
 /* layout(s) */
-static const float mfact     = 0.63; /* factor of master area size [0.05..0.95] */
-static const int nmaster     = 1;    /* number of clients in master area */
-static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
-static const int lockfullscreen = 0; /* 1 will force focus on the fullscreen window */
+static const float mfact         = 0.63; /* factor of master area size [0.05..0.95] */
+static const int nmaster         = 1;    /* number of clients in master area */
+static const int resizehints     = 1;    /* 1 means respect size hints in tiled resizals */
+static const int lockfullscreen  = 0; /* 1 will force focus on the fullscreen window */
 static const int attachdirection = 4;    /* 0 default, 1 above, 2 aside, 3 below, 4 bottom, 5 top */
 
 static const Layout layouts[] = {
     /* first entry is default */
 	/* symbol     arrange function */
-	{ "󰬛",           tile },
-	{ "󰬔",           monocle },
-	{ "󰬚",           spiral },
- 	{ "󰬋",           dwindle },
-	{ NULL,          NULL },
+	{ "󰬛",        tile },
+	{ "󰬔",        monocle },
+	{ "󰬚",        spiral },
+ 	{ "󰬋",        dwindle },
+	{ NULL,       NULL },
 };
 
 /* key definitions */
@@ -164,11 +164,11 @@ static const char *termcmd[]  = { "kitty", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key            function            argument */
-	{ MODKEY,             			XK_p,          spawn,              {.v = roficmd } },
-	{ MODKEY|ShiftMask,    			XK_p,          spawn,              {.v = menucmd } },
+	{ MODKEY,                       XK_p,          spawn,              {.v = roficmd } },
+	{ MODKEY|ShiftMask,             XK_p,          spawn,              {.v = menucmd } },
 	{ MODKEY,    			        XK_e,          spawn,              {.v = rangcmd } },
 	{ MODKEY|ShiftMask,            	XK_e,          spawn,              {.v = thuncmd } },
-	{ MODKEY,             			XK_s,          spawn,              {.v = flamcmd } },
+	{ MODKEY,                       XK_s,          spawn,              {.v = flamcmd } },
 	{ MODKEY|ShiftMask,             XK_s,          spawn,              {.v = scrkcmd } },
 	{ MODKEY|ShiftMask,             XK_z,          spawn,              {.v = kmagcmd } },
 	{ MODKEY|ShiftMask,             XK_Return,     spawn,              {.v = termcmd } },
@@ -188,16 +188,16 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_c,          killclient,         {0} },
 	{ MODKEY,                       XK_space,      cyclelayout,        {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_space,      togglefloating,     {0} },
-	{ MODKEY,             			XK_z,          togglelayer,        {0} },
+	{ MODKEY,                       XK_z,          togglelayer,        {0} },
 	{ MODKEY,                       XK_r,          togglermaster,      {0} },
 	{ MODKEY,                       XK_slash,      show,               {0} },
-	{ MODKEY|ShiftMask,             XK_slash, 	   showall,            {0} },
+	{ MODKEY|ShiftMask,             XK_slash,      showall,            {0} },
 	{ MODKEY,             			XK_semicolon,  hide,               {0} },
 	{ MODKEY|ShiftMask,             XK_semicolon,  hideall,            {0} },
 	{ MODKEY,             			XK_m,          resetnmaster,       {0} },
 	{ MODKEY,                       XK_0,          view,               {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,          tag,                {.ui = ~0 } },
-	{ MODKEY,             			XK_apostrophe, focusstackhid,      {.i = -1 } },
+	{ MODKEY,                       XK_apostrophe, focusstackhid,      {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_apostrophe, focusstackhid,      {.i = +1 } },
 	{ MODKEY,                       XK_comma,      focusmon,           {.i = -1 } },
 	{ MODKEY,                       XK_period,     focusmon,           {.i = +1 } },
@@ -205,7 +205,7 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_period,     tagmon,             {.i = +1 } },
 	{ MODKEY,                       XK_minus,      setgaps,            {.i = -1 } },
 	{ MODKEY,                       XK_equal,      setgaps,            {.i = +1 } },
-	{ MODKEY|ShiftMask,             XK_equal,      setgaps,            {.i = 0  } },
+    { MODKEY|ShiftMask,             XK_equal,      setgaps,            {.i = 0  } },
     { MODKEY|ShiftMask,             XK_Up,         movethrow,          {.ui = WIN_N  }},
     { MODKEY|ShiftMask,             XK_Down,       movethrow,          {.ui = WIN_S  }},
     { MODKEY|ShiftMask,             XK_Left,       movethrow,          {.ui = WIN_W  }},
