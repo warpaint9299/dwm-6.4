@@ -18,9 +18,9 @@ static const int sidepad           = 0;        /* horizontal padding of bar */
 static const int user_bh           = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const int min_tag           = 4;        /* min number of tag */
 static const char *fonts[] = { "VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
-								"Symbola:size=16:antialias=true:autohint=true",
-								"LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
-								"Comic Code:style=Medium:size=16:antialias=true:autohint=true", };
+                               "Symbola:size=16:antialias=true:autohint=true",
+                               "LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
+                               "Comic Code:style=Medium:size=16:antialias=true:autohint=true", };
 static const unsigned int baralpha    = 0xd0;
 static const unsigned int borderalpha = OPAQUE;
 static const char fgcolor1[] = "#0e0e0e";
@@ -70,7 +70,7 @@ static const char *colors[][3] = {
 static const unsigned int alphas[][3] = {
     /*               fg      bg        border*/
     [SchemeNorm] = { OPAQUE, baralpha, borderalpha },
-	[SchemeSel]  = { OPAQUE, baralpha, borderalpha },
+    [SchemeSel]  = { OPAQUE, baralpha, borderalpha },
     [SchemeStatus] = { OPAQUE, baralpha, borderalpha },
     [SchemeTagsSel]  = { OPAQUE, baralpha, borderalpha },
     [SchemeTagsHover]  = { OPAQUE, baralpha, borderalpha },
