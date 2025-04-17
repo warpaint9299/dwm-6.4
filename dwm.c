@@ -135,6 +135,13 @@ enum
     OPEN_CLIENT,
     CLOSE_CLIENT,
 }; /* actions of unfloatexceptlatest */
+enum
+{
+    XFCE4_PANEL,
+    KMAGNIFIER,
+    KCLOCK,
+    GNOME_CALCULATOR
+}; /* refers to ispanel */
 
 typedef union
 {
@@ -293,8 +300,7 @@ static void grabkeys(void);
 static void hide(const Arg *arg);
 static void hideall(const Arg *arg);
 static void hidewin(Client *c);
-static int ismagnifier(Client *c);
-static int ispanel(Client *c);
+static int ispanel(Client *c, int ptype);
 static void incnmaster(const Arg *arg);
 static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
@@ -546,7 +552,7 @@ applyrules(Client *c)
             c->viewontag = r->viewontag;
             oldstate = c->isfloating;
 
-            if(c->isfloating && !ispanel(c))
+            if(c->isfloating && !ispanel(c, XFCE4_PANEL))
             {
                 if(r->isfactor)
                     applyfactor(c, r);
@@ -816,7 +822,7 @@ buttonpress(XEvent *e)
         i = x = occ = 0;
         for(c = m->clients; c; c = c->next)
         {
-            if(ispanel(c) || ismagnifier(c))
+            if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER))
                 continue;
             occ |= c->tags;
         }
@@ -888,7 +894,7 @@ changerule(Client *c)
                     r->isfloating = c->isfloating;
             }
 
-            if(!ispanel(c))
+            if(!ispanel(c, XFCE4_PANEL))
             {
                 // the `!m->num` is a primary or first monitor
                 if(c->isfloating && !m->num)
@@ -1201,7 +1207,7 @@ dirtomon(int dir)
 void
 dotogglefloating(Monitor *m, Client *c)
 {
-    if(!m || !c || ispanel(c) || ismagnifier(c))
+    if(!m || !c || ispanel(c, XFCE4_PANEL))
         return;
 
     c->isfloating = !c->isfloating || c->mon->sel->isfixed;
@@ -1232,7 +1238,7 @@ drawbar(Monitor *m)
     {
         for(c = m->clients; c; c = c->next)
         {
-            if(ispanel(c))
+            if(ispanel(c, XFCE4_PANEL))
             {
                 hidewin(c);
                 break;
@@ -1252,7 +1258,8 @@ drawbar(Monitor *m)
     for(c = m->clients; c; c = c->next)
     {
         // prevent showing the panel as active application:
-        if(ispanel(c) || ismagnifier(c))
+        if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER)
+           || ispanel(c, KCLOCK) || ispanel(c, GNOME_CALCULATOR))
             continue;
         occ |= c->tags;
         if(c->isurgent)
@@ -1281,7 +1288,7 @@ drawbar(Monitor *m)
         {
             drw_setscheme(drw, scheme[SchemeInfoSel]);
             twidth = m->ww - x - 2 * sp - getpanelwidth(m);
-            drawtitle = !ispanel(m->sel) && !ismagnifier(m->sel);
+            drawtitle = !ispanel(m->sel, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER);
             drawicon = drawtitle && m->sel->icon;
             drw_text(drw, x, 0, twidth, bh,
                      lrpad / 2 + (drawicon ? m->sel->icw + ICONSPACING : 0),
@@ -1326,7 +1333,7 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
     {
         for(c = m->clients; c; c = c->next)
         {
-            if(ispanel(c))
+            if(ispanel(c, XFCE4_PANEL))
             {
                 hidewin(c);
                 break;
@@ -1346,7 +1353,8 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
     for(c = m->clients; c; c = c->next)
     {
         // prevent showing the panel as active application:
-        if(ispanel(c) || ismagnifier(c))
+        if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER)
+           || ispanel(c, KCLOCK) || ispanel(c, GNOME_CALCULATOR))
             continue;
         occ |= c->tags;
         if(c->isurgent)
@@ -1389,7 +1397,7 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
         {
             drw_setscheme(drw, scheme[SchemeInfoSel]);
             twidth = m->ww - x - 2 * sp - getpanelwidth(m);
-            drawtitle = !ispanel(m->sel) && !ismagnifier(m->sel);
+            drawtitle = !ispanel(m->sel, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER);
             drawicon = drawtitle && m->sel->icon;
             drw_text(drw, x, 0, twidth, bh,
                      lrpad / 2 + (drawicon ? m->sel->icw + ICONSPACING : 0),
@@ -1496,7 +1504,8 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
         {
             if(ISVISIBLE(cl))
             {
-                if(cl->forcetile && cl != c && !ispanel(cl) && cl->isfloating)
+                if(cl->forcetile && cl != c && !ispanel(cl, XFCE4_PANEL)
+                   && cl->isfloating)
                 {
                     for(i = 0; i < LENGTH(rules); i++)
                     {
@@ -1520,7 +1529,9 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
         {
             if(ISVISIBLE(c))
             {
-                if(!ispanel(c) && !ismagnifier(c) && c->isfloating)
+                if(!ispanel(c, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER)
+                   && !ispanel(c, KCLOCK) && !ispanel(c, GNOME_CALCULATOR)
+                   && c->isfloating)
                     return;
                 for(i = 0; i < LENGTH(rules); i++)
                 {
@@ -1639,7 +1650,8 @@ focus(Client *c)
         if(c->isurgent)
             seturgent(c, 0);
         // prevents the panel getting focus when tag switching:
-        if(!ispanel(c) && !ismagnifier(c))
+        if(!ispanel(c, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER)
+           && !ispanel(c, KCLOCK) && !ispanel(c, GNOME_CALCULATOR))
         {
             detachstack(c);
             attachstack(c);
@@ -1732,8 +1744,8 @@ focusstack(int inc, int vis)
         if(selmon->sel)
         {
             for(i = selmon->clients; i != selmon->sel; i = i->next)
-                if(!ispanel(i) && !ismagnifier(c) && ISVISIBLE(i)
-                   && !(!vis && HIDDEN(i)))
+                if(!ispanel(i, XFCE4_PANEL) && !ispanel(i, KMAGNIFIER)
+                   && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
                     c = i;
         }
         else
@@ -1741,8 +1753,8 @@ focusstack(int inc, int vis)
         if(!c)
         {
             for(; i; i = i->next)
-                if(!ispanel(i) && !ismagnifier(c) && ISVISIBLE(i)
-                   && !(!vis && HIDDEN(i)))
+                if(!ispanel(i, XFCE4_PANEL) && !ispanel(i, KMAGNIFIER)
+                   && ISVISIBLE(i) && !(!vis && HIDDEN(i)))
                     c = i;
         }
     }
@@ -1751,7 +1763,7 @@ focusstack(int inc, int vis)
         return;
     else
     {
-        if(!ispanel(c) && c->isfloating)
+        if(!ispanel(c, XFCE4_PANEL) && c->isfloating)
             XRaiseWindow(dpy, c->win);
         restack(c->mon);
         focus(c);
@@ -1765,7 +1777,7 @@ focusstack(int inc, int vis)
     }
 
     // skipping the panel when switching focus:
-    if(ispanel(c) && focussed_panel == 0)
+    if(ispanel(c, XFCE4_PANEL) && focussed_panel == 0)
     {
         focussed_panel = 1;
         focusstack(inc, 0);
@@ -1966,7 +1978,7 @@ getpanelwidth(Monitor *m)
     XWindowAttributes wa;
     for(c = m->clients; c; c = c->next)
     {
-        if(ISVISIBLE(c) && ispanel(c))
+        if(ISVISIBLE(c) && ispanel(c, XFCE4_PANEL))
         {
             XGetWindowAttributes(dpy, c->win, &wa);
             width = wa.width;
@@ -2017,19 +2029,19 @@ grabkeys(void)
 }
 
 int
-ismagnifier(Client *c)
+ispanel(Client *c, int ptype)
 {
     if(!c)
         return 0;
-    return !strcmp(c->name, panel[2]);
-}
 
-int
-ispanel(Client *c)
-{
-    if(!c)
-        return 0;
-    return !strcmp(c->name, panel[0]);
+    switch(ptype)
+    {
+    case XFCE4_PANEL: return !strcmp(c->name, panel[0]); break;
+    case KMAGNIFIER: return !strcmp(c->name, panel[1]); break;
+    case KCLOCK: return !strcmp(c->name, panel[2]); break;
+    case GNOME_CALCULATOR: return !strcmp(c->name, panel[3]); break;
+    default: return 0;
+    }
 }
 
 void
@@ -2037,7 +2049,7 @@ hide(const Arg *arg)
 {
     if(!selmon->sel)
         return;
-    if(ispanel(selmon->sel) || ismagnifier(selmon->sel))
+    if(ispanel(selmon->sel, XFCE4_PANEL) || ispanel(selmon->sel, KMAGNIFIER))
         return;
     hidewin(selmon->sel);
     focus(NULL);
@@ -2050,7 +2062,7 @@ hideall(const Arg *arg)
     Client *c = NULL;
     for(c = selmon->clients; c; c = c->next)
     {
-        if(ispanel(c) || ismagnifier(c))
+        if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER))
             continue;
         // hide clients in the current tagset
         if(c->tags == selmon->tagset[selmon->seltags])
@@ -2175,9 +2187,9 @@ manage(Window w, XWindowAttributes *wa)
     c->bw = borderpx;
 
     // no border - even when active
-    if(ispanel(c) || ismagnifier(c))
+    if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER))
         c->bw = c->oldbw = 0;
-    if(ispanel(c))
+    if(ispanel(c, XFCE4_PANEL))
         setpanel();
     if(c->hasrulebw && !c->isfullscreen)
         wc.border_width = c->borderpx;
@@ -2346,7 +2358,8 @@ movemouse(const Arg *arg)
     XEvent ev;
     Time lasttime = 0;
 
-    if(!(c = selmon->sel) || ispanel(selmon->sel))
+    if(!(c = selmon->sel) || ispanel(selmon->sel, XFCE4_PANEL))
+        // if(!(c = selmon->sel))
         return;
     restack(selmon);
     ocx = c->x;
@@ -2520,7 +2533,7 @@ movestack(const Arg *arg)
         else if(c == selmon->clients)
             selmon->clients = selmon->sel;
         arrange(selmon);
-        if(c->mon == selmon && !ispanel(selmon->sel)
+        if(c->mon == selmon && !ispanel(selmon->sel, XFCE4_PANEL)
            && selmon->sel->iswarppointer)
             XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0,
                          selmon->sel->w / 2, selmon->sel->h / 2);
@@ -2544,20 +2557,20 @@ movethrow(const Arg *arg)
         ny = selmon->wy + selmon->gappx;
         break;
     case WIN_E:
-        nx = selmon->wx + selmon->ww - c->w - c->borderpx * 2 - selmon->gappx;
+        nx = selmon->wx + selmon->ww - c->w - c->bw * 2 - selmon->gappx;
         ny = c->y;
         break;
     case WIN_S:
         nx = c->x;
-        ny = selmon->wy + selmon->wh - c->h - c->borderpx * 2 - selmon->gappx;
+        ny = selmon->wy + selmon->wh - c->h - c->bw * 2 - selmon->gappx;
         break;
     case WIN_W:
         nx = selmon->wx + selmon->gappx;
         ny = c->y;
         break;
     case WIN_C:
-        nx = selmon->wx + ((selmon->ww - c->w - c->borderpx * 2) / 2);
-        ny = selmon->wy + ((selmon->wh - c->h - c->borderpx * 2) / 2);
+        nx = selmon->wx + ((selmon->ww - c->w - c->bw * 2) / 2);
+        ny = selmon->wy + ((selmon->wh - c->h - c->bw * 2) / 2);
         break;
     default: return;
     }
@@ -2681,7 +2694,7 @@ void
 raiseclient(const Arg *arg)
 {
     Client *c = selmon->sel;
-    if(!c || ispanel(c))
+    if(!c || ispanel(c, XFCE4_PANEL))
         return;
 
     if(c->isfloating)
@@ -2717,8 +2730,7 @@ resetnmaster(const Arg *arg)
 void
 resize(Client *c, int x, int y, int w, int h, int interact)
 {
-    if(ispanel(c) || ismagnifier(c)
-       || applysizehints(c, &x, &y, &w, &h, interact))
+    if(ispanel(c, XFCE4_PANEL) || applysizehints(c, &x, &y, &w, &h, interact))
         resizeclient(c, x, y, w, h);
 }
 
@@ -2753,10 +2765,8 @@ resizeclient(Client *c, int x, int y, int w, int h)
         c->h = wc.height += c->bw * 2;
         wc.border_width = 0;
     }
-    if(ispanel(c))
+    if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER))
         c->y = c->oldy = c->bw = wc.y = wc.border_width = 0;
-    if(ismagnifier(c))
-        wc.border_width = 0;
     XConfigureWindow(dpy, c->win,
                      CWX | CWY | CWWidth | CWHeight | CWBorderWidth, &wc);
     configure(c);
@@ -2777,7 +2787,8 @@ resizemouse(const Arg *arg)
     Window dummy;
     Time lasttime = 0;
 
-    if(!(c = selmon->sel) || ispanel(selmon->sel))
+    if(!(c = selmon->sel) || ispanel(selmon->sel, XFCE4_PANEL))
+        // if(!(c = selmon->sel))
         return;
     restack(selmon);
     ocx = c->x;
@@ -3053,7 +3064,8 @@ sendmon(Client *c, Monitor *m)
     if(!c)
         return;
 
-    if(ispanel(c) || ismagnifier(c))
+    if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER) || ispanel(c, KCLOCK)
+       || ispanel(c, GNOME_CALCULATOR))
         return;
 
     unfocus(c, 1);
@@ -3355,7 +3367,7 @@ showwin(Client *c)
 void
 showhide(Client *c)
 {
-    if(!c || ispanel(c))
+    if(!c || ispanel(c, XFCE4_PANEL))
         return;
     if(ISVISIBLE(c))
     {
@@ -3426,52 +3438,15 @@ tag(const Arg *arg)
 void
 tagmon(const Arg *arg)
 {
-    Monitor *m;
     Client *c = selmon->sel;
-    unsigned int source, destination, primary;
 
     if(!c || !mons->next || !entagmon)
         return;
 
-    source = c->mon->num;
     sendmon(c, dirtomon(arg->i));
     focusmon(arg);
-    destination = c->mon->num;
-    primary = !selmon->num ? 0 : !selmon->num;
-    // get primary monitor
-    for(m = mons; m->num; m = m->next)
-        ;
-    if(source == primary && source != destination && destination != primary
-       && c->isfloating)
-    {
-        dotogglefloating(c->mon, c);
-        arrange(c->mon);
-        if(oldstate && !istoggled)
-        {
-            // primany --> displayPort-0
-            if(m->clients)
-            {
-                Client *cl = m->clients;
-                while(cl->next && !ispanel(cl->next))
-                    cl = cl->next;
-                unfloatexceptlatest(cl->mon, cl, CLOSE_CLIENT);
-            }
-            arrange(m);
-        }
-    }
-    else if(source != primary && source != destination && destination == primary
-            && !c->isfloating)
-    {
-        // displayPort-0 --> primany
-        if(oldstate && !istoggled)
-        {
-            c->isfloating ^= 1;
-            changerule(c);
-            XRaiseWindow(dpy, c->win);
-            unfloatexceptlatest(m, c, OPEN_CLIENT);
-            arrange(m);
-        }
-    }
+    applyrules(c);
+    arrange(c->mon);
 }
 
 void
@@ -3522,7 +3497,7 @@ togglebar(const Arg *arg)
     m->showbar = !m->showbar;
     for(c = m->clients; c; c = c->next)
     {
-        if(ispanel(c))
+        if(ispanel(c, XFCE4_PANEL))
         {
             m->showbar ? showwin(c) : hidewin(c);
             break;
@@ -3538,7 +3513,8 @@ togglefloating(const Arg *arg)
 {
     Monitor *m = selmon;
     Client *c = m->sel;
-    if(!m || !c || ispanel(c) || ismagnifier(c))
+    if(!m || !c || ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER)
+       || ispanel(c, KCLOCK) || ispanel(c, GNOME_CALCULATOR))
         return;
     c->istoggled = c->isfloating ? 1 : 0;
     dotogglefloating(m, c);
@@ -3553,7 +3529,7 @@ void
 togglelayer(const Arg *arg)
 {
     Client *c = selmon->sel;
-    if(!c || ispanel(c) || !ISVISIBLE(c) || c->isfullscreen)
+    if(!c || ispanel(c, XFCE4_PANEL) || !ISVISIBLE(c) || c->isfullscreen)
         return;
     if(c->isfloating)
         c->islowest ^= 1;
@@ -3684,7 +3660,7 @@ unmanage(Client *c, int destroyed)
     if(m->clients)
     {
         cl = m->clients;
-        while(cl->next && !ispanel(cl->next))
+        while(cl->next && !ispanel(cl->next, XFCE4_PANEL))
             cl = cl->next;
         if(forcetile && isfloating)
         {
@@ -4046,7 +4022,7 @@ viewafterclose(char *name)
     fprintf(stderr, "\n\nIn the viewafterclose: the matched is %d\n", matched);
     for(cl = selmon->clients; cl; cl = cl->next)
     {
-        if(ISVISIBLE(cl) && !ispanel(cl)
+        if(ISVISIBLE(cl) && !ispanel(cl, XFCE4_PANEL)
            && !matchregex(cl->name, regexarray[1]))
         {
             c = cl;
@@ -4108,7 +4084,7 @@ warppointer(Client *c)
 {
     if(!c || c->mon != selmon)
         return;
-    if(!ispanel(c) && ISVISIBLE(c) && c->iswarppointer)
+    if(!ispanel(c, XFCE4_PANEL) && ISVISIBLE(c) && c->iswarppointer)
         XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
 }
 
