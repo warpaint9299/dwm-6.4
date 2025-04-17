@@ -1288,7 +1288,9 @@ drawbar(Monitor *m)
         {
             drw_setscheme(drw, scheme[SchemeInfoSel]);
             twidth = m->ww - x - 2 * sp - getpanelwidth(m);
+            // clang-format off
             drawtitle = !ispanel(m->sel, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER);
+            // clang-format on
             drawicon = drawtitle && m->sel->icon;
             drw_text(drw, x, 0, twidth, bh,
                      lrpad / 2 + (drawicon ? m->sel->icw + ICONSPACING : 0),
@@ -1397,7 +1399,9 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
         {
             drw_setscheme(drw, scheme[SchemeInfoSel]);
             twidth = m->ww - x - 2 * sp - getpanelwidth(m);
+            // clang-format off
             drawtitle = !ispanel(m->sel, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER);
+            // clang-format on
             drawicon = drawtitle && m->sel->icon;
             drw_text(drw, x, 0, twidth, bh,
                      lrpad / 2 + (drawicon ? m->sel->icw + ICONSPACING : 0),
@@ -3438,15 +3442,50 @@ tag(const Arg *arg)
 void
 tagmon(const Arg *arg)
 {
+    Monitor *m;
     Client *c = selmon->sel;
+    unsigned int destination, primary;
 
     if(!c || !mons->next || !entagmon)
         return;
 
     sendmon(c, dirtomon(arg->i));
     focusmon(arg);
-    applyrules(c);
-    arrange(c->mon);
+    destination = c->mon->num;
+    primary = 0;
+    // get primary monitor
+    for(m = mons; m->num; m = m->next)
+        ;
+    // primany --> displayPort-0
+    if(destination != primary)
+    {
+        if(c->isfloating)
+        {
+            dotogglefloating(c->mon, c);
+            arrange(c->mon);
+        }
+        if(m->clients)
+        {
+            Client *cl = m->clients;
+            while(cl->next && !ispanel(cl->next, XFCE4_PANEL))
+                cl = cl->next;
+            unfloatexceptlatest(cl->mon, cl, CLOSE_CLIENT);
+        }
+        arrange(m);
+    }
+    // displayPort-0 --> primany
+    else if(destination == primary)
+    {
+        applyrules(c);
+        unfloatexceptlatest(c->mon, c, OPEN_CLIENT);
+        if(c->viewontag)
+        {
+            Arg arg = { .ui = c->tags };
+            if((arg.ui & TAGMASK) != TAGMASK)
+                view(&arg);
+        }
+        arrange(m);
+    }
 }
 
 void
