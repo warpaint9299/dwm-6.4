@@ -1289,7 +1289,7 @@ drawbar(Monitor *m)
             drw_setscheme(drw, scheme[SchemeInfoSel]);
             twidth = m->ww - x - 2 * sp - getpanelwidth(m);
             // clang-format off
-            drawtitle = !ispanel(m->sel, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER);
+            drawtitle = !ispanel(m->sel, XFCE4_PANEL) && !ispanel(m->sel, KMAGNIFIER);
             // clang-format on
             drawicon = drawtitle && m->sel->icon;
             drw_text(drw, x, 0, twidth, bh,
@@ -1400,7 +1400,7 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
             drw_setscheme(drw, scheme[SchemeInfoSel]);
             twidth = m->ww - x - 2 * sp - getpanelwidth(m);
             // clang-format off
-            drawtitle = !ispanel(m->sel, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER);
+            drawtitle = !ispanel(m->sel, XFCE4_PANEL) && !ispanel(m->sel, KMAGNIFIER);
             // clang-format on
             drawicon = drawtitle && m->sel->icon;
             drw_text(drw, x, 0, twidth, bh,
@@ -1767,12 +1767,15 @@ focusstack(int inc, int vis)
         return;
     else
     {
-        if(!ispanel(c, XFCE4_PANEL) && c->isfloating)
-            XRaiseWindow(dpy, c->win);
-        restack(c->mon);
-        focus(c);
-        arrange(c->mon);
-        warppointer(c);
+        if(!ispanel(c, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER))
+        {
+            if(c->isfloating)
+                XRaiseWindow(dpy, c->win);
+            restack(c->mon);
+            focus(c);
+            arrange(c->mon);
+            XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
+        }
         if(HIDDEN(c))
         {
             showwin(c);
@@ -2363,7 +2366,6 @@ movemouse(const Arg *arg)
     Time lasttime = 0;
 
     if(!(c = selmon->sel) || ispanel(selmon->sel, XFCE4_PANEL))
-        // if(!(c = selmon->sel))
         return;
     restack(selmon);
     ocx = c->x;
@@ -2769,7 +2771,7 @@ resizeclient(Client *c, int x, int y, int w, int h)
         c->h = wc.height += c->bw * 2;
         wc.border_width = 0;
     }
-    if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER))
+    if(ispanel(c, XFCE4_PANEL))
         c->y = c->oldy = c->bw = wc.y = wc.border_width = 0;
     XConfigureWindow(dpy, c->win,
                      CWX | CWY | CWWidth | CWHeight | CWBorderWidth, &wc);
