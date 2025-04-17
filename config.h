@@ -8,7 +8,7 @@ static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int gappx     = 8;        /* gap pixel between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int rmaster            = 0;        /* 1 means master-area is initially on the right */
-static const char panel[][32]       = { "xfce4-panel", "Xfce4-panel", "KMagnifier", "kmag" }; /* name & cls of panel win */
+static const char panel[][32]       = { "xfce4-panel", "KMagnifier", "Clock", "Calculator" }; /* name & cls of panel win */
 static const int entagmon			= 1;		/* 0 means dosn't send selclient when switch monitor*/
 static const int viewontag          = 1;        /* Switch view on tag switch */
 static const int showbar            = 1;        /* 0 means no bar */
@@ -104,20 +104,20 @@ static Rule rules[] = {
     { "firefox-esr",          NULL,         NULL,         1 << 2,      1,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "Chromium",             NULL,         NULL,         0,           0,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "code-oss",             NULL,         NULL,         1 << 1,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "gnome-calculator",     NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.23,1.0,1.0,0.32,      2,        0 },
+    { "gnome-calculator",     NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        0.23,1.0,1.0,0.32,      2,        0 },
     { "rnote",                NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "GoldenDict",           NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.5,0.5,1.0,1.0,       2,        1 },
-    { "kclock",               NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
+    { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
+    { "GoldenDict",           NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.5,0.5,1.0,1.0,        2,        1 },
     { "Clash for Windows",    NULL,         NULL,         0,           0,         1,          1,         0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "Vmware",               NULL,         NULL,         1 << 7,      1,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "VirtualBox Manager",   NULL,         NULL,         1 << 8,      1,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { "VirtualBox Machine",   NULL,         NULL,         0,           1,         0,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { "VirtualBox Machine",   NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { "steam",                NULL,         NULL,         1 << 3,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { "Xfce4-notifyd",        NULL,         NULL,         0,           0,         1,          0,         0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
     { NULL,                   NULL,         regexarray[1],1 << 3,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { NULL,                   NULL,         regexarray[0],0,           0,         1,          0,         0,         -1,      1,        0.6,1.0,1.0,0.8,        2,        1 },
-    { panel[3],               NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        0.4,1.0,1.0,0.17,       0,        0 },
-    { panel[1],               NULL,         NULL,         (1 << 9) - 1,0,         1,          1,         0,         -1,      0,        1.0,1.0,1.0,1.0,        0,        0 },
+    { "kmag",                 NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        0.4,1.0,1.0,0.17,       0,        0 },
+    { "Xfce4-panel",          NULL,         NULL,         (1 << 9) - 1,0,         1,          1,         0,         -1,      0,        1.0,1.0,1.0,1.0,        0,        0 },
     { broken,                 NULL,         NULL,         0,           0,         1,          1,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { NULL,                   NULL,         NULL,         0,           0,         1,          1,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
 };
