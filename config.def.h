@@ -9,7 +9,7 @@ static const unsigned int gappx    = 8;        /* gap pixel between windows */
 static const unsigned int snap     = 32;       /* snap pixel */
 static const int rmaster           = 0;        /* 1 means master-area is initially on the right */
 static const char panel[][32]      = { "xfce4-panel", "KMagnifier", "Clock", "Calculator" }; /* name & cls of panel win */
-static const int entagmon          = 1;		/* 0 means dosn't send selclient when switch monitor*/
+static const int entagmon          = 1;     /* 0 means dosn't send selclient when switch monitor*/
 static const int viewontag         = 1;        /* Switch view on tag switch */
 static const int showbar           = 1;        /* 0 means no bar */
 static const int topbar            = 1;        /* 0 means bottom bar */
@@ -93,8 +93,8 @@ static const int dynamicrule = 0;
 static char regexarray[][255] = { "^nvim$", "^(Minecraft Launcher|Sign in to Minecraft|Welcome to Xbox)$" };
 static Rule rules[] = {
     /* xprop(1):
-     *	WM_CLASS(STRING) = instance, class
-     *	WM_NAME(STRING) = title
+     *  WM_CLASS(STRING) = instance, class
+     *  WM_NAME(STRING) = title
      */
     /* class                  instance      title         tags mask    viewontag  isfloating  iscentered forcetile  monitor  isfactor  factor x,y,w,h(double)  borderpx  iswarppointer */
  // { "st",                   NULL,         NULL,         0,           1,         1,          1,         1,         -1,      1,        1.0,1.0,1.0,1.0,        2,        1 },
@@ -167,7 +167,7 @@ static const Key keys[] = {
     { MODKEY,                       XK_p,          spawn,              {.v = roficmd } },
     { MODKEY|ShiftMask,             XK_p,          spawn,              {.v = menucmd } },
     { MODKEY,                       XK_e,          spawn,              {.v = rangcmd } },
-    { MODKEY|ShiftMask,            	XK_e,          spawn,              {.v = thuncmd } },
+    { MODKEY|ShiftMask,             XK_e,          spawn,              {.v = thuncmd } },
     { MODKEY,                       XK_s,          spawn,              {.v = flamcmd } },
     { MODKEY|ShiftMask,             XK_s,          spawn,              {.v = scrkcmd } },
     { MODKEY|ShiftMask,             XK_z,          spawn,              {.v = kmagcmd } },
@@ -226,7 +226,7 @@ static const Key keys[] = {
 /* button definitions */
 /* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
 static const Button buttons[] = {
-	/* click                event mask      button          function        argument */
+    /* click                event mask      button          function        argument */
     { ClkLtSymbol,          0,              Button1,        cyclelayout,      {.i = +1 } },
     { ClkLtSymbol,          0,              Button3,        cyclelayout,      {.i = -1 } },
     { ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
