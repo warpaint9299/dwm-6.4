@@ -56,27 +56,27 @@ static const char bgcolor8[] = "#b8bb26";
 static const char bdcolor8[] = "#b8bb26";
 
 static const char *colors[][3] = {
-    /*                         fg         bg         border   */
-    [SchemeNorm]        =    { fgcolor1, bgcolor1, bdcolor1 },
-    [SchemeSel]         =    { fgcolor2, bgcolor2, bdcolor2 },
-    [SchemeStatus]      =    { fgcolor3, bgcolor3, bdcolor3 },
-    [SchemeTagsSel]     =    { fgcolor4, bgcolor4, bdcolor4 },
-    [SchemeTagsHover]   =    { fgcolor5, bgcolor5, bdcolor5 },
-    [SchemeTagsNorm]    =    { fgcolor6, bgcolor6, bdcolor6 },
-    [SchemeInfoSel]     =    { fgcolor7, bgcolor7, bdcolor7 },
-    [SchemeInfoNorm]    =    { fgcolor8, bgcolor8, bdcolor8 },
+    /*                    fg        bg       border   */
+    [SchemeNorm]      = { fgcolor1, bgcolor1, bdcolor1 },
+    [SchemeSel]       = { fgcolor2, bgcolor2, bdcolor2 },
+    [SchemeStatus]    = { fgcolor3, bgcolor3, bdcolor3 },
+    [SchemeTagsSel]   = { fgcolor4, bgcolor4, bdcolor4 },
+    [SchemeTagsHover] = { fgcolor5, bgcolor5, bdcolor5 },
+    [SchemeTagsNorm]  = { fgcolor6, bgcolor6, bdcolor6 },
+    [SchemeInfoSel]   = { fgcolor7, bgcolor7, bdcolor7 },
+    [SchemeInfoNorm]  = { fgcolor8, bgcolor8, bdcolor8 },
 };
 
 static const unsigned int alphas[][3] = {
-    /*               fg      bg        border*/
-    [SchemeNorm] = { OPAQUE, baralpha, borderalpha },
-    [SchemeSel]  = { OPAQUE, baralpha, borderalpha },
-    [SchemeStatus] = { OPAQUE, baralpha, borderalpha },
-    [SchemeTagsSel]  = { OPAQUE, baralpha, borderalpha },
-    [SchemeTagsHover]  = { OPAQUE, baralpha, borderalpha },
-    [SchemeTagsNorm] = { OPAQUE, baralpha, borderalpha },
-    [SchemeInfoSel]  = { OPAQUE, baralpha, borderalpha },
-    [SchemeInfoNorm] = { OPAQUE, baralpha, borderalpha },
+    /*                    fg      bg        border*/
+    [SchemeNorm]      = { OPAQUE, baralpha, borderalpha },
+    [SchemeSel]       = { OPAQUE, baralpha, borderalpha },
+    [SchemeStatus]    = { OPAQUE, baralpha, borderalpha },
+    [SchemeTagsSel]   = { OPAQUE, baralpha, borderalpha },
+    [SchemeTagsHover] = { OPAQUE, baralpha, borderalpha },
+    [SchemeTagsNorm]  = { OPAQUE, baralpha, borderalpha },
+    [SchemeInfoSel]   = { OPAQUE, baralpha, borderalpha },
+    [SchemeInfoNorm]  = { OPAQUE, baralpha, borderalpha },
 };
 
 /* Select the font index for you statusbar
@@ -90,7 +90,10 @@ static char lockfile[] = "/tmp/dwm.lock";
 
 /* 1 means dynamically changing isfloating rule of a selected client, and vice versa. */
 static const int dynamicrule = 0;
-static char regexarray[][255] = { "^nvim$", "^(Minecraft Launcher|Sign in to Minecraft|Welcome to Xbox)$" };
+static char regexarray[][255] = { "^nvim$",
+                                  "^(Minecraft Launcher|Sign in to Minecraft|Welcome to Xbox)$",
+                                  "^(.*Oracle VirtualBox)$" };
+
 static Rule rules[] = {
     /* xprop(1):
      *  WM_CLASS(STRING) = instance, class
@@ -109,11 +112,11 @@ static Rule rules[] = {
     { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
     { "GoldenDict",           NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.5,0.5,1.0,1.0,        2,        1 },
     { "Clash for Windows",    NULL,         NULL,         0,           0,         1,          1,         0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "Xfce4-notifyd",        NULL,         NULL,         0,           0,         1,          0,         0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
+    { "steam",                NULL,         NULL,         1 << 3,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { "Vmware",               NULL,         NULL,         1 << 7,      1,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "VirtualBox Manager",   NULL,         NULL,         1 << 8,      1,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { "VirtualBox Machine",   NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { "steam",                NULL,         NULL,         1 << 3,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { "Xfce4-notifyd",        NULL,         NULL,         0,           0,         1,          0,         0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
+    { NULL,                   NULL,         regexarray[2],0,           0,         0,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { NULL,                   NULL,         regexarray[1],1 << 3,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { NULL,                   NULL,         regexarray[0],0,           0,         1,          0,         0,         -1,      1,        0.6,1.0,1.0,0.8,        2,        1 },
     { "kmag",                 NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        0.4,1.0,1.0,0.2,        0,        0 },
