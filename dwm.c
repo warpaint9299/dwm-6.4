@@ -1654,8 +1654,7 @@ focus(Client *c)
         if(c->isurgent)
             seturgent(c, 0);
         // prevents the panel getting focus when tag switching:
-        if(!ispanel(c, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER)
-           && !ispanel(c, KCLOCK) && !ispanel(c, GNOME_CALCULATOR))
+        if(!ispanel(c, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER))
         {
             detachstack(c);
             attachstack(c);
