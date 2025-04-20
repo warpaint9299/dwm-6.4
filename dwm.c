@@ -4051,7 +4051,7 @@ view(const Arg *arg)
     selmon->lt[selmon->sellt ^ 1]
         = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt ^ 1];
     focus(NULL);
-    if(selmon->sel->islowest)
+    if(selmon->sel && selmon->sel->islowest)
     {
         Arg arg = { .i = -1 };
         XLowerWindow(dpy, selmon->sel->win);
