@@ -177,6 +177,7 @@ struct Client
     int isfixed, isfloating, islowest, isurgent, neverfocus, oldstate,
         isfullscreen;
     int forcetile, iswarppointer, istoggled, iscentered;
+    float factorx;
     int borderpx;
     int hasrulebw;
     Client *next;
@@ -519,6 +520,7 @@ applyrules(Client *c)
     c->iswarppointer = 0;
     c->istoggled = 0;
     c->iscentered = 0;
+    c->factorx = 1.0;
 
     XGetClassHint(dpy, c->win, &ch);
     class = ch.res_class ? ch.res_class : broken;
@@ -550,6 +552,7 @@ applyrules(Client *c)
             c->iswarppointer = r->iswarppointer;
             c->iscentered = r->iscentered;
             c->viewontag = r->viewontag;
+            c->factorx = r->factorx;
             oldstate = c->isfloating;
 
             if(c->isfloating && !ispanel(c, XFCE4_PANEL))
@@ -2244,9 +2247,16 @@ manage(Window w, XWindowAttributes *wa)
         if((arg.ui & TAGMASK) != TAGMASK)
             view(&arg);
     }
-    if (ispanel(c, KCLOCK) || ispanel(c, GNOME_CALCULATOR)) {
-        Arg arg = { .ui = WIN_E};
+    if(!ispanel(c, XFCE4_PANEL) && c->isfloating && c->factorx <= 0.5)
+    {
+        Arg arg = { .ui = WIN_E };
         movethrow(&arg);
+        if(!ispanel(c, KMAGNIFIER) && !ispanel(c, KCLOCK)
+           && !ispanel(c, GNOME_CALCULATOR))
+        {
+            Arg arg = { .ui = WIN_S };
+            movethrow(&arg);
+        }
     }
     arrange(c->mon);
     if(!HIDDEN(c))
