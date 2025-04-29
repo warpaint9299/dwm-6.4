@@ -2244,6 +2244,10 @@ manage(Window w, XWindowAttributes *wa)
         if((arg.ui & TAGMASK) != TAGMASK)
             view(&arg);
     }
+    if (ispanel(c, KCLOCK) || ispanel(c, GNOME_CALCULATOR)) {
+        Arg arg = { .ui = WIN_E};
+        movethrow(&arg);
+    }
     arrange(c->mon);
     if(!HIDDEN(c))
         XMapWindow(dpy, c->win);
