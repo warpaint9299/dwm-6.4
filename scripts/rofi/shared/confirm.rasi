@@ -19,7 +19,7 @@ configuration {
 
 * {
     /* Resolution : 1920x1080 */
-	selected:					 #B8BB26;
+    selected:                    #B8BB26;
     box-spacing:                 30px;
     box-margin:                  300px 100px;
     inputbar-spacing:            30px;
@@ -96,7 +96,7 @@ textbox-prompt-colon {
 }
 prompt {
     enabled:                     true;
-	font:						 "Comic Code Bold 64";
+    font:                        "Comic Code Bold 64";
     padding:                     var(general-padding);
     border-radius:               var(general-radius);
     background-color:            transparent;

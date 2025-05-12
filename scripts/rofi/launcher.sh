@@ -14,5 +14,5 @@ dir="$HOME/.dwm/scripts/rofi"
 theme="launcher-style"
 
 rofi -show drun  \
-	 -modes drun,run \
-	 -theme ${dir}/${theme}.rasi
+     -modes drun,run \
+     -theme ${dir}/${theme}.rasi
