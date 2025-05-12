@@ -8,7 +8,7 @@ static const unsigned int borderpx = 2;        /* border pixel of windows */
 static const unsigned int gappx    = 8;        /* gap pixel between windows */
 static const unsigned int snap     = 32;       /* snap pixel */
 static const int rmaster           = 0;        /* 1 means master-area is initially on the right */
-static const char panel[][32]      = { "xfce4-panel", "KMagnifier", "Clock", "Calculator", "xfce4-notifyd" }; /* name & cls of panel win */
+static const char panel[][32]      = { "xfce4-panel","xfce4-notifyd" , "KMagnifier", "Clock", "Calculator" }; /* name & cls of panel win */
 static const int entagmon          = 1;     /* 0 means dosn't send selclient when switch monitor*/
 static const int viewontag         = 1;        /* Switch view on tag switch */
 static const int showbar           = 1;        /* 0 means no bar */
@@ -99,30 +99,30 @@ static Rule rules[] = {
      *  WM_CLASS(STRING) = instance, class
      *  WM_NAME(STRING) = title
      */
-    /* class                  instance      title         tags mask    viewontag  isfloating  iscentered forcetile  monitor  isfactor  factor x,y,w,h(double)  borderpx  iswarppointer */
- // { "st",                   NULL,         NULL,         0,           1,         1,          1,         1,         -1,      1,        1.0,1.0,1.0,1.0,        2,        1 },
-    { "st",                   NULL,         NULL,         0,           0,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "kitty",                NULL,         NULL,         0,           0,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "okular",               NULL,         NULL,         1 << 1,      1,         0,          0,         1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "firefox-esr",          NULL,         NULL,         1 << 2,      1,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "Chromium",             NULL,         NULL,         0,           0,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "code-oss",             NULL,         NULL,         1 << 1,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "gnome-calculator",     NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        0.23,1.0,1.0,0.32,      2,        0 },
-    { "rnote",                NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
-    { "GoldenDict",           NULL,         NULL,         0,           0,         1,          0,         0,         -1,      1,        0.5,0.5,1.0,1.0,        2,        1 },
-    { "Clash for Windows",    NULL,         NULL,         0,           0,         1,          1,         0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "Xfce4-notifyd",        NULL,         NULL,         0,           0,         1,          0,         0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
-    { "steam",                NULL,         NULL,         1 << 3,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { "Vmware",               NULL,         NULL,         1 << 7,      1,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "VirtualBox Manager",   NULL,         NULL,         1 << 8,      1,         1,          0,         1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { NULL,                   NULL,         regexarray[2],0,           0,         0,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { NULL,                   NULL,         regexarray[1],1 << 3,      1,         1,          0,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { NULL,                   NULL,         regexarray[0],0,           0,         1,          0,         0,         -1,      1,        0.6,1.0,1.0,0.8,        2,        1 },
-    { "kmag",                 NULL,         NULL,         (1 << 9) - 1,0,         1,          0,         0,         -1,      1,        0.4,1.0,1.0,0.2,        0,        0 },
-    { "Xfce4-panel",          NULL,         NULL,         (1 << 9) - 1,0,         1,          1,         0,         -1,      0,        1.0,1.0,1.0,1.0,        0,        0 },
-    { broken,                 NULL,         NULL,         0,           0,         1,          1,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { NULL,                   NULL,         NULL,         0,           0,         1,          1,         0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    /* class                  instance      title         tags mask    viewontag  isfloating  position     forcetile  monitor  isfactor  factor x,y,w,h(double)  borderpx  iswarppointer */
+ // { "st",                   NULL,         NULL,         0,           1,         1,          CENTER,      1,         -1,      1,        1.0,1.0,1.0,1.0,        2,        1 },
+    { "st",                   NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "kitty",                NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "okular",               NULL,         NULL,         1 << 1,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "firefox-esr",          NULL,         NULL,         1 << 2,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "Chromium",             NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "code-oss",             NULL,         NULL,         1 << 1,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "gnome-calculator",     NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.32,      2,        0 },
+    { "rnote",                NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
+    { "GoldenDict",           NULL,         NULL,         0,           0,         1,          RIGHT_BOTTOM,0,         -1,      1,        0.5,0.5,1.0,1.0,        2,        1 },
+    { "Clash for Windows",    NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "Xfce4-notifyd",        NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
+    { "steam",                NULL,         NULL,         1 << 3,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { "Vmware",               NULL,         NULL,         1 << 7,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "VirtualBox Manager",   NULL,         NULL,         1 << 8,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { NULL,                   NULL,         regexarray[2],0,           0,         0,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { NULL,                   NULL,         regexarray[1],1 << 3,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { NULL,                   NULL,         regexarray[0],0,           0,         1,          CENTER,      0,         -1,      1,        0.6,1.0,1.0,0.8,        2,        1 },
+    { "kmag",                 NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.4,1.0,1.0,0.2,        0,        0 },
+    { "Xfce4-panel",          NULL,         NULL,         (1 << 9) - 1,0,         1,          CENTER,      0,         -1,      0,        1.0,1.0,1.0,1.0,        0,        0 },
+    { broken,                 NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { NULL,                   NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
 };
 
 /* layout(s) */
@@ -160,7 +160,6 @@ static const char *menucmd[] = { "/bin/sh", "-c" , "~/.dwm/scripts/rofi/powermen
 static const char *roficmd[] = { "/bin/sh", "-c" , "~/.dwm/scripts/rofi/launcher.sh" , NULL };
 static const char *scrkcmd[] = { "/bin/sh", "-c" , "~/.dwm/scripts/screenkey/screenkey.sh" , NULL };
 static const char *kmagcmd[] = { "/bin/sh", "-c" , "~/.dwm/scripts/kmagnifier/kmagnifier.sh" , NULL };
-static const char *kdoccmd[] = { "kdocker", NULL };
 static const char *rangcmd[] = { "kitty", "ranger", NULL };
 static const char *flamcmd[] = { "flameshot", "gui", NULL };
 static const char *thuncmd[] = { "thunar", NULL };
@@ -174,7 +173,6 @@ static const Key keys[] = {
     { MODKEY|ShiftMask,             XK_e,          spawn,              {.v = thuncmd } },
     { MODKEY,                       XK_s,          spawn,              {.v = flamcmd } },
     { MODKEY|ShiftMask,             XK_s,          spawn,              {.v = scrkcmd } },
-    { MODKEY,                       XK_z,          spawn,              {.v = kdoccmd } },
     { MODKEY|ShiftMask,             XK_z,          spawn,              {.v = kmagcmd } },
     { MODKEY|ShiftMask,             XK_Return,     spawn,              {.v = termcmd } },
     { MODKEY,                       XK_b,          togglebar,          {0} },

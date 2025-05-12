@@ -138,11 +138,24 @@ enum
 enum
 {
     XFCE4_PANEL,
+    XFCE4_NOTIFYD,
     KMAGNIFIER,
     KCLOCK,
-    GNOME_CALCULATOR
+    GNOME_CALCULATOR,
+    BROKEN
 }; /* refers to ispanel */
-
+enum
+{
+    CENTER,
+    LEFT,
+    RIGHT,
+    TOP,
+    BOTTOM,
+    LEFT_TOP,
+    LEFT_BOTTOM,
+    RIGHT_TOP,
+    RIGHT_BOTTOM
+}; /* initial client positions */
 typedef union
 {
     int i;
@@ -176,7 +189,8 @@ struct Client
     unsigned int viewontag;
     int isfixed, isfloating, islowest, isurgent, neverfocus, oldstate,
         isfullscreen;
-    int forcetile, iswarppointer, istoggled, iscentered;
+    int forcetile, iswarppointer, istoggled;
+    int iniposition;
     float factorx;
     int borderpx;
     int hasrulebw;
@@ -235,7 +249,7 @@ typedef struct
     unsigned int tags;
     unsigned int viewontag;
     int isfloating;
-    int iscentered;
+    int iniposition;
     int forcetile;
     int monitor;
     int isfactor;
@@ -259,7 +273,7 @@ static void attachbottom(Client *c);
 static void attachtop(Client *c);
 static void attachstack(Client *c);
 static void buttonpress(XEvent *e);
-static void center(Client *c);
+static void initposition(Client *c);
 static void changerule(Client *c);
 static void checkotherwm(void);
 static void cleanup(void);
@@ -519,7 +533,7 @@ applyrules(Client *c)
     c->forcetile = 0;
     c->iswarppointer = 0;
     c->istoggled = 0;
-    c->iscentered = 0;
+    c->iniposition = CENTER;
     c->factorx = 1.0;
 
     XGetClassHint(dpy, c->win, &ch);
@@ -550,7 +564,7 @@ applyrules(Client *c)
             c->forcetile = r->forcetile;
             c->tags |= r->tags;
             c->iswarppointer = r->iswarppointer;
-            c->iscentered = r->iscentered;
+            c->iniposition = r->iniposition;
             c->viewontag = r->viewontag;
             c->factorx = r->factorx;
             oldstate = c->isfloating;
@@ -825,7 +839,9 @@ buttonpress(XEvent *e)
         i = x = occ = 0;
         for(c = m->clients; c; c = c->next)
         {
-            if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER))
+            if(ispanel(c, XFCE4_PANEL) || ispanel(c, XFCE4_NOTIFYD)
+               || ispanel(c, KMAGNIFIER) || ispanel(c, KCLOCK)
+               || ispanel(c, GNOME_CALCULATOR))
                 continue;
             occ |= c->tags;
         }
@@ -866,12 +882,65 @@ buttonpress(XEvent *e)
 }
 
 void
-center(Client *c)
+initposition(Client *c)
 {
-    if(c->iscentered)
+    if(c->viewontag)
     {
-        c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
-        c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
+        Arg arg = { .ui = c->tags };
+        if((arg.ui & TAGMASK) != TAGMASK)
+            view(&arg);
+    }
+
+    if(c->isfloating)
+    {
+        Arg arg = { .ui = WIN_C };
+        switch(c->iniposition)
+        {
+        case CENTER:
+            arg.ui = WIN_C;
+            movethrow(&arg);
+            break;
+        case LEFT:
+            arg.ui = WIN_W;
+            movethrow(&arg);
+            break;
+        case RIGHT:
+            arg.ui = WIN_E;
+            movethrow(&arg);
+            break;
+        case TOP:
+            arg.ui = WIN_N;
+            movethrow(&arg);
+            break;
+        case BOTTOM:
+            arg.ui = WIN_S;
+            movethrow(&arg);
+            break;
+        case LEFT_TOP:
+            arg.ui = WIN_W;
+            movethrow(&arg);
+            arg.ui = WIN_N;
+            movethrow(&arg);
+            break;
+        case LEFT_BOTTOM:
+            arg.ui = WIN_W;
+            movethrow(&arg);
+            arg.ui = WIN_S;
+            movethrow(&arg);
+            break;
+        case RIGHT_TOP:
+            arg.ui = WIN_E;
+            movethrow(&arg);
+            arg.ui = WIN_N;
+            movethrow(&arg);
+            break;
+        case RIGHT_BOTTOM:
+            arg.ui = WIN_E;
+            movethrow(&arg);
+            arg.ui = WIN_S;
+            movethrow(&arg);
+            break;
+        }
     }
 }
 
@@ -1261,8 +1330,9 @@ drawbar(Monitor *m)
     for(c = m->clients; c; c = c->next)
     {
         // prevent showing the panel as active application:
-        if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER)
-           || ispanel(c, KCLOCK) || ispanel(c, GNOME_CALCULATOR))
+        if(ispanel(c, XFCE4_PANEL) || ispanel(c, XFCE4_NOTIFYD)
+           || ispanel(c, KMAGNIFIER) || ispanel(c, KCLOCK)
+           || ispanel(c, GNOME_CALCULATOR))
             continue;
         occ |= c->tags;
         if(c->isurgent)
@@ -2046,9 +2116,11 @@ ispanel(Client *c, int ptype)
     switch(ptype)
     {
     case XFCE4_PANEL: return !strcmp(c->name, panel[0]); break;
-    case KMAGNIFIER: return !strcmp(c->name, panel[1]); break;
-    case KCLOCK: return !strcmp(c->name, panel[2]); break;
-    case GNOME_CALCULATOR: return !strcmp(c->name, panel[3]); break;
+    case XFCE4_NOTIFYD: return !strcmp(c->name, panel[1]); break;
+    case KMAGNIFIER: return !strcmp(c->name, panel[2]); break;
+    case KCLOCK: return !strcmp(c->name, panel[3]); break;
+    case GNOME_CALCULATOR: return !strcmp(c->name, panel[4]); break;
+    case BROKEN: return !strcmp(c->name, broken); break;
     default: return 0;
     }
 }
@@ -2210,7 +2282,6 @@ manage(Window w, XWindowAttributes *wa)
     updatewindowtype(c);
     updatesizehints(c);
     updatewmhints(c);
-    center(c);
     XSelectInput(dpy, w,
                  EnterWindowMask | FocusChangeMask | PropertyChangeMask
                      | StructureNotifyMask);
@@ -2241,23 +2312,7 @@ manage(Window w, XWindowAttributes *wa)
     if(c->mon == selmon)
         unfocus(selmon->sel, 0);
     c->mon->sel = c;
-    if(c->viewontag)
-    {
-        Arg arg = { .ui = c->tags };
-        if((arg.ui & TAGMASK) != TAGMASK)
-            view(&arg);
-    }
-    if(!ispanel(c, XFCE4_PANEL) && c->isfloating && c->factorx <= 0.5)
-    {
-        Arg arg = { .ui = WIN_E };
-        movethrow(&arg);
-        if(!ispanel(c, KMAGNIFIER) && !ispanel(c, KCLOCK)
-           && !ispanel(c, GNOME_CALCULATOR))
-        {
-            Arg arg = { .ui = WIN_S };
-            movethrow(&arg);
-        }
-    }
+    initposition(c);
     arrange(c->mon);
     if(!HIDDEN(c))
         XMapWindow(dpy, c->win);
@@ -2565,6 +2620,10 @@ movethrow(const Arg *arg)
     Client *c;
     int nh, nw, nx, ny;
     c = selmon->sel;
+    if(!c || ispanel(c, XFCE4_PANEL) || ispanel(c, XFCE4_NOTIFYD))
+    {
+        return;
+    }
     if(selmon->lt[selmon->sellt]->arrange && !c->isfloating)
         togglefloating(NULL);
     nw = c->w;
@@ -2594,7 +2653,7 @@ movethrow(const Arg *arg)
     default: return;
     }
     resize(c, nx, ny, nw, nh, True);
-    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, nw / 2, nh / 2);
+    warppointer(c);
 }
 
 Client *
@@ -3493,12 +3552,7 @@ tagmon(const Arg *arg)
     {
         applyrules(c);
         unfloatexceptlatest(c->mon, c, OPEN_CLIENT);
-        if(c->viewontag)
-        {
-            Arg arg = { .ui = c->tags };
-            if((arg.ui & TAGMASK) != TAGMASK)
-                view(&arg);
-        }
+        initposition(c);
         arrange(m);
     }
 }
@@ -3574,7 +3628,7 @@ togglefloating(const Arg *arg)
     dotogglefloating(m, c);
     oldstate = c->isfloating;
     istoggled ^= 1;
-    c->iscentered = c->isfloating ? 1 : 0;
+    initposition(c);
     arrange(m);
     warppointer(c);
 }
@@ -3721,6 +3775,7 @@ unmanage(Client *c, int destroyed)
             unfloatexceptlatest(m, cl, CLOSE_CLIENT);
             if(cl->isfloating)
                 XRaiseWindow(dpy, cl->win);
+            initposition(cl);
         }
     }
     updateclientlist();
@@ -4002,7 +4057,7 @@ updatewindowtype(Client *c)
         setfullscreen(c, 1);
     if(wtype == netatom[NetWMWindowTypeDialog])
     {
-        c->iscentered = 1;
+        c->iniposition = CENTER;
         c->isfloating = 1;
     }
 }
@@ -4144,7 +4199,8 @@ warppointer(Client *c)
 {
     if(!c || c->mon != selmon)
         return;
-    if(!ispanel(c, XFCE4_PANEL) && ISVISIBLE(c) && c->iswarppointer)
+    if(!ispanel(c, XFCE4_PANEL) && !ispanel(c, XFCE4_NOTIFYD) && ISVISIBLE(c)
+       && c->iswarppointer)
         XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
 }
 
