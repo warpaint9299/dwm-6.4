@@ -107,7 +107,7 @@ BreakAfterJavaFieldAnnotations: false
 BreakAfterReturnType: AllDefinitions
 BreakArrays: true
 BreakBeforeBinaryOperators: All
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Linux
 BreakBeforeConceptDeclarations: Always
 BreakBeforeInlineASMColon: OnlyMultiline
 BreakBeforeTernaryOperators: true
