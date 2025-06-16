@@ -829,7 +829,11 @@ initposition(Client *c)
             view(&arg);
     }
 
-    if(c->isfloating) {
+    if(c->isfloating
+       // && !ispanel(c, XFCE4_PANEL) && !ispanel(c, XFCE4_NOTIFYD)
+       // && !ispanel(c, KMAGNIFIER) && !ispanel(c, KCLOCK)
+       // && !ispanel(c, GNOME_CALCULATOR)
+    ) {
         Arg arg = { .ui = WIN_C };
         switch(c->iniposition) {
         case CENTER:
@@ -1596,8 +1600,7 @@ focus(Client *c)
         if(c->isurgent)
             seturgent(c, 0);
         // prevents the panel getting focus when tag switching:
-        if(!ispanel(c, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER)
-           && !c->islowest) {
+        if(!ispanel(c, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER)) {
             detachstack(c);
             attachstack(c);
             grabbuttons(c, 1);
@@ -3831,7 +3834,14 @@ view(const Arg *arg)
         = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt];
     selmon->lt[selmon->sellt ^ 1]
         = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt ^ 1];
-    focus(NULL);
+    // Do not focus on the lowlayer window, except the mouse on it when switch
+    // tag.
+    for(Client *cl = selmon->sel; cl; cl = cl->next) {
+        if(ISVISIBLE(cl) && !cl->islowest) {
+            focus(cl);
+            break;
+        }
+    }
     arrange(selmon);
 }
 

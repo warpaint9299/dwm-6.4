@@ -12,6 +12,7 @@ static const char panel[][32]      = { "xfce4-panel","xfce4-notifyd" , "KMagnifi
 static const int entagmon          = 1;     /* 0 means dosn't send selclient when switch monitor*/
 static const int viewontag         = 1;        /* Switch view on tag switch */
 static const int showbar           = 1;        /* 0 means no bar */
+static const int showicon          = 0;        /* 0 means no icon with title*/
 static const int topbar            = 1;        /* 0 means bottom bar */
 static const int vertpad           = 0;        /* vertical padding of bar */
 static const int sidepad           = 0;        /* horizontal padding of bar */
@@ -107,9 +108,9 @@ static Rule rules[] = {
     { "firefox-esr",          NULL,         NULL,         1 << 2,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "Chromium",             NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "code-oss",             NULL,         NULL,         1 << 1,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "gnome-calculator",     NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.32,      2,        0 },
+    { "gnome-calculator",     NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT,       0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
     { "rnote",                NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
+    { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT,       0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
     { "GoldenDict",           NULL,         NULL,         0,           0,         1,          RIGHT_BOTTOM,0,         -1,      1,        0.5,0.5,1.0,1.0,        2,        1 },
     { "Clash for Windows",    NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "Xfce4-notifyd",        NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
