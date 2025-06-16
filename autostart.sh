@@ -19,7 +19,7 @@ done &
 # When any browser is focused on YouTube and in fullscreen mode, kill xautolock
 (
 while true; do
-	for browser in "firefox" "brave" "chrome"; do
+	for browser in "firefox" "brave" "chrome" "chromium"; do
 		xdotool search --class "${browser}" | while read wm_id; do
 			if [[ 0 -ne $(xprop -id ${wm_id} | grep '_NET_WM_STATE_FULLSCREEN' | wc -l) ]]; then
 				if [[ 0 -ne $(xprop -id ${wm_id} | grep -E 'YouTube|小宝影院' | wc -l) ]]; then
