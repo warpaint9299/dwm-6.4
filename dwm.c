@@ -829,11 +829,7 @@ initposition(Client *c)
             view(&arg);
     }
 
-    if(c->isfloating
-       // && !ispanel(c, XFCE4_PANEL) && !ispanel(c, XFCE4_NOTIFYD)
-       // && !ispanel(c, KMAGNIFIER) && !ispanel(c, KCLOCK)
-       // && !ispanel(c, GNOME_CALCULATOR)
-    ) {
+    if(c->isfloating) {
         Arg arg = { .ui = WIN_C };
         switch(c->iniposition) {
         case CENTER:
@@ -3806,7 +3802,7 @@ updatewmhints(Client *c)
 void
 view(const Arg *arg)
 {
-    int i;
+    int i, isfocused;
     unsigned int tmptag;
 
     if((arg->ui & TAGMASK) == selmon->tagset[selmon->seltags])
@@ -3834,13 +3830,19 @@ view(const Arg *arg)
         = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt];
     selmon->lt[selmon->sellt ^ 1]
         = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt ^ 1];
-    // Do not focus on the lowlayer window, except the mouse on it when switch
-    // tag.
-    for(Client *cl = selmon->sel; cl; cl = cl->next) {
-        if(ISVISIBLE(cl) && !cl->islowest) {
+    // Do not focus on the specific window
+    isfocused = 0;
+    for(Client *cl = selmon->clients; cl; cl = cl->next) {
+        if(ISVISIBLE(cl) && !ispanel(cl, XFCE4_PANEL)
+           && !ispanel(cl, XFCE4_NOTIFYD) && !ispanel(cl, KMAGNIFIER)
+           && !ispanel(cl, KCLOCK) && !ispanel(cl, GNOME_CALCULATOR)) {
             focus(cl);
+            isfocused = 1;
             break;
         }
+    }
+    if(!isfocused) {
+        focus(NULL);
     }
     arrange(selmon);
 }
