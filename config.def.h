@@ -16,12 +16,12 @@ static const int showicon          = 0;        /* 0 means no icon with title*/
 static const int topbar            = 1;        /* 0 means bottom bar */
 static const int vertpad           = 0;        /* vertical padding of bar */
 static const int sidepad           = 0;        /* horizontal padding of bar */
-static const int user_bh           = 32;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
+static const int user_bh           = 36;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const int min_tag           = 4;        /* min number of tag */
-static const char *fonts[] = { "VictorMono Nerd Font:style=Bold:size=16:antialias=true:autohint=true",
-                               "Symbola:size=16:antialias=true:autohint=true",
-                               "LXGW WenKai:style=Medium:size=16:antialias=true:autohint=true",
-                               "Comic Code:style=Medium:size=16:antialias=true:autohint=true", };
+static const char *fonts[] = { "VictorMono Nerd Font:style=Bold:size=21:antialias=true:autohint=true",
+                               "Symbola:size=21:antialias=true:autohint=true",
+                               "LXGW WenKai:style=Medium:size=21:antialias=true:autohint=true",
+                               "Comic Code:style=Medium:size=21:antialias=true:autohint=true", };
 static const unsigned int baralpha    = 0xd0;
 static const unsigned int borderalpha = OPAQUE;
 static const char fgcolor1[] = "#0e0e0e";
@@ -106,13 +106,13 @@ static Rule rules[] = {
     { "kitty",                NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "okular",               NULL,         NULL,         1 << 1,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "firefox-esr",          NULL,         NULL,         1 << 2,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "Chromium",             NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "Chromium",             NULL,         NULL,         1 << 2,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "code-oss",             NULL,         NULL,         1 << 1,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "gnome-calculator",     NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT,       0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
+    { "gnome-calculator",     NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT,       0,         -1,      1,        0.2,1.0,1.0,0.30,      2,        0 },
     { "rnote",                NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT,       0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
+    { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT,       0,         -1,      1,        0.2,1.0,1.0,0.30,      2,        0 },
     { "GoldenDict",           NULL,         NULL,         0,           0,         1,          RIGHT_BOTTOM,0,         -1,      1,        0.5,0.5,1.0,1.0,        2,        1 },
-    { "Clash for Windows",    NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "Clash-nyanpasu",       NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "Xfce4-notifyd",        NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
     { "steam",                NULL,         NULL,         1 << 3,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { "Vmware",               NULL,         NULL,         1 << 7,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
