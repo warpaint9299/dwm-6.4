@@ -16,30 +16,18 @@ while true; do
 done &
 )
 
+# When any browser is focused on YouTube and in fullscreen mode, kill xautolock
 (
 while true; do
-	wm_id_chrome=$(xdotool search --onlyvisible --class 'google-chrome');
-	wm_id_firefox=$(xdotool search --onlyvisible --class 'firefox');
-	wm_id_brave=$(xdotool search --onlyvisible --class 'brave-browser');
-
-	if [[ -n ${wm_id_chrome} ]]; then
-		if [[ '_NET_WM_STATE_FULLSCREEN' -eq $(xprop -id ${wm_id_chrome} _NET_WM_STATE | cut -d\= -f2 | tr -d ' ') ]]; then
-			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
-		fi
-	fi
-
-	if [[ -n ${wm_id_firefox} ]]; then
-		if [[ 0 -ne $( ps -aux | grep firefox | grep -v grep | wc -l ) ]];then
-			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
-		fi
-	fi
-
-	if [[ -n ${wm_id_brave} ]]; then
-		if [[ 0 -ne $( ps -aux | grep brave | grep -v grep | wc -l ) ]];then
-			[[ $(pgrep -x 'xautolock') ]] && killall xautolock
-		fi
-	fi
-
+	for browser in "firefox" "brave" "chrome" "chromium"; do
+		xdotool search --class "${browser}" | while read wm_id; do
+			if [[ 0 -ne $(xprop -id ${wm_id} | grep '_NET_WM_STATE_FULLSCREEN' | wc -l) ]]; then
+				if [[ 0 -ne $(xprop -id ${wm_id} | grep -E 'YouTube|小宝影院' | wc -l) ]]; then
+					[[ $(pgrep -x 'xautolock') ]] && killall xautolock
+				fi
+			fi
+		done
+	done
 	sleep 5;
 done &
 )
@@ -52,8 +40,9 @@ done &
 )
 
 blueman-applet &
-flameshot &
 fcitx5 &
-tmux has-session && exec kitty -e tmux attach || exec kitty -e tmux &
+flameshot &
 xfce4-panel --disable-wm-check &
+sleep 0.3
+tmux has-session && exec kitty tmux attach || exec kitty tmux &
 exec xset -b & # disable console bell volume

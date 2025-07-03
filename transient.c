@@ -14,7 +14,7 @@ main(void)
     XEvent e;
 
     d = XOpenDisplay(NULL);
-    if (!d)
+    if(!d)
         exit(1);
     r = DefaultRootWindow(d);
 
@@ -26,12 +26,10 @@ main(void)
     XMapWindow(d, f);
 
     XSelectInput(d, f, ExposureMask);
-    while (1)
-    {
+    while(1) {
         XNextEvent(d, &e);
 
-        if (t == None)
-        {
+        if(t == None) {
             sleep(5);
             t = XCreateSimpleWindow(d, r, 50, 50, 100, 100, 0, 0, 0);
             XSetTransientForHint(d, t, f);

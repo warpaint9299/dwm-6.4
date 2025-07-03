@@ -1,0 +1,13 @@
+/**
+ *
+ * Author : Aditya Shakya (adi1090x)
+ * Github : @adi1090x
+ * Modifier: @warpaint9299
+ *
+ * Fonts
+ *
+ **/
+
+* {
+     font: "Comic Code Bold 12";
+}
