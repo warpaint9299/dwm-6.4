@@ -41,9 +41,14 @@ done &
 
 # wacom settings
 (
-xsetwacom set "Wacom Intuos BT M Pen stylus" MapToOutput DisplayPort-0
+while true; do
+xsetwacom set "Wacom Intuos BT M Pen stylus" MapToOutput HEAD-1
 xsetwacom set "Wacom Intuos BT M Pad pad" Button 1 "key Ctrl z"
 xsetwacom set "Wacom Intuos BT M Pad pad" Button 2 "key Shift Ctrl o"
+xsetwacom set "Wacom Intuos BT M Pad pad" Button 3 "key Ctrl plus"
+xsetwacom set "Wacom Intuos BT M Pad pad" Button 8 "key Ctrl minus"
+sleep 5;
+done &
 )
 
 blueman-applet &
@@ -52,6 +57,5 @@ flameshot &
 xfce4-panel --disable-wm-check &
 sleep 0.3
 tmux has-session && exec kitty tmux attach || exec kitty tmux &
-
 
 exec xset -b & # disable console bell volume

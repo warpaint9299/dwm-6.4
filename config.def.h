@@ -12,7 +12,6 @@ static const char panel[][32]      = { "xfce4-panel","xfce4-notifyd" , "KMagnifi
 static const int entagmon          = 1;     /* 0 means dosn't send selclient when switch monitor*/
 static const int viewontag         = 1;        /* Switch view on tag switch */
 static const int showbar           = 1;        /* 0 means no bar */
-static const int showicon          = 0;        /* 0 means no icon with title*/
 static const int topbar            = 1;        /* 0 means bottom bar */
 static const int vertpad           = 0;        /* vertical padding of bar */
 static const int sidepad           = 0;        /* horizontal padding of bar */
@@ -105,16 +104,19 @@ static Rule rules[] = {
     { "st",                   NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "kitty",                NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "okular",               NULL,         NULL,         1 << 1,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "xournalpp",            NULL,         NULL,         1 << 3,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "firefox",              NULL,         NULL,         1 << 2,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "firefox-esr",          NULL,         NULL,         1 << 2,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "Chromium",             NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "code-oss",             NULL,         NULL,         1 << 1,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "gnome-calculator",     NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT,       0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
+    { "code-oss",             NULL,         NULL,         1 << 1,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        0,        1 },
+    { "gnome-calculator",     NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.32,      2,        0 },
     { "rnote",                NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT,       0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
+    { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
     { "GoldenDict",           NULL,         NULL,         0,           0,         1,          RIGHT_BOTTOM,0,         -1,      1,        0.5,0.5,1.0,1.0,        2,        1 },
     { "Clash for Windows",    NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "Clash-nyanpasu",       NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "Xfce4-notifyd",        NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
-    { "steam",                NULL,         NULL,         1 << 3,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { "steam",                NULL,         NULL,         1 << 3,      1,         0,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { "Vmware",               NULL,         NULL,         1 << 7,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "VirtualBox Manager",   NULL,         NULL,         1 << 8,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { NULL,                   NULL,         regexarray[2],0,           0,         0,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
@@ -123,7 +125,7 @@ static Rule rules[] = {
     { "kmag",                 NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.4,1.0,1.0,0.2,        0,        0 },
     { "Xfce4-panel",          NULL,         NULL,         (1 << 9) - 1,0,         1,          CENTER,      0,         -1,      0,        1.0,1.0,1.0,1.0,        0,        0 },
     { broken,                 NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { NULL,                   NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { NULL,                   NULL,         NULL,         0,           0,         0,          CENTER,      0,         -1,      1,        0.7,0.7,0.7,0.7,        2,        0 },
 };
 
 /* layout(s) */
@@ -238,7 +240,6 @@ static const Button buttons[] = {
     { ClkWinTitle,          0,              Button2,        zoom,           {0} },
     { ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
     { ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
-    { ClkClientWin,         ControlMask,    Button1,        raiseclient,    {0} },
     { ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
     { ClkTagBar,            0,              Button1,        view,           {0} },
     { ClkTagBar,            0,              Button3,        toggleview,     {0} },

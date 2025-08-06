@@ -311,7 +311,6 @@ static Client *nexttiled(Client *c);
 static void pop(Client *c);
 static void propertynotify(XEvent *e);
 static void quit(const Arg *arg);
-static void raiseclient(const Arg *arg);
 static Monitor *recttomon(int x, int y, int w, int h);
 static void resetnmaster(const Arg *arg);
 static void resize(Client *c, int x, int y, int w, int h, int interact);
@@ -505,7 +504,6 @@ applyrules(Client *c)
     c->iswarppointer = 0;
     c->istoggled = 0;
     c->iniposition = CENTER;
-    c->factorx = 1.0;
 
     XGetClassHint(dpy, c->win, &ch);
     class = ch.res_class ? ch.res_class : broken;
@@ -535,7 +533,6 @@ applyrules(Client *c)
             c->iswarppointer = r->iswarppointer;
             c->iniposition = r->iniposition;
             c->viewontag = r->viewontag;
-            c->factorx = r->factorx;
             oldstate = c->isfloating;
 
             if(c->isfloating && !ispanel(c, XFCE4_PANEL)) {
@@ -902,9 +899,11 @@ changerule(Client *c)
 
             if(!ispanel(c, XFCE4_PANEL)) {
                 // the `!m->num` is a primary or first monitor
-                if(c->isfloating && !m->num)
+                if(c->isfloating && !m->num) {
                     applyfactor(c, r);
+                }
             }
+            break;
         }
     }
     pthread_mutex_unlock(&rule_mutex);
@@ -1699,8 +1698,7 @@ focusstack(int inc, int vis)
         return;
     else {
         if(!ispanel(c, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER)) {
-            if(c->isfloating)
-                XRaiseWindow(dpy, c->win);
+            XRaiseWindow(dpy, c->win);
             restack(c->mon);
             focus(c);
             arrange(c->mon);
@@ -2564,21 +2562,6 @@ quit(const Arg *arg)
         if((fd = fopen(lockfile, "a")) != NULL)
             fclose(fd);
     }
-}
-
-void
-raiseclient(const Arg *arg)
-{
-    Client *c = selmon->sel;
-    if(!c || ispanel(c, XFCE4_PANEL))
-        return;
-
-    if(c->isfloating)
-        XRaiseWindow(dpy, c->win);
-
-    focus(c);
-    restack(c->mon);
-    arrange(c->mon);
 }
 
 Monitor *
@@ -3802,7 +3785,7 @@ updatewmhints(Client *c)
 void
 view(const Arg *arg)
 {
-    int i, isfocused;
+    int i;
     unsigned int tmptag;
 
     if((arg->ui & TAGMASK) == selmon->tagset[selmon->seltags])
@@ -3830,19 +3813,9 @@ view(const Arg *arg)
         = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt];
     selmon->lt[selmon->sellt ^ 1]
         = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt ^ 1];
-    // Do not focus on the specific window
-    isfocused = 0;
-    for(Client *cl = selmon->clients; cl; cl = cl->next) {
-        if(ISVISIBLE(cl) && !ispanel(cl, XFCE4_PANEL)
-           && !ispanel(cl, XFCE4_NOTIFYD) && !ispanel(cl, KMAGNIFIER)
-           && !ispanel(cl, KCLOCK) && !ispanel(cl, GNOME_CALCULATOR)) {
-            focus(cl);
-            isfocused = 1;
-            break;
-        }
-    }
-    if(!isfocused) {
-        focus(NULL);
+    focus(NULL);
+    if(selmon->sel) {
+        XRaiseWindow(dpy, selmon->sel->win);
     }
     arrange(selmon);
 }
