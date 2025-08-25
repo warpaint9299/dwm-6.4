@@ -20,15 +20,15 @@ configuration {
 * {
     /* Resolution : 1920x1080 */
     selected:                    #B8BB26;
-    box-spacing:                 30px;
-    box-margin:                  300px 100px;
+    box-spacing:                 20px;
+    box-margin:                  300px 30px;
     inputbar-spacing:            30px;
     list-spacing:                30px;
     general-padding:             20px;
-    element-padding:             100px 10px;
+    element-padding:             100px 80px;
     element-radius:              0px;
     general-radius:              0px;
-    element-font:                "feather 64";
+    element-font:                "feather 42";
 }
 
 /*****----- Main Window -----*****/

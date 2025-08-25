@@ -92,40 +92,41 @@ static char lockfile[] = "/tmp/dwm.lock";
 static const int dynamicrule = 0;
 static char regexarray[][255] = { "^nvim$",
                                   "^(Minecraft Launcher|Sign in to Minecraft|Welcome to Xbox)$",
-                                  "^(.*Oracle VirtualBox)$" };
+                                  "^(.*Oracle VirtualBox)$"};
 
 static Rule rules[] = {
     /* xprop(1):
      *  WM_CLASS(STRING) = instance, class
      *  WM_NAME(STRING) = title
      */
-    /* class                  instance      title         tags mask    viewontag  isfloating  position     forcetile  monitor  isfactor  factor x,y,w,h(double)  borderpx  iswarppointer */
- // { "st",                   NULL,         NULL,         0,           1,         1,          CENTER,      1,         -1,      1,        1.0,1.0,1.0,1.0,        2,        1 },
-    { "st",                   NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "kitty",                NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "okular",               NULL,         NULL,         1 << 1,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "xournalpp",            NULL,         NULL,         1 << 3,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "firefox",              NULL,         NULL,         1 << 2,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "firefox-esr",          NULL,         NULL,         1 << 2,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "Chromium",             NULL,         NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "code-oss",             NULL,         NULL,         1 << 1,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        0,        1 },
-    { "gnome-calculator",     NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.32,      2,        0 },
-    { "rnote",                NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "kclock",               NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
-    { "GoldenDict",           NULL,         NULL,         0,           0,         1,          RIGHT_BOTTOM,0,         -1,      1,        0.5,0.5,1.0,1.0,        2,        1 },
-    { "Clash for Windows",    NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "Clash-nyanpasu",       NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "Xfce4-notifyd",        NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
-    { "steam",                NULL,         NULL,         1 << 3,      1,         0,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { "Vmware",               NULL,         NULL,         1 << 7,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "VirtualBox Manager",   NULL,         NULL,         1 << 8,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { NULL,                   NULL,         regexarray[2],0,           0,         0,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { NULL,                   NULL,         regexarray[1],1 << 3,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { NULL,                   NULL,         regexarray[0],0,           0,         1,          CENTER,      0,         -1,      1,        0.6,1.0,1.0,0.8,        2,        1 },
-    { "kmag",                 NULL,         NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.4,1.0,1.0,0.2,        0,        0 },
-    { "Xfce4-panel",          NULL,         NULL,         (1 << 9) - 1,0,         1,          CENTER,      0,         -1,      0,        1.0,1.0,1.0,1.0,        0,        0 },
-    { broken,                 NULL,         NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { NULL,                   NULL,         NULL,         0,           0,         0,          CENTER,      0,         -1,      1,        0.7,0.7,0.7,0.7,        2,        0 },
+    /* class                  instance          title         tags mask    viewontag  isfloating  position     forcetile  monitor  isfactor  factor x,y,w,h(double)  borderpx  iswarppointer */
+ // { "st",                   NULL,             NULL,         0,           1,         1,          CENTER,      1,         -1,      1,        1.0,1.0,1.0,1.0,        2,        1 },
+    { "steam",                NULL,             NULL,         1 << 7,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { "st",                   NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "kitty",                NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "okular",               NULL,             NULL,         1 << 2,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "xournalpp",            NULL,             NULL,         1 << 3,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "firefox",              NULL,             NULL,         1 << 1,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "firefox-esr",          NULL,             NULL,         1 << 1,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "Chromium",             NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "code-oss",             NULL,             NULL,         1 << 1,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "gnome-calculator",     NULL,             NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.70,      0,        0 },
+    { "rnote",                NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "kclock",               NULL,             NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
+    { "GoldenDict",           NULL,             NULL,         0,           0,         1,          RIGHT_BOTTOM,0,         -1,      1,        0.5,0.5,1.0,1.0,        2,        1 },
+    { "Clash for Windows",    NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "Clash-nyanpasu",       NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "Xfce4-notifyd",        NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
+    { "Vmware",               NULL,             NULL,         1 << 7,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "VirtualBox Manager",   NULL,             NULL,         1 << 8,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { "gamescope",            NULL,             NULL,         1 << 8,      1,         0,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { NULL,                   NULL,             regexarray[2],0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { NULL,                   NULL,             regexarray[1],1 << 3,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { NULL,                   NULL,             regexarray[0],0,           0,         1,          CENTER,      0,         -1,      1,        0.6,1.0,1.0,0.8,        2,        1 },
+    { "kmag",                 NULL,             NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.4,1.0,1.0,0.2,        0,        0 },
+    { "Xfce4-panel",          NULL,             NULL,         (1 << 9) - 1,0,         1,          CENTER,      0,         -1,      0,        1.0,1.0,1.0,1.0,        0,        0 },
+    { broken,                 NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { NULL,                   NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.7,0.7,0.7,0.7,        0,        0 },
 };
 
 /* layout(s) */
@@ -203,6 +204,8 @@ static const Key keys[] = {
     { MODKEY,                       XK_m,          resetnmaster,       {0} },
     { MODKEY,                       XK_0,          view,               {.ui = ~0 } },
     { MODKEY|ShiftMask,             XK_0,          tag,                {.ui = ~0 } },
+    { MODKEY,                       XK_n,          cycleview,          {1} },
+    { MODKEY|ShiftMask,             XK_n,          cycleview,          {0} },
     { MODKEY,                       XK_apostrophe, focusstackhid,      {.i = -1 } },
     { MODKEY|ShiftMask,             XK_apostrophe, focusstackhid,      {.i = +1 } },
     { MODKEY,                       XK_comma,      focusmon,           {.i = -1 } },

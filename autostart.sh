@@ -41,13 +41,34 @@ done &
 
 # wacom settings
 (
+DEVICE1="Wacom Intuos BT M Pen stylus"
+DEVICE2="Wacom Intuos BT M Pad pad"
 while true; do
-xsetwacom set "Wacom Intuos BT M Pen stylus" MapToOutput HEAD-1
-xsetwacom set "Wacom Intuos BT M Pad pad" Button 1 "key Ctrl z"
-xsetwacom set "Wacom Intuos BT M Pad pad" Button 2 "key Shift Ctrl o"
-xsetwacom set "Wacom Intuos BT M Pad pad" Button 3 "key Ctrl plus"
-xsetwacom set "Wacom Intuos BT M Pad pad" Button 8 "key Ctrl minus"
-sleep 5;
+    if [[ $(xsetwacom list | wc -c ) -ne 0 ]]; then
+        APP=$(xdotool getwindowfocus getwindowclassname)
+        case "$APP" in
+            okular)
+                xsetwacom set "$DEVICE2" Button 1 "key Ctrl 1"
+                xsetwacom set "$DEVICE2" Button 2 "key Ctrl 4"
+                xsetwacom set "$DEVICE2" Button 3 "key F9"
+                xsetwacom set "$DEVICE2" Button 8 "key Shift F9"
+                ;;
+            Com.github.xournalpp.xournalpp)
+                # xsetwacom set "$DEVICE1" MapToOutput HEAD-1
+                xsetwacom set "$DEVICE2" Button 1 "key Ctrl z"
+                xsetwacom set "$DEVICE2" Button 2 "key Shift Ctrl o"
+                xsetwacom set "$DEVICE2" Button 3 "key F9"
+                xsetwacom set "$DEVICE2" Button 8 "key Shift F9"
+                ;;
+            *)
+                # xsetwacom set "$DEVICE2" Button 3 "key F12"
+                # xsetwacom set "$DEVICE2" Button 8 "key Shift F12"
+                xsetwacom set "$DEVICE2" Button 3 "key F9"
+                xsetwacom set "$DEVICE2" Button 8 "key Shift F9"
+                ;;
+        esac
+    fi
+    sleep 1;
 done &
 )
 
@@ -56,6 +77,7 @@ fcitx5 &
 flameshot &
 xfce4-panel --disable-wm-check &
 sleep 0.3
+gromit-mpx &
 tmux has-session && exec kitty tmux attach || exec kitty tmux &
 
 exec xset -b & # disable console bell volume

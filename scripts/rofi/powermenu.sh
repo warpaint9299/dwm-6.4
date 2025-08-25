@@ -18,13 +18,13 @@ dir="$HOME/.dwm/scripts/rofi"
 theme="power_menu-style"
 
 # Options
-shutdown=''
-reboot=''
-lock=''
-suspend=''
-logout=''
+shutdown='󰐦'
+reboot='󰑓'
+lock=''
+suspend='󰤄'
+logout='󰍃'
 yes=''
-no=''
+no=''
 
 # Rofi CMD
 rofi_cmd() {

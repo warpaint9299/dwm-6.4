@@ -262,6 +262,7 @@ static void configurenotify(XEvent *e);
 static void configurerequest(XEvent *e);
 static Monitor *createmon(void);
 static void cyclelayout(const Arg *arg);
+static void cycleview(const Arg *arg);
 static void destroynotify(XEvent *e);
 static void detach(Client *c);
 static void detachstack(Client *c);
@@ -1134,6 +1135,23 @@ cyclelayout(const Arg *arg)
         setlayout(&((Arg){ .v = (l - 1) }));
     else
         setlayout(&((Arg){ .v = &layouts[LENGTH(layouts) - 2] }));
+}
+
+void
+cycleview(const Arg *arg)
+{
+    unsigned int newtag;
+    if(arg->ui) { /* if ui is 1 goto the left if 0 goto the right */
+        newtag = selmon->tagset[selmon->seltags] >> 1;
+        if(newtag == 0)
+            newtag = (1 << (LENGTH(tags) - 1));
+    } else {
+        newtag = selmon->tagset[selmon->seltags] << 1;
+        if(newtag > (1 << (LENGTH(tags) - 1)))
+            newtag = 1;
+    }
+    Arg a = { .ui = newtag };
+    view(&a);
 }
 
 void
