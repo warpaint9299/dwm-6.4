@@ -62,6 +62,9 @@ run_cmd() {
             mpc -q pause
             amixer set Master mute
             systemctl suspend
+            if [[ -x '/usr/bin/i3lock' ]]; then
+                i3lock -c 0e0e0e -n
+            fi
         elif [[ $1 == '--logout' ]]; then
             if [[ "$DESKTOP_SESSION" == 'openbox' ]]; then
                 openbox --exit

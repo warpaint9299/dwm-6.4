@@ -3842,7 +3842,13 @@ void
 viewafterclose(char *name)
 {
     Client *cl, *c = NULL;
-    int matched = matchregex(name, regexarray[1]);
+    int matched = 0;
+    matched = matchregex(name, regexarray[1]);
+    if (matched) goto prepare_switch_tag;
+    matched = matchregex(name, regexarray[3]);
+    if (matched) goto prepare_switch_tag;
+
+prepare_switch_tag:
     fprintf(stderr, "\n\nIn the viewafterclose: the matched is %d\n", matched);
     for(cl = selmon->clients; cl; cl = cl->next) {
         if(ISVISIBLE(cl) && !ispanel(cl, XFCE4_PANEL)

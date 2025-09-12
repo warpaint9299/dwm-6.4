@@ -78,6 +78,7 @@ flameshot &
 xfce4-panel --disable-wm-check &
 sleep 0.3
 gromit-mpx &
+opensnitch-ui &
 tmux has-session && exec kitty tmux attach || exec kitty tmux &
-
+exec setxkbmap us dvorak & 
 exec xset -b & # disable console bell volume

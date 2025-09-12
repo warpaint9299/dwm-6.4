@@ -4,7 +4,7 @@
 #define ICONSPACING 8 /* space between icon and title */
 
 /* appearance */
-static const unsigned int borderpx = 2;        /* border pixel of windows */
+static const unsigned int borderpx = 0;        /* border pixel of windows */
 static const unsigned int gappx    = 8;        /* gap pixel between windows */
 static const unsigned int snap     = 32;       /* snap pixel */
 static const int rmaster           = 0;        /* 1 means master-area is initially on the right */
@@ -92,7 +92,9 @@ static char lockfile[] = "/tmp/dwm.lock";
 static const int dynamicrule = 0;
 static char regexarray[][255] = { "^nvim$",
                                   "^(Minecraft Launcher|Sign in to Minecraft|Welcome to Xbox)$",
-                                  "^(.*Oracle VirtualBox)$"};
+                                  "^(.*Oracle VirtualBox)$",
+                                  "^(WPS Office.*|.*WPS Office)$",
+                                };
 
 static Rule rules[] = {
     /* xprop(1):
@@ -102,7 +104,7 @@ static Rule rules[] = {
     /* class                  instance          title         tags mask    viewontag  isfloating  position     forcetile  monitor  isfactor  factor x,y,w,h(double)  borderpx  iswarppointer */
  // { "st",                   NULL,             NULL,         0,           1,         1,          CENTER,      1,         -1,      1,        1.0,1.0,1.0,1.0,        2,        1 },
     { "steam",                NULL,             NULL,         1 << 7,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
-    { "st",                   NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "st",                   NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.7,0.7,0.7,0.7,        2,        1 },
     { "kitty",                NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "okular",               NULL,             NULL,         1 << 2,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "xournalpp",            NULL,             NULL,         1 << 3,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
@@ -119,13 +121,15 @@ static Rule rules[] = {
     { "Xfce4-notifyd",        NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.23,1.0,1.0,1.0,       0,        0 },
     { "Vmware",               NULL,             NULL,         1 << 7,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "VirtualBox Manager",   NULL,             NULL,         1 << 8,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { "VirtualBox Machine",   NULL,             NULL,         1 << 8,      1,         0,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "gamescope",            NULL,             NULL,         1 << 8,      1,         0,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
+    { NULL,                   NULL,             regexarray[3],1 << 3,      1,         0,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        0,        1 },
     { NULL,                   NULL,             regexarray[2],0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { NULL,                   NULL,             regexarray[1],1 << 3,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { NULL,                   NULL,             regexarray[0],0,           0,         1,          CENTER,      0,         -1,      1,        0.6,1.0,1.0,0.8,        2,        1 },
     { "kmag",                 NULL,             NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.4,1.0,1.0,0.2,        0,        0 },
     { "Xfce4-panel",          NULL,             NULL,         (1 << 9) - 1,0,         1,          CENTER,      0,         -1,      0,        1.0,1.0,1.0,1.0,        0,        0 },
-    { broken,                 NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { broken,                 NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        0,        1 },
     { NULL,                   NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.7,0.7,0.7,0.7,        0,        0 },
 };
 
@@ -204,8 +208,8 @@ static const Key keys[] = {
     { MODKEY|ShiftMask,             XK_m,          resetnmaster,       {0} },
     { MODKEY,                       XK_0,          view,               {.ui = ~0 } },
     { MODKEY|ShiftMask,             XK_0,          tag,                {.ui = ~0 } },
-    { MODKEY,                       XK_n,          cycleview,          {1} },
-    { MODKEY,                       XK_m,          cycleview,          {0} },
+    { MODKEY,                       XK_v,          cycleview,          {1} },
+    { MODKEY|ShiftMask,             XK_v,          cycleview,          {0} },
     { MODKEY,                       XK_apostrophe, focusstackhid,      {.i = -1 } },
     { MODKEY|ShiftMask,             XK_apostrophe, focusstackhid,      {.i = +1 } },
     { MODKEY,                       XK_comma,      focusmon,           {.i = -1 } },
