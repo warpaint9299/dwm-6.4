@@ -124,10 +124,12 @@ enum {
 }; /* actions of unfloatexceptlatest */
 enum {
     XFCE4_PANEL,
+    XFCE4_PANEL_CLASS,
     XFCE4_NOTIFYD,
     KMAGNIFIER,
     KCLOCK,
     GNOME_CALCULATOR,
+    GOLDENDICTNG,
     BROKEN
 }; /* refers to ispanel */
 enum {
@@ -781,9 +783,10 @@ buttonpress(XEvent *e)
     if(ev->window == selmon->barwin) {
         i = x = occ = 0;
         for(c = m->clients; c; c = c->next) {
-            if(ispanel(c, XFCE4_PANEL) || ispanel(c, XFCE4_NOTIFYD)
-               || ispanel(c, KMAGNIFIER) || ispanel(c, KCLOCK)
-               || ispanel(c, GNOME_CALCULATOR))
+            if(ispanel(c, XFCE4_PANEL) || ispanel(c, XFCE4_PANEL_CLASS) 
+               || ispanel(c, XFCE4_NOTIFYD) || ispanel(c, KMAGNIFIER) 
+               || ispanel(c, KCLOCK) || ispanel(c, GNOME_CALCULATOR) 
+               || ispanel(c, GOLDENDICTNG))
                 continue;
             occ |= c->tags;
         }
@@ -1254,9 +1257,10 @@ drawbar(Monitor *m)
 
     for(c = m->clients; c; c = c->next) {
         // prevent showing the panel as active application:
-        if(ispanel(c, XFCE4_PANEL) || ispanel(c, XFCE4_NOTIFYD)
-           || ispanel(c, KMAGNIFIER) || ispanel(c, KCLOCK)
-           || ispanel(c, GNOME_CALCULATOR))
+        if(ispanel(c, XFCE4_PANEL) || ispanel(c, XFCE4_PANEL_CLASS) 
+           || ispanel(c, XFCE4_NOTIFYD) || ispanel(c, KMAGNIFIER) 
+           || ispanel(c, KCLOCK) || ispanel(c, GNOME_CALCULATOR) 
+           || ispanel(c, GOLDENDICTNG))
             continue;
         occ |= c->tags;
         if(c->isurgent)
@@ -1342,8 +1346,10 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
 
     for(c = m->clients; c; c = c->next) {
         // prevent showing the panel as active application:
-        if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER)
-           || ispanel(c, KCLOCK) || ispanel(c, GNOME_CALCULATOR))
+        if(ispanel(c, XFCE4_PANEL) || ispanel(c, XFCE4_PANEL_CLASS) 
+           || ispanel(c, XFCE4_NOTIFYD) || ispanel(c, KMAGNIFIER) 
+           || ispanel(c, KCLOCK) || ispanel(c, GNOME_CALCULATOR) 
+           || ispanel(c, GOLDENDICTNG))
             continue;
         occ |= c->tags;
         if(c->isurgent)
@@ -1968,10 +1974,12 @@ ispanel(Client *c, int ptype)
 
     switch(ptype) {
     case XFCE4_PANEL: return !strcmp(c->name, panel[0]); break;
-    case XFCE4_NOTIFYD: return !strcmp(c->name, panel[1]); break;
-    case KMAGNIFIER: return !strcmp(c->name, panel[2]); break;
-    case KCLOCK: return !strcmp(c->name, panel[3]); break;
-    case GNOME_CALCULATOR: return !strcmp(c->name, panel[4]); break;
+    case XFCE4_PANEL_CLASS: return !strcmp(c->class, panel[1]); break;
+    case XFCE4_NOTIFYD: return !strcmp(c->class, panel[2]); break;
+    case KMAGNIFIER: return !strcmp(c->class, panel[3]); break;
+    case KCLOCK: return !strcmp(c->class, panel[4]); break;
+    case GNOME_CALCULATOR: return !strcmp(c->class, panel[5]); break;
+    case GOLDENDICTNG: return !strcmp(c->class, panel[6]); break;
     case BROKEN: return !strcmp(c->name, broken); break;
     default: return 0;
     }
