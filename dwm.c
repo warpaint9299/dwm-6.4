@@ -3842,6 +3842,9 @@ view(const Arg *arg)
     selmon->lt[selmon->sellt ^ 1]
         = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt ^ 1];
     focus(NULL);
+    if(ispanel(selmon->sel, GOLDENDICTNG)) {
+        focusstack(-1, 0);
+    }
     if(selmon->sel) {
         XRaiseWindow(dpy, selmon->sel->win);
     }
