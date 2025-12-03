@@ -256,6 +256,7 @@ static void attachstack(Client *c);
 static void buttonpress(XEvent *e);
 static void initposition(Client *c);
 static void changerule(Client *c);
+static void changewmtagstate(Client *c, unsigned int ctype);
 static void checkotherwm(void);
 static void cleanup(void);
 static void cleanupmon(Monitor *mon);
@@ -901,9 +902,11 @@ changerule(Client *c)
                 if(r->forcetile)
                     r->isfloating = c->isfloating;
             }
-
             if(!ispanel(c, XFCE4_PANEL)) {
-                // the `!m->num` is a primary or first monitor
+                // change client tags
+                changewmtagstate(c, GOLDENDICTNG);
+                // the `!m->num` is a primary or first monitor, multi-monitor
+                // settings
                 if(c->isfloating && !m->num) {
                     applyfactor(c, r);
                 }
@@ -923,6 +926,29 @@ checkotherwm(void)
     XSync(dpy, False);
     XSetErrorHandler(xerror);
     XSync(dpy, False);
+}
+
+void
+changewmtagstate(Client *c, unsigned int ctype)
+{
+    switch(ctype) {
+    case GOLDENDICTNG:
+        if(ispanel(c, GOLDENDICTNG)) {
+            if(c->isfloating) {
+                c->tags = c->tags & TAGMASK;
+            } else {
+                // set client's tags with the current tag
+                c->tags = c->mon->tagset[c->mon->seltags];
+            }
+        }
+        break;
+    default:;
+    }
+    fprintf(stderr,
+            "\nIn the changewmtagstate: the "
+            "selmon->tagset[selmon->seltags] "
+            "is %d, the c->tags is %d,c->name is %s\n",
+            selmon->tagset[selmon->seltags], c->tags, c->name);
 }
 
 void
@@ -1480,11 +1506,11 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
     const Rule *r;
     switch(action) {
     case OPEN_CLIENT:
-        fprintf(
-            stderr,
-            "\nIn the unfloatexceptlatest: the selmon->tagset[selmon->seltags] "
-            "is %d, the c->tags is %d,c->name is %s\n",
-            selmon->tagset[selmon->seltags], c->tags, c->name);
+        fprintf(stderr,
+                "\nIn the unfloatexceptlatest: the "
+                "selmon->tagset[selmon->seltags] "
+                "is %d, the c->tags is %d,c->name is %s\n",
+                selmon->tagset[selmon->seltags], c->tags, c->name);
         // if (!c->forcetile || selmon->tagset[selmon->seltags] != c->tags)
         if(!c->forcetile || !ISVISIBLE(c))
             return;
@@ -1510,8 +1536,8 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
     case CLOSE_CLIENT:
         for(c = m->stack; c; c = c->snext) {
             if(ISVISIBLE(c)) {
-                // suppose there is a client which float on current tag, return
-                // the function
+                // suppose there is a client which float on current tag,
+                // return the function
                 if(!ispanel(c, XFCE4_PANEL) && !ispanel(c, KMAGNIFIER)
                    && !ispanel(c, KCLOCK) && !ispanel(c, GNOME_CALCULATOR)
                    && c->isfloating)
@@ -1685,8 +1711,8 @@ focusstack(int inc, int vis)
 {
     Client *c = NULL, *i;
 
-    // if no client selected AND exclude hiden client; if client selected but
-    // fullscreened
+    // if no client selected AND exclude hiden client; if client selected
+    // but fullscreened
     if((!selmon->sel && !vis)
        || (selmon->sel && selmon->sel->isfullscreen && lockfullscreen))
         return;
@@ -2234,9 +2260,9 @@ monocle(Monitor *m)
        && m->lt[m->sellt]->arrange == monocle) /* override layout symbol */
         snprintf(m->ltsymbol, sizeof m->ltsymbol, "%s", "󰬔");
     for(c = nexttiled(m->clients); c; c = nexttiled(c->next)) {
-        // I'm not sure, but calling resize with the border width subtractions
-        // fixes a glitch where windows would not redraw until they were
-        // manually resized after restarting dwm.
+        // I'm not sure, but calling resize with the border width
+        // subtractions fixes a glitch where windows would not redraw until
+        // they were manually resized after restarting dwm.
         resize(c, m->wx + m->gappx, m->wy + m->gappx,
                m->ww - (2 * c->bw) - (2 * m->gappx),
                m->wh - (2 * c->bw) - (2 * m->gappx), False);
@@ -3930,9 +3956,9 @@ warppointer(Client *c)
         XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
 }
 
-/* There's no way to check accesses to destroyed windows, thus those cases are
- * ignored (especially on UnmapNotify's). Other types of errors call Xlibs
- * default error handler, which may call exit. */
+/* There's no way to check accesses to destroyed windows, thus those cases
+ * are ignored (especially on UnmapNotify's). Other types of errors call
+ * Xlibs default error handler, which may call exit. */
 int
 xerror(Display *dpy, XErrorEvent *ee)
 {
