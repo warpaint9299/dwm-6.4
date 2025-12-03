@@ -75,7 +75,7 @@ done &
 blueman-applet &
 fcitx5 &
 flameshot &
-xfce4-panel --disable-wm-check &
+# xfce4-panel --disable-wm-check &
 sleep 0.3
 gromit-mpx &
 opensnitch-ui &

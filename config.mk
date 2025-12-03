@@ -17,13 +17,17 @@ XINERAMAFLAGS = -DXINERAMA
 # freetype
 FREETYPELIBS = -lfontconfig -lXft
 FREETYPEINC = /usr/include/freetype2
+
+GLIBINCS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/xfce4/xfconf-0
+GLIBLIBS = -lxfconf-0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
+
 # OpenBSD (uncomment)
 #FREETYPEINC = ${X11INC}/freetype2
 #MANPREFIX = ${PREFIX}/man
 
 # includes and libs
-INCS = -I${X11INC} -I${FREETYPEINC}
-LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS} -lXrender -lm -lImlib2
+INCS = -I${X11INC} -I${FREETYPEINC} ${GLIBINCS}
+LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS} ${GLIBLIBS} -lXrender -lm -lImlib2
 
 # flags
 CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_POSIX_C_SOURCE=200809L -DVERSION=\"${VERSION}\" ${XINERAMAFLAGS}

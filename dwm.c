@@ -20,6 +20,7 @@
  *
  * To understand everything else, start reading main().
  */
+#include "glib-object.h"
 #include <X11/X.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
@@ -48,6 +49,9 @@
 
 #include "drw.h"
 #include "util.h"
+
+#include <glib-2.0/glib.h>
+#include <xfce4/xfconf-0/xfconf/xfconf.h>
 
 /* macros */
 #define BUTTONMASK (ButtonPressMask | ButtonReleaseMask)
@@ -326,6 +330,7 @@ static void restack(Monitor *m);
 static void rotatestack(const Arg *arg);
 static void run(void);
 static void runautostart(void);
+static void runpanel(void);
 static void scan(void);
 static int sendevent(Client *c, Atom proto);
 static void sendmon(Client *c, Monitor *m);
@@ -428,6 +433,7 @@ static int depth;
 static Colormap cmap;
 static int oldstate = 0;
 static int istoggled = 0;
+static unsigned int panel_width = 0;
 
 pthread_mutex_t rule_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -1057,6 +1063,7 @@ configurenotify(XEvent *e)
             arrange(NULL);
         }
     }
+    setpanel();
 }
 
 void
@@ -1312,7 +1319,8 @@ drawbar(Monitor *m)
     if((w = m->ww - tw - x) > bh) {
         if(m->sel) {
             drw_setscheme(drw, scheme[SchemeInfoSel]);
-            twidth = m->ww - x - 2 * sp - getpanelwidth(m);
+            // setup title width
+            twidth = m->ww - x - 2 * sp - panel_width;
             // clang-format off
             drawtitle = !ispanel(m->sel, XFCE4_PANEL) && !ispanel(m->sel, KMAGNIFIER);
             // clang-format on
@@ -1415,7 +1423,8 @@ drawhoverbar(Monitor *m, XMotionEvent *ev)
     if((w = m->ww - tw - x) > bh) {
         if(m->sel) {
             drw_setscheme(drw, scheme[SchemeInfoSel]);
-            twidth = m->ww - x - 2 * sp - getpanelwidth(m);
+            // setup title width
+            twidth = m->ww - x - 2 * sp - panel_width;
             // clang-format off
             drawtitle = !ispanel(m->sel, XFCE4_PANEL) && !ispanel(m->sel, KMAGNIFIER);
             // clang-format on
@@ -2153,8 +2162,6 @@ manage(Window w, XWindowAttributes *wa)
     // no border - even when active
     if(ispanel(c, XFCE4_PANEL) || ispanel(c, KMAGNIFIER))
         c->bw = c->oldbw = 0;
-    if(ispanel(c, XFCE4_PANEL))
-        setpanel();
     if(c->hasrulebw && !c->isfullscreen)
         wc.border_width = c->borderpx;
     else
@@ -2914,6 +2921,15 @@ runautostart(void)
 }
 
 void
+runpanel(void)
+{
+    // launch XFCE4_PANEL
+    const char *panelcmd[] = { "xfce4-panel", "--disable-wm-check", NULL };
+    Arg arg = { .v = panelcmd };
+    spawn(&arg);
+}
+
+void
 scan(void)
 {
     unsigned int i, num;
@@ -3084,29 +3100,52 @@ void
 setpanel(void)
 {
     char command[255];
-    int x = selmon->mw;
-    int y = selmon->mh;
+    XfconfChannel *channel;
+    GValue pos_val = G_VALUE_INIT;
+    GValue size_val = G_VALUE_INIT;
+    GValue nrows_val = G_VALUE_INIT;
+    gchar *psize, *pnrows, *position;
+    int size, nrows, panelx, panely;
 
-    if(topbar)
-        snprintf(command, sizeof(command),
-                 "xfconf-query -c xfce4-panel -p /panels/panel-1/position -s "
-                 "'p=0;x=%d;y=%d' &",
-                 x, 0);
-    else
-        snprintf(command, sizeof(command),
-                 "xfconf-query -c xfce4-panel -p /panels/panel-1/position -s "
-                 "'p=0;x=%d;y=%d' &",
-                 x, y);
+    // initial values
+    panel_width = getpanelwidth(selmon);
+    xfconf_init(NULL);
+    g_value_init(&pos_val, G_TYPE_STRING);
+    g_value_init(&size_val, G_TYPE_INT);
+    g_value_init(&nrows_val, G_TYPE_INT);
+    psize = "/panels/panel-1/size";
+    pnrows = "/panels/panel-1/nrows";
+    position = "/panels/panel-1/position";
 
-    if(system(command) != 0)
-        fprintf(stderr, "\nWarning: Failed to execute %s\n", command);
+    // get properties
+    channel = xfconf_channel_get("xfce4-panel");
+    xfconf_channel_get_property(channel, psize, &size_val);
+    xfconf_channel_get_property(channel, pnrows, &nrows_val);
+    size = g_value_get_int(&size_val);
+    nrows = g_value_get_int(&nrows_val);
 
-    snprintf(command, sizeof(command),
-             "xfconf-query -c xfce4-panel -p /panels/panel-1/output-name  -s "
-             "'Primary'");
+    if(topbar) {
+        // set values
+        panelx = selmon->mw - sidepad - (panel_width / 2);
+        fprintf(stderr, "\n\n\n##########the panel width is %i##########\n\n\n",
+                panel_width);
+        panely = (size * nrows) / 2 + vertpad;
+        snprintf(command, sizeof(command), "p=0;x=%d;y=%d", panelx, panely);
+        g_value_set_string(&pos_val, command);
+        xfconf_channel_set_property(channel, position, &pos_val);
+    } else {
+        // set value with bottom bar
+        panelx = selmon->mw - sidepad - (panel_width / 2);
+        panely = selmon->mh - ((size * nrows) / 2 + vertpad);
+        snprintf(command, sizeof(command), "p=0;x=%d;y=%d", panelx, panely);
+        g_value_set_string(&pos_val, command);
+        xfconf_channel_set_property(channel, position, &pos_val);
+    }
 
-    if(system(command) != 0)
-        fprintf(stderr, "\nWarning: Failed to execute %s'\n", command);
+    // free
+    g_value_unset(&pos_val);
+    g_value_unset(&size_val);
+    g_value_unset(&nrows_val);
 }
 
 void
@@ -4058,6 +4097,7 @@ main(int argc, char *argv[])
 #endif /* __OpenBSD__ */
     scan();
     runautostart();
+    runpanel();
     run();
     cleanup();
     XCloseDisplay(dpy);
