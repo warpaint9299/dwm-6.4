@@ -8,7 +8,7 @@ static const unsigned int borderpx = 0;        /* border pixel of windows */
 static const unsigned int gappx    = 8;        /* gap pixel between windows */
 static const unsigned int snap     = 32;       /* snap pixel */
 static const int rmaster           = 0;        /* 1 means master-area is initially on the right */
-static const char panel[][32]      = { "xfce4-panel", "Xfce4-panel", "Xfce4-notifyd", "kmag", "kclock", "gnome-calculator",  "GoldenDict-ng" }; /* name & cls of panel win */
+static const char panel[][32]      = { "xfce4-panel", "Xfce4-panel", "Xfce4-notifyd", "kmag", "kclock", "gnome-calculator", "org.gnome.Characters",  "GoldenDict-ng" }; /* name & cls of panel win */
 static const int entagmon          = 1;     /* 0 means dosn't send selclient when switch monitor*/
 static const int viewontag         = 1;        /* Switch view on tag switch */
 static const int showbar           = 1;        /* 0 means no bar */
@@ -113,6 +113,7 @@ static Rule rules[] = {
     { "Chromium",             NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "code-oss",             NULL,             NULL,         1 << 1,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "gnome-calculator",     NULL,             NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.70,      0,        0 },
+    { "org.gnome.Characters", NULL,             NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.70,      0,        0 },
     { "rnote",                NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "kclock",               NULL,             NULL,         (1 << 9) - 1,0,         1,          RIGHT_TOP,   0,         -1,      1,        0.23,1.0,1.0,0.70,      2,        0 },
     { "GoldenDict",           NULL,             NULL,         (1 << 9) - 1,0,         1,          RIGHT_BOTTOM,0,         -1,      1,        0.5,0.5,1.0,1.0,        2,        1 },
@@ -217,22 +218,22 @@ static const Key keys[] = {
     { MODKEY|ShiftMask,             XK_comma,      tagmon,             {.i = -1 } },
     { MODKEY|ShiftMask,             XK_period,     tagmon,             {.i = +1 } },
     { MODKEY,                       XK_minus,      setgaps,            {.i = -1 } },
-    { MODKEY,                       XK_equal,      setgaps,            {.i = +1 } },
+    { MODKEY|ShiftMask,             XK_minus,      setgaps,            {.i = +1 } },
     { MODKEY|ShiftMask,             XK_equal,      setgaps,            {.i = 0  } },
     { MODKEY|ShiftMask,             XK_Up,         movethrow,          {.ui = WIN_N  }},
     { MODKEY|ShiftMask,             XK_Down,       movethrow,          {.ui = WIN_S  }},
     { MODKEY|ShiftMask,             XK_Left,       movethrow,          {.ui = WIN_W  }},
     { MODKEY|ShiftMask,             XK_Right,      movethrow,          {.ui = WIN_E  }},
     { MODKEY|ShiftMask,             XK_m,          movethrow,          {.ui = WIN_C  }},
-    TAGKEYS(                        XK_1,                              0)
-    TAGKEYS(                        XK_2,                              1)
-    TAGKEYS(                        XK_3,                              2)
-    TAGKEYS(                        XK_4,                              3)
-    TAGKEYS(                        XK_5,                              4)
-    TAGKEYS(                        XK_6,                              5)
-    TAGKEYS(                        XK_7,                              6)
-    TAGKEYS(                        XK_8,                              7)
-    TAGKEYS(                        XK_9,                              8)
+    TAGKEYS(                        XK_1,                               0)
+    TAGKEYS(                        XK_2,                               1)
+    TAGKEYS(                        XK_3,                               2)
+    TAGKEYS(                        XK_4,                               3)
+    TAGKEYS(                        XK_5,                               4)
+    TAGKEYS(                        XK_6,                               5)
+    TAGKEYS(                        XK_7,                               6)
+    TAGKEYS(                        XK_8,                               7)
+    TAGKEYS(                        XK_9,                               8)
     { MODKEY|ShiftMask,             XK_q,          quit,               {0} },
 };
 

@@ -12,8 +12,8 @@
 configuration {
     modi:                       "drun,run";
     show-icons:                 false;
-    display-drun:               "";
-    display-run:                "";
+    display-drun:               "";
+    display-run:                "";
     display-filebrowser:        "";
     display-window:             "";
     drun-display-format:        "{name}";
