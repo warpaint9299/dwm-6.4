@@ -1017,7 +1017,9 @@ configurenotify(XEvent *e)
             arrange(NULL);
         }
     }
+    pthread_mutex_lock(&rule_mutex);
     setpanel();
+    pthread_mutex_unlock(&rule_mutex);
 }
 
 void
@@ -2446,6 +2448,11 @@ propertynotify(XEvent *e)
     else if(ev->state == PropertyDelete)
         return; /* ignore */
     else if((c = wintoclient(ev->window))) {
+        if(ispanel(c, XFCE4_PANEL)) {
+            pthread_mutex_lock(&rule_mutex);
+            setpanel();
+            pthread_mutex_unlock(&rule_mutex);
+        }
         switch(ev->atom) {
         default: break;
         case XA_WM_TRANSIENT_FOR:
@@ -2481,7 +2488,6 @@ propertynotify(XEvent *e)
         if(ev->atom == netatom[NetWMWindowType])
             updatewindowtype(c);
     }
-    setpanel();
 }
 
 void
@@ -2982,6 +2988,7 @@ setpanel(void)
 
     // initial values
     int panel_width = getpanelwidth(selmon);
+    fprintf(stderr, "\n\n############## Panel Width is %i#############\n\n", panel_width);
     xfconf_init(NULL);
     g_value_init(&pos_val, G_TYPE_STRING);
     g_value_init(&size_val, G_TYPE_INT);
