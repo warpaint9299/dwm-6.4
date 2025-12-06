@@ -412,6 +412,7 @@ static int depth;
 static Colormap cmap;
 static int oldstate = 0;
 static int istoggled = 0;
+int focussed_panel = 0; // helper for focusstack, avoids loops when panel is the only client
 
 pthread_mutex_t rule_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -1653,9 +1654,6 @@ focusstackhid(const Arg *arg)
 {
     focusstack(arg->i, 1);
 }
-
-// helper for focusstack, avoids loops when panel is the only client
-int focussed_panel = 0;
 
 void
 focusstack(int inc, int vis)
