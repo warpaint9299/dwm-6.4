@@ -103,6 +103,7 @@ static Rule rules[] = {
      */
     /* class                  instance          title         tags mask    viewontag  isfloating  position     forcetile  monitor  isfactor  factor x,y,w,h(double)  borderpx  iswarppointer */
  // { "st",                   NULL,             NULL,         0,           1,         1,          CENTER,      1,         -1,      1,        1.0,1.0,1.0,1.0,        2,        1 },
+// { "mpv",                  NULL,             NULL,         (1 << 9) - 1,0,         1,          CENTER,      0,         -1,      0,        1.0,1.0,1.0,1.0,        0,        0 },
     { "steam",                NULL,             NULL,         1 << 7,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { "Clash-verge",          NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "st",                   NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.7,0.7,0.7,0.7,        2,        1 },

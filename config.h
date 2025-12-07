@@ -107,9 +107,9 @@ static Rule rules[] = {
     { "Clash-verge",          NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "st",                   NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.7,0.7,0.7,0.7,        2,        1 },
     { "kitty",                NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "okular",               NULL,             NULL,         1 << 2,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "okular",               NULL,             NULL,         1 << 1,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "xournalpp",            NULL,             NULL,         1 << 3,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
-    { "firefox",              NULL,             NULL,         1 << 1,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
+    { "firefox",              NULL,             NULL,         1 << 2,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "firefox-esr",          NULL,             NULL,         1 << 1,      1,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "Chromium",             NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "code-oss",             NULL,             NULL,         1 << 1,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
@@ -225,15 +225,15 @@ static const Key keys[] = {
     { MODKEY|ShiftMask,             XK_Left,       movethrow,          {.ui = WIN_W  }},
     { MODKEY|ShiftMask,             XK_Right,      movethrow,          {.ui = WIN_E  }},
     { MODKEY|ShiftMask,             XK_m,          movethrow,          {.ui = WIN_C  }},
-    TAGKEYS(                        XK_ampersand,                       0)
-    TAGKEYS(                        XK_bracketleft,                     1)
-    TAGKEYS(                        XK_braceleft,                       2)
-    TAGKEYS(                        XK_braceright,                      3)
-    TAGKEYS(                        XK_parenleft,                       4)
-    TAGKEYS(                        XK_equal,                           5)
-    TAGKEYS(                        XK_asterisk,                        6)
-    TAGKEYS(                        XK_parenright,                      7)
-    TAGKEYS(                        XK_plus,                            8)
+    TAGKEYS(                        XK_1,                               0)
+    TAGKEYS(                        XK_2,                               1)
+    TAGKEYS(                        XK_3,                               2)
+    TAGKEYS(                        XK_4,                               3)
+    TAGKEYS(                        XK_5,                               4)
+    TAGKEYS(                        XK_6,                               5)
+    TAGKEYS(                        XK_7,                               6)
+    TAGKEYS(                        XK_8,                               7)
+    TAGKEYS(                        XK_9,                               8)
     { MODKEY|ShiftMask,             XK_q,          quit,               {0} },
 };
 

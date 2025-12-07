@@ -4,15 +4,15 @@ systemctl --user import-environment
 
 (
 while true; do
-	feh --recursive --randomize --bg-fill ~/.wallpaper/*.png >> /dev/null 2>&1
-	sleep 120;
+feh --recursive --randomize --bg-fill ~/.wallpaper/*.png >> /dev/null 2>&1
+sleep 120;
 done &
 )
 
 (
 while true; do
-	[[ $(pgrep -x 'picom') ]] || picom --config ~/.config/picom/picom.conf >> /dev/null 2>&1
-	sleep 3;
+[[ $(pgrep -x 'picom') ]] || picom --config ~/.config/picom/picom.conf >> /dev/null 2>&1
+sleep 3;
 done &
 )
 
