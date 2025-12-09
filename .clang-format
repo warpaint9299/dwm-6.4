@@ -9,3 +9,4 @@ AlwaysBreakBeforeMultilineStrings: true
 BinPackArguments: true
 BinPackParameters: true
 SpaceBeforeParens: Never
+BreakBeforeBraces: Allman
