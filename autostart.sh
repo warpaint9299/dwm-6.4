@@ -75,8 +75,6 @@ done &
 blueman-applet &
 fcitx5 &
 flameshot &
-# xfce4-panel --disable-wm-check &
-sleep 0.3
 gromit-mpx &
 opensnitch-ui &
 tmux has-session && exec kitty tmux attach || exec kitty tmux &

@@ -141,6 +141,7 @@ enum
   XFCE4_PANEL,
   XFCE4_NOTIFYD,
   XFCE4_PANEL_PREFERENCES,
+  XFCE4_DIALOG,
   KMAGNIFIER,
   KCLOCK,
   GNOME_CALCULATOR,
@@ -322,6 +323,7 @@ static void hide(const Arg *arg);
 static void hideall(const Arg *arg);
 static void hidewin(Client *c);
 static int isclassof(Client *c, int wmclass);
+static int istypeofdialog(Client *c);
 static int istypeofdock(Client *c);
 static int istypeofnotification(Client *c);
 static void incnmaster(const Arg *arg);
@@ -576,7 +578,8 @@ applyrules(Client *c)
       c->viewontag = r->viewontag;
       oldstate = c->isfloating;
 
-      if(c->isfloating && !isclassof(c, XFCE4_PANEL))
+      if(c->isfloating && !isclassof(c, XFCE4_PANEL)
+         && !isclassof(c, XFCE4_DIALOG))
       {
         if(r->isfactor)
           applyfactor(c, r);
@@ -970,7 +973,7 @@ changerule(Client *c)
     {
       if(dynamicrule)
       {
-        if(r->forcetile)
+        if(r->forcetile && !isclassof(c, XFCE4_DIALOG))
           r->isfloating = c->isfloating;
       }
       if(!isclassof(c, XFCE4_PANEL))
@@ -1662,7 +1665,7 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
       if(ISVISIBLE(cl))
       {
         if(cl->forcetile && cl != c && !isclassof(cl, XFCE4_PANEL)
-           && cl->isfloating)
+           && !isclassof(c, XFCE4_DIALOG) && cl->isfloating)
         {
           for(i = 0; i < LENGTH(rules); i++)
           {
@@ -1698,7 +1701,7 @@ unfloatexceptlatest(Monitor *m, Client *c, int action)
              && (!r->class || strstr(c->class, r->class))
              && (!r->instance || strstr(c->instance, r->instance)))
           {
-            if(r->forcetile)
+            if(r->forcetile && !isclassof(c, XFCE4_DIALOG))
             {
               c->isfloating ^= 1;
               if(r->isfactor)
@@ -2183,6 +2186,9 @@ isclassof(Client *c, int wmclass)
   case XFCE4_NOTIFYD:
     return istypeofnotification(c);
     break;
+  case XFCE4_DIALOG:
+    return istypeofdialog(c);
+    break;
   case XFCE4_PANEL_PREFERENCES:
     return !strcmp(c->class, wmclasses[0]);
     break;
@@ -2206,6 +2212,15 @@ isclassof(Client *c, int wmclass)
   default:
     return 0;
   }
+}
+
+int
+istypeofdialog(Client *c)
+{
+  if(!c)
+    return 0;
+  return netatom[NetWMWindowTypeDialog]
+         == getatomprop(c, netatom[NetWMWindowType]);
 }
 
 int
