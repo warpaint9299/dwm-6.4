@@ -56,6 +56,7 @@ fcitx5 &
 flameshot &
 gromit-mpx &
 opensnitch-ui &
+goldendict &
 # tmux has-session && exec kitty tmux attach || exec kitty tmux &
 tmux has-session && exec alacritty -e tmux attach || exec alacritty -e tmux &
 # exec setxkbmap us dvorak & 
