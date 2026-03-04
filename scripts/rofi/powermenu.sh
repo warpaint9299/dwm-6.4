@@ -75,6 +75,7 @@ run_cmd() {
             elif [[ "$DESKTOP_SESSION" == 'plasma' ]]; then
                 qdbus org.kde.ksmserver /KSMServer logout 0 0 0
             else
+                ps -aux | grep 'autostart.sh' | grep -v grep | awk '{print $2}' | xargs -I {} kill -s KILL {} && \
                 pkill dwm && \
                 loginctl terminate-session ${XDG_SESSION_ID-}
             fi

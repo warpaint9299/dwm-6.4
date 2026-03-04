@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 systemctl --user import-environment
+mkdir -p ~/.config
+cp -rf ~/.dwm/assets/* ~/.config/
 
 (
 while true; do
@@ -23,12 +25,12 @@ while true; do
 		xdotool search --class "${browser}" | while read wm_id; do
 			if [[ 0 -ne $(xprop -id ${wm_id} | grep '_NET_WM_STATE_FULLSCREEN' | wc -l) ]]; then
 				if [[ 0 -ne $(xprop -id ${wm_id} | grep -E 'YouTube|小宝影院' | wc -l) ]]; then
-					[[ $(pgrep -x 'xautolock') ]] && killall xautolock
-				fi
+				[[ $(pgrep -x 'xautolock') ]] && killall xautolock
+			fi
 			fi
 		done
 	done
-	sleep 5;
+sleep 5;
 done &
 )
 
@@ -40,43 +42,21 @@ done &
 )
 
 # wacom settings
-(
 DEVICE1="Wacom Intuos BT M Pen stylus"
 DEVICE2="Wacom Intuos BT M Pad pad"
-while true; do
-    if [[ $(xsetwacom list | wc -c ) -ne 0 ]]; then
-        APP=$(xdotool getwindowfocus getwindowclassname)
-        case "$APP" in
-            okular)
-                xsetwacom set "$DEVICE2" Button 1 "key Ctrl 1"
-                xsetwacom set "$DEVICE2" Button 2 "key Ctrl 4"
-                xsetwacom set "$DEVICE2" Button 3 "key F9"
-                xsetwacom set "$DEVICE2" Button 8 "key Shift F9"
-                ;;
-            Com.github.xournalpp.xournalpp)
-                # xsetwacom set "$DEVICE1" MapToOutput HEAD-1
-                xsetwacom set "$DEVICE2" Button 1 "key Ctrl z"
-                xsetwacom set "$DEVICE2" Button 2 "key Shift Ctrl o"
-                xsetwacom set "$DEVICE2" Button 3 "key F9"
-                xsetwacom set "$DEVICE2" Button 8 "key Shift F9"
-                ;;
-            *)
-                # xsetwacom set "$DEVICE2" Button 3 "key F12"
-                # xsetwacom set "$DEVICE2" Button 8 "key Shift F12"
-                xsetwacom set "$DEVICE2" Button 3 "key F9"
-                xsetwacom set "$DEVICE2" Button 8 "key Shift F9"
-                ;;
-        esac
-    fi
-    sleep 1;
-done &
-)
+# Com.github.xournalpp.xournalpp)
+# xsetwacom set "$DEVICE1" MapToOutput HEAD-1
+# xsetwacom set "$DEVICE2" Button 1 "key Ctrl z"
+# xsetwacom set "$DEVICE2" Button 2 "key Shift Ctrl o"
+xsetwacom set "$DEVICE2" Button 3 "key F9"
+xsetwacom set "$DEVICE2" Button 8 "key Shift F9"
 
 blueman-applet &
 fcitx5 &
 flameshot &
 gromit-mpx &
 opensnitch-ui &
-tmux has-session && exec kitty tmux attach || exec kitty tmux &
+# tmux has-session && exec kitty tmux attach || exec kitty tmux &
+tmux has-session && exec alacritty -e tmux attach || exec alacritty -e tmux &
 # exec setxkbmap us dvorak & 
 exec xset -b & # disable console bell volume

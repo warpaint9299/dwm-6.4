@@ -106,6 +106,7 @@ static Rule rules[] = {
     { "steam",                NULL,             NULL,         1 << 7,      1,         1,          CENTER,      0,         -1,      1,        0.9,0.9,0.9,0.9,        2,        0 },
     { "Clash-verge",          NULL,             NULL,         0,           0,         1,          CENTER,      0,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
     { "st",                   NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.7,0.7,0.7,0.7,        2,        1 },
+    { "Alacritty",            NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "kitty",                NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "Thunar",               NULL,             NULL,         0,           0,         1,          CENTER,      1,         -1,      1,        0.9,0.9,0.9,0.9,        2,        1 },
     { "okular",               NULL,             NULL,         1 << 1,      1,         0,          CENTER,      1,         -1,      0,        0.9,0.9,0.9,0.9,        2,        1 },
@@ -173,7 +174,7 @@ static const char *kmagcmd[] = { "/bin/sh", "-c" , "~/.dwm/scripts/kmagnifier/km
 static const char *rangcmd[] = { "kitty", "ranger", NULL };
 static const char *flamcmd[] = { "flameshot", "gui", NULL };
 static const char *thuncmd[] = { "thunar", NULL };
-static const char *termcmd[] = { "kitty", NULL };
+static const char *termcmd[] = { "alacritty", NULL };
 
 static const Key keys[] = {
     /* modifier                     key            function            argument */
